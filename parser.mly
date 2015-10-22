@@ -13,11 +13,13 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left AND OR
+%left OR
+%left AND
 %left EQ
 %left LT GT LEQ GEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
+%right NEW
 %right NOT
 %left COMMA APOST
 
