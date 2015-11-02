@@ -3,7 +3,7 @@
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
 | "~"     { comment lexbuf }           (* Comments *)
-| '('      { LPAREN }
+| '('      { LPAREN }                  (* Punctuation *)
 | ')'      { RPAREN }
 | '{'      { LBRACE }
 | '}'      { RBRACE }
@@ -12,7 +12,9 @@ rule token = parse
 | ';'      { SEMI }
 | ','      { COMMA }
 | '.'      { PERIOD }
-| "'s"     { APOST }
+(*| "'s"     { APOST } *)
+
+(* Binary Operators *)
 | '+'      { PLUS }
 | '-'      { MINUS }
 | '*'      { TIMES }
@@ -22,37 +24,44 @@ rule token = parse
 | "<="     { LEQ }
 | ">"      { GT }
 | ">="     { GEQ }
-| "is"     { ASSIGN }
 | "="      { EQ }
+| "!="     { NEQ }
+| "is"     { ASSIGN }
+
+(* Logical Operators *)
 | "not"    { NOT }
 | "and"    { AND }
 | "or"     { OR }
+
+(* Control flow *)
 | "if"     { IF }
 | "else"   { ELSE }
-| "elseif" { ELIF }
+(*| "elseif" { ELIF }*)
 | "repeatfor" { FOR }
 | "repeatwhile" { WHILE }
-| "endwith" { ENDWITH }
+(*| "endwith" { ENDWITH }*)
 | "returns" { RETURN }
-| "number"  { NUMBER }
+
+(* Primitives--booleans, chars, strings, numbers *)
 | "tof"     { BOOL }
 | "true"    { TRUE }
 | "false"   { FALSE}
+| "number"  { NUMBER }
 | "words"   { STRING }
-| "letter"  { CHAR }
+| "letter"  { CHAR } (*
 | "list"    { LIST }
 | "null"    { NULL }
 | "subtype" { SUBTYPE }
-| "Plot"    { MAIN }
+| "Plot"    { MAIN }*)
 | "Chapter" { FUNCTION }
-| "Character" { CLASS }
-| "Action" { METHOD }
-| "trait" { IVAR }
-| "new" { NEW }
-| "say" { SAY }
-| ['-'']?['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+(*| "Character" { CLASS } *)
+(*| "Action" { METHOD } *)
+(*| "trait" { IVAR }*)
+(*| "new" { NEW }*)
+(*| "say" { SAY }*)
 | eof { EOF }
+| ['-']?['0'-'9']+ as lxm { LIT_INT(int_of_string lxm) }
+| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse

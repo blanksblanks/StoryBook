@@ -1,12 +1,18 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD APOST
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD
+/*token APOST*/
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
-%token EQ NOT AND OR LT LEQ GT GEQ
-%token RETURNS ENDWIDTH IF ELSE ELIF FOR WHILE
-%token NUMBER BOOL TRUE FALSE STRING CHAR LIST NULL
-%token SUBTYPE MAIN FUNCTION CLASS METHOD IVAR NEW SAY
-%token <int> LITERAL
+token EQ NOT AND OR NEQ LT LEQ GT GEQ
+/*%token ENDWIDTH ELIF*/
+%token RETURNS IF ELSE FOR WHILE 
+/*%token LIST NULL */
+%token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
+/*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
+%token <int> LIT_INT
+%token <bool> LIT_BOOL
+%token <string> LIT_STRING
+%token <char> LIT_CHAR
 %token <string> ID
 %token EOF
 
@@ -15,13 +21,13 @@
 %right ASSIGN
 %left OR
 %left AND
-%left EQ
+%left EQ NEQ
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
-%right NEW
+/* %right NEW */
 %right NOT
-%left COMMA APOST
+/* %left COMMA APOST */
 
 %start program
 %type <Ast.program> program
@@ -37,34 +43,40 @@ decls:
  | decls fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-   ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { fname = $1;
-	 formals = $3;
-	 locals = List.rev $6;
-	 body = List.rev $7 } }
+   FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
+     { { fname = $2;
+	 formals = $4;
+	 locals = List.rev $9;
+	 body = List.rev $10 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-    ID                   { [$1] }
-  | formal_list COMMA ID { $3 :: $1 }
+    type_label ID                   { [($1, $2)] } /* tuple (type, id) */
+  | formal_list SEMI type_label ID { ($3, $4) :: $1 } /* params are separated by ';' */
 
+type_label:
+   NUMBER  { Int }
+ | BOOL    { Bool }
+ | STRING  { String }
+ | CHAR    { Char }
+ 
 vdecl_list:
     /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
-
+ 
 vdecl:
-   INT ID SEMI { $2 }
+   type_label ID PERIOD { ($1, $2) } /* tuple (type, id) */
 
 stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
-    expr SEMI { Expr($1) }
-  | RETURN expr SEMI { Return($2) }
+    expr PERIOD { Expr($1) }
+  | RETURNS expr SEMI { Return($2) }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -77,21 +89,28 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LITERAL          {0}
+    LIT_INT          {0}
+  | LIT_BOOL         {0}
+  | LIT_STRING       {0}
+  | LIT_CHAR         {0}
   | ID               {0}
   | expr PLUS   expr {0}
   | expr MINUS  expr {0}
   | expr TIMES  expr {0}
   | expr DIVIDE expr {0}
+  | expr MOD    expr {0}
   | expr EQ     expr {0}
+  | expr NEQ    expr {0}
   | expr LT     expr {0}
   | expr LEQ    expr {0}
   | expr GT     expr {0}
   | expr GEQ    expr {0}
-  | expr MOD    expr {0}
+  | expr OR     expr {0}
+  | expr AND    expr {0}
+  | NOT expr {0}
   | ID ASSIGN expr   {0}
+  | ID LPAREN actuals_opt RPAREN {0}
   | LPAREN expr RPAREN {0}
-  |
 
 actuals_opt:
     /* nothing */ { [] }
@@ -99,4 +118,4 @@ actuals_opt:
 
 actuals_list:
     expr                    { [$1] }
-  | actuals_list COMMA expr { $3 :: $1 }
+  | actuals_list SEMI expr { $3 :: $1 }
