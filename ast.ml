@@ -30,7 +30,7 @@ Block of stmt list (* { ... } *)
 | While of expr * stmt (* while (i<10) { i = i + 1 } *)
 
 type var_decl =
- variable of var_type * string (* (type, name) tuple *)
+ Variable of var_type * string (* (type, name) tuple *)
 
 type func_decl = {
 fname : string; (* Name of the function *)

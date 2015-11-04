@@ -8,7 +8,7 @@ token EQ NOT AND OR NEQ LT LEQ GT GEQ
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
-%token CLASS METHOD IVAR
+%token CLASS METHOD IVAR NEW
 %token <int> LIT_INT
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
@@ -68,7 +68,8 @@ vdecl_list:
   | vdecl_list vdecl { $2 :: $1 }
  
 vdecl:
-   type_label ID PERIOD { ($1, $2) } /* tuple (type, id) */
+   type_label ID PERIOD{ ($1, $2) } /* tuple (type, id) */
+   | type_label ID ASSIGN expr PERIOD {0} 
 
 classdecl:
   CLASS ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
@@ -102,7 +103,6 @@ stmt:
   | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-
 expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
@@ -131,8 +131,10 @@ expr:
   | ID APOST ID      {0} /* member access */
   | ID APOST ID ASSIGN expr {0} /* member assign */
   | ID LPAREN actuals_opt RPAREN {0} /* function call */
-  | ID COMMA ID LPAREN acuals_opt RPAREN {0} /* action call */
+  | ID COMMA ID LPAREN actuals_opt RPAREN {0} /* action call */
+  | NEW ID LPAREN actuals_opt RPAREN {0} /* object declaration */
   | LPAREN expr RPAREN {0}
+
 
 actuals_opt:
     /* nothing */ { [] }

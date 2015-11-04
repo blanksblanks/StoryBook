@@ -58,7 +58,7 @@ rule token = parse
 | "Character" { CLASS }
 | "Action" { METHOD }
 | "trait" { IVAR }
-(*| "new" { NEW }*)
+| "new" { NEW }
 (*| "say" { SAY }*)
 | eof { EOF }
 | ['-']?['0'-'9']+ as lxm { LIT_INT(int_of_string lxm) }
