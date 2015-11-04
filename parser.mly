@@ -127,10 +127,11 @@ expr:
   | expr OR     expr {0}
   | expr AND    expr {0}
   | NOT expr {0}
-  | ID ASSIGN expr   {0}
+  | ID ASSIGN expr   {0} /* variable assign */
   | ID APOST ID      {0} /* member access */
   | ID APOST ID ASSIGN expr {0} /* member assign */
   | ID LPAREN actuals_opt RPAREN {0} /* function call */
+  | ID COMMA ID LPAREN acuals_opt RPAREN {0} /* action call */
   | LPAREN expr RPAREN {0}
 
 actuals_opt:
