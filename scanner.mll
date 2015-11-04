@@ -13,7 +13,7 @@ rule token = parse
 | ';'      { SEMI }
 | ','      { COMMA }
 | '.'      { PERIOD }
-(*| "'s"     { APOST } *)
+|"'s"      { APOST }
 
 (* Binary Operators *)
 | '+'      { PLUS }
@@ -55,9 +55,9 @@ rule token = parse
 | "subtype" { SUBTYPE }
 | "Plot"    { MAIN }*)
 | "Chapter" { FUNCTION }
-(*| "Character" { CLASS } *)
-(*| "Action" { METHOD } *)
-(*| "trait" { IVAR }*)
+| "Character" { CLASS }
+| "Action" { METHOD }
+| "trait" { IVAR }
 (*| "new" { NEW }*)
 (*| "say" { SAY }*)
 | eof { EOF }

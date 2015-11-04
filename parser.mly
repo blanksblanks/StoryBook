@@ -1,7 +1,6 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD
-/*token APOST*/
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD APOST
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
 token EQ NOT AND OR NEQ LT LEQ GT GEQ
 /*%token ENDWIDTH ELIF*/
@@ -9,6 +8,7 @@ token EQ NOT AND OR NEQ LT LEQ GT GEQ
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
+%token CLASS METHOD IVAR
 %token <int> LIT_INT
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
@@ -27,7 +27,7 @@ token EQ NOT AND OR NEQ LT LEQ GT GEQ
 %left TIMES DIVIDE MOD
 /* %right NEW */
 %right NOT
-/* %left COMMA APOST */
+ %left COMMA APOST /* function call and member access */
 
 %start program
 %type <Ast.program> program
@@ -38,8 +38,8 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [], [] }
- | decls vdecl { ($2 :: fst $1), snd $1 }
+   /* nothing */ { [], [], [] }
+ | decls classdecl { ($2 :: fst $1), snd $1 } /* change to class decl */
  | decls fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
@@ -69,6 +69,25 @@ vdecl_list:
  
 vdecl:
    type_label ID PERIOD { ($1, $2) } /* tuple (type, id) */
+
+classdecl:
+  CLASS ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
+  { { cname: $2;
+      ivars : $4;
+      actions: $8; }}
+
+action_list:
+  /* nothing */ {[]}
+  | action_list actiondecl {$2::$1}
+
+actiondecl:
+  METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
+  {{
+     action_name: $2;
+     formals: $4;
+     locals: List.rev $9;
+     body: List.rev $10;
+  }}
 
 stmt_list:
     /* nothing */  { [] }
@@ -109,7 +128,9 @@ expr:
   | expr AND    expr {0}
   | NOT expr {0}
   | ID ASSIGN expr   {0}
-  | ID LPAREN actuals_opt RPAREN {0}
+  | ID APOST ID      {0} /* member access */
+  | ID APOST ID ASSIGN expr {0} /* member assign */
+  | ID LPAREN actuals_opt RPAREN {0} /* function call */
   | LPAREN expr RPAREN {0}
 
 actuals_opt:

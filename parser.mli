@@ -8,6 +8,7 @@ type token =
   | RBRACK
   | COMMA
   | PERIOD
+  | APOST
   | PLUS
   | MINUS
   | TIMES
@@ -36,6 +37,9 @@ type token =
   | STRING
   | CHAR
   | FUNCTION
+  | CLASS
+  | METHOD
+  | IVAR
   | LIT_INT of (int)
   | LIT_BOOL of (bool)
   | LIT_STRING of (string)
