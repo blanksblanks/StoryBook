@@ -1,3 +1,11 @@
+scanner.ml
+scanner.output
 parser.ml
 parser.mli
 parser.output
+
+*.swp
+*.cmo
+*.cmi
+*.out
+*.diff
