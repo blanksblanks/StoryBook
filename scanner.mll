@@ -64,8 +64,8 @@ rule token = parse
 | ['-']?['0'-'9']+ as lxm { LIT_INT(int_of_string lxm) }
 (* String regex modified from:
  realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html *)
-| '"'( ('\'('/'|'\\'| 'b' | 'f' | 'n' | 'r' | 't'))|([^'"']) )*'"' as lxm { LIT_STRING(lxm) }
-| '\''[_] '\'' as lxm {LIT_CHAR(lxm) }
+| '"'( ('\\'('/'|'\\'| 'b' | 'f' | 'n' | 'r' | 't'))|([^'"']) )*'"' as lxm { LIT_STRING(lxm) }
+| ['\'']_['\''] as lxm {LIT_CHAR(lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
