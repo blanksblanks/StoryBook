@@ -33,7 +33,7 @@ scanner.ml : scanner.mll
 	ocamllex scanner.mll
 
 parser.ml parser.mli : parser.mly
-	$(YACC) parser.mly
+	$(YACC) -v parser.mly
 
 ast.cmo : ast.ml
 	ocamlc -c ast.ml
@@ -44,15 +44,14 @@ parser.cmo : parser.ml
 scanner.cmo : scanner.ml
 	ocamlc -c scanner.ml
 
-ast.cmi : ast.mli
-	ocamlc -c ast.mli
+ast.cmi : ast.ml
+	ocamlc -c ast.ml
 
 parser.cmi : parser.mli
 	ocamlc -c parser.mli
 
-scanner.cmi : scanner.mli
-	ocamlc -c scanner.mli
-
+scanner.cmi : scanner.ml
+	ocamlc -c scanner.ml
 
 .PHONY : clean
 clean :

@@ -8,7 +8,7 @@
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
-%token CLASS METHOD IVAR NEW
+%token CHARACTER METHOD IVAR NEW
 %token <int> LIT_INT
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
@@ -62,17 +62,20 @@ type_label:
  | BOOL    { Boolean }
  | STRING  { String }
  | CHAR    { Char }
+
  
 vdecl_list:
     /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
  
 vdecl:
-   type_label ID PERIOD { U_Var($1, $2) } /* tuple (type, id) */
-   | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} 
+   type_label ID PERIOD { U_Var($1, $2) } /* uninitialized variable */
+   |CHARACTER ID ID PERIOD {U_Var(Object($2), $3)} /* uninitialized character variable */
+   | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized primitive variable */
+   | CHARACTER ID ID ASSIGN expr PERIOD {I_Var(Object($2), $3, $5)}
 
 classdecl:
-  CLASS ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
+  CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
       ivars = $4;
       actions = $8; 

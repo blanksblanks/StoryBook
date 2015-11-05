@@ -55,7 +55,7 @@ rule token = parse
 | "subtype" { SUBTYPE }
 | "Plot"    { MAIN }*)
 | "Chapter" { FUNCTION }
-| "Character" { CLASS }
+| "Character" { CHARACTER }
 | "Action" { METHOD }
 | "trait" { IVAR }
 | "new" { NEW }
@@ -65,7 +65,7 @@ rule token = parse
 (* String regex modified from:
  realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html *)
 | '"'( ('\\'('/'|'\\'| 'b' | 'f' | 'n' | 'r' | 't'))|([^'"']) )*'"' as lxm { LIT_STRING(lxm) }
-| [['\''](_ as l)['\'']] {LIT_CHAR(l) }
+| ['\''] (_ as l) ['\''] {LIT_CHAR(l) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 

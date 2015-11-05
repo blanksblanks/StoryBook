@@ -3,6 +3,7 @@ type var_type =
   | Boolean
   | String
   | Char
+  | Object of string
  (* | Character*) (* object *)
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
