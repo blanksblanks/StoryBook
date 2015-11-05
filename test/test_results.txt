@@ -1,2 +1,9 @@
-tree1.txt
-tree_add.txt
+Accept Tests:
+tree_1_accept.txt
+SUCCESS: tree_1_accept.txt
+tree_add_accept.txt
+SUCCESS: tree_add_accept.txt
+****************************
+Reject Tests:
+tree_1_reject.txt
+FAILURE: tree_1_reject.txt
