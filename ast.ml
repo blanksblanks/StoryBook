@@ -39,17 +39,17 @@ locals : var_decl list; (* Local variables as (type, name) tuples *)
 body : stmt list; 
 }
 
-type class_decl = {
- cname : string; (*name of the class *)
- ivars: var_decl list; (*instance vars as (type, name) tuples *)
- actions: action list; (*lists of actions (methods) *)
-}
-
 type action = {
   action_name : string;
   formals: var_decl list;
   locals: var_decl list;
   body : stmt list;
+}
+
+type class_decl = {
+ cname : string; (*name of the class *)
+ ivars: var_decl list; (*instance vars as (type, name) tuples *)
+ actions: action list; (*lists of actions (methods) *)
 }
 
 type program = class_decl list * func_decl list (* classes, funcs. no global vars *)
