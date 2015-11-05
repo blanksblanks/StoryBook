@@ -1,0 +1,20 @@
+ACCEPT
+[program:
+  [decls:
+    [decls:]
+    [fdecl:
+      FUNCTION
+      ID
+      LPAREN
+      [formals_opt:]
+      RPAREN
+      RETURNS
+      [type_label: NUMBER]
+      LBRACE
+      [vdecl_list:]
+      [stmt_list:]
+      RBRACE
+    ]
+  ]
+  EOF
+]
