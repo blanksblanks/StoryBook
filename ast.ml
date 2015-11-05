@@ -3,9 +3,9 @@ type var_type =
   | Boolean
   | String
   | Char
-  | Character (* object *)
+ (* | Character*) (* object *)
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq|
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
 OR | AND | NOT
 
 type expr = (* Expressions *)
@@ -19,6 +19,7 @@ type expr = (* Expressions *)
 | Access of string * string (* foo's name *)
 | Trait_Assign of string * string * expr (* object name, instance var name, expr *)
 | Binop of expr * op * expr (* a + b *)
+| Unop of op * expr
 | FCall of string * expr list (* foo(1, 25 *)
 | ACall of string * string * expr list (* object id, action name, params *)
 type stmt = (* Statements *)
@@ -29,26 +30,31 @@ Block of stmt list (* { ... } *)
 | For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 | While of expr * stmt (* while (i<10) { i = i + 1 } *)
 
+(*unintialized var *)
+type param_decl = 
+  Parameter of var_type * string
+
 type var_decl =
- Variable of var_type * string (* (type, name) tuple *)
+  U_Var of var_type * string
+  |I_Var of var_type * string * expr
 
 type func_decl = {
 fname : string; (* Name of the function *)
-formals : var_decl list; (* Formal argument (type,name) tuples *)
+formals : param_decl list; (* Formal argument (type,name) tuples *)
 locals : var_decl list; (* Local variables as (type, name) tuples *)
 body : stmt list; 
 }
 
 type action = {
   action_name : string;
-  formals: var_decl list;
+  formals: param_decl list;
   locals: var_decl list;
   body : stmt list;
 }
 
 type class_decl = {
  cname : string; (*name of the class *)
- ivars: var_decl list; (*instance vars as (type, name) tuples *)
+ ivars: param_decl list; (*instance vars as (type, name) tuples *)
  actions: action list; (*lists of actions (methods) *)
 }
 

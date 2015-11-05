@@ -2,7 +2,7 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD APOST
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
-token EQ NOT AND OR NEQ LT LEQ GT GEQ
+%token EQ NOT AND OR NEQ LT LEQ GT GEQ
 /*%token ENDWIDTH ELIF*/
 %token RETURNS IF ELSE FOR WHILE 
 /*%token LIST NULL */
@@ -38,28 +38,28 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [], [], [] }
+   /* nothing */ { [], [] }
  | decls classdecl { ($2 :: fst $1), snd $1 } /* change to class decl */
  | decls fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
    FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
      { { fname = $2;
-	 formals = $4;
-	 locals = List.rev $9;
-	 body = List.rev $10 } }
+	       formals = $4;
+	       locals = List.rev $9;
+	       body = List.rev $10 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-    type_label ID                   { [($1, $2)] } /* tuple (type, id) */
-  | formal_list SEMI type_label ID { ($3, $4) :: $1 } /* params are separated by ';' */
+    type_label ID                   { [Parameter($1, $2)] } /* tuple (type, id) */
+  | formal_list SEMI type_label ID { Parameter($3, $4) :: $1 } /* params are separated by ';' */
 
 type_label:
-   NUMBER  { Int }
- | BOOL    { Bool }
+   NUMBER  { Number }
+ | BOOL    { Boolean }
  | STRING  { String }
  | CHAR    { Char }
  
@@ -68,14 +68,15 @@ vdecl_list:
   | vdecl_list vdecl { $2 :: $1 }
  
 vdecl:
-   type_label ID PERIOD{ ($1, $2) } /* tuple (type, id) */
-   | type_label ID ASSIGN expr PERIOD {0} 
+   type_label ID PERIOD { U_Var($1, $2) } /* tuple (type, id) */
+   | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} 
 
 classdecl:
   CLASS ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
-  { { cname: $2;
-      ivars : $4;
-      actions: $8; }}
+  {{  cname = $2;
+      ivars = $4;
+      actions = $8; 
+  }}
 
 action_list:
   /* nothing */ {[]}
@@ -84,10 +85,10 @@ action_list:
 actiondecl:
   METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
   {{
-     action_name: $2;
-     formals: $4;
-     locals: List.rev $9;
-     body: List.rev $10;
+     action_name = $2;
+     formals = $4;
+     locals = List.rev $9;
+     body = List.rev $10;
   }}
 
 stmt_list:
@@ -108,32 +109,32 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LIT_INT          {0}
-  | LIT_BOOL         {0}
-  | LIT_STRING       {0}
-  | LIT_CHAR         {0}
-  | ID               {0}
-  | expr PLUS   expr {0}
-  | expr MINUS  expr {0}
-  | expr TIMES  expr {0}
-  | expr DIVIDE expr {0}
-  | expr MOD    expr {0}
-  | expr EQ     expr {0}
-  | expr NEQ    expr {0}
-  | expr LT     expr {0}
-  | expr LEQ    expr {0}
-  | expr GT     expr {0}
-  | expr GEQ    expr {0}
-  | expr OR     expr {0}
-  | expr AND    expr {0}
-  | NOT expr {0}
-  | ID ASSIGN expr   {0} /* variable assign */
-  | ID APOST ID      {0} /* member access */
-  | ID APOST ID ASSIGN expr {0} /* member assign */
-  | ID LPAREN actuals_opt RPAREN {0} /* function call */
-  | ID COMMA ID LPAREN actuals_opt RPAREN {0} /* action call */
-  | NEW ID LPAREN actuals_opt RPAREN {0} /* object declaration */
-  | LPAREN expr RPAREN {0}
+    LIT_INT          {Lit_int($1)}
+  | LIT_BOOL         {Lit_bool($1)}
+  | LIT_STRING       {Lit_string($1)}
+  | LIT_CHAR         {Lit_char($1)}
+  | ID               {Id($1)}
+  | expr PLUS   expr {Binop($1, Add, $3)}
+  | expr MINUS  expr {Binop($1, Sub, $3)}
+  | expr TIMES  expr {Binop($1, Mult, $3)}
+  | expr DIVIDE expr {Binop($1, Div, $3)}
+  | expr MOD    expr {Binop($1, Mod, $3)}
+  | expr EQ     expr {Binop($1, Equal, $3)}
+  | expr NEQ    expr {Binop($1, Neq, $3)}
+  | expr LT     expr {Binop($1, Less, $3)}
+  | expr LEQ    expr {Binop($1, Leq, $3)}
+  | expr GT     expr {Binop($1, Greater, $3)}
+  | expr GEQ    expr {Binop($1, Geq, $3)}
+  | expr OR     expr {Binop($1, OR, $3)}
+  | expr AND    expr {Binop($1, AND, $3)}
+  | NOT expr {Unop(NOT, $2)}
+  | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
+  | ID APOST ID      {Access($1, $3)} /* member access */
+  | ID APOST ID ASSIGN expr {Trait_Assign($1, $3, $5)} /* member assign */
+  | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
+  | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
+ /* | NEW ID LPAREN actuals_opt RPAREN {0} object declaration  */
+  | LPAREN expr RPAREN {$2}
 
 
 actuals_opt:
