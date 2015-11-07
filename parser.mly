@@ -43,11 +43,10 @@ decls:
  | decls fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-   FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
+   FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
      { { fname = $2;
 	       formals = $4;
-	       locals = List.rev $9;
-	       body = List.rev $10 } }
+	       body = List.rev $9 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -86,12 +85,11 @@ action_list:
   | action_list actiondecl {$2::$1}
 
 actiondecl:
-  METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE vdecl_list stmt_list RBRACE
+  METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
   {{
      action_name = $2;
      formals = $4;
-     locals = List.rev $9;
-     body = List.rev $10;
+     body = List.rev $9;
   }}
 
 stmt_list:
@@ -100,6 +98,7 @@ stmt_list:
 
 stmt:
     expr PERIOD { Expr($1) }
+  | vdecl {Var_Decl($1)}
   | RETURNS expr SEMI { Return($2) }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }

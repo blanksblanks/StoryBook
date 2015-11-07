@@ -1,9 +1,19 @@
 Accept Tests:
 tree_1_accept.txt
 SUCCESS: tree_1_accept.txt
+tree_FuncStmtVar_accept.txt
+SUCCESS: tree_FuncStmtVar_accept.txt
+tree_addLits_accept.txt
+SUCCESS: tree_addLits_accept.txt
 tree_add_accept.txt
 SUCCESS: tree_add_accept.txt
 ****************************
 Reject Tests:
-tree_1_reject.txt
-FAILURE: tree_1_reject.txt
+tree_addGarbage_reject.txt
+SUCCESS: tree_addGarbage_reject.txt
+tree_addOne_reject.txt
+SUCCESS: tree_addOne_reject.txt
+tree_addSemi_reject.txt
+SUCCESS: tree_addSemi_reject.txt
+tree_addTwoOps_reject.txt
+SUCCESS: tree_addTwoOps_reject.txt

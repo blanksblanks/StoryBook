@@ -6,6 +6,10 @@ type var_type =
   | Object of string (* string is typename of object *)
  (* | Character*) (* object *)
 
+type param_decl = 
+  Parameter of var_type * string
+
+
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
 OR | AND | NOT
 
@@ -23,6 +27,11 @@ type expr = (* Expressions *)
 | Unop of op * expr
 | FCall of string * expr list (* foo(1, 25 *)
 | ACall of string * string * expr list (* object id, action name, params *)
+
+type var_decl = 
+  U_Var of var_type * string (* uninitialized *)
+  |I_Var of var_type * string * expr (*initialized *)
+
 type stmt = (* Statements *)
 Block of stmt list (* { ... } *)
 | Expr of expr (* foo = bar + 3; *)
@@ -30,26 +39,20 @@ Block of stmt list (* { ... } *)
 | If of expr * stmt * stmt (* if (foo == 42) {} else {} *)
 | For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 | While of expr * stmt (* while (i<10) { i = i + 1 } *)
+| Var_Decl of var_decl
 
-(*unintialized var *)
-type param_decl = 
-  Parameter of var_type * string
-
-type var_decl = 
-  U_Var of var_type * string (* uninitialized *)
-  |I_Var of var_type * string * expr (*initialized *)
 
 type func_decl = {
 fname : string; (* Name of the function *)
 formals : param_decl list; (* Formal argument (type,name) tuples *)
-locals : var_decl list; (* Local variables as (type, name) tuples *)
+(*locals : var_decl list; Local variables as (type, name) tuples *)
 body : stmt list; 
 }
 
 type action = {
   action_name : string;
   formals: param_decl list;
-  locals: var_decl list;
+ (* locals: var_decl list;*)
   body : stmt list;
 }
 
