@@ -57,7 +57,7 @@ rule token = parse
 | "Chapter" { FUNCTION }
 | "Character" { CHARACTER }
 | "Action" { METHOD }
-| "trait" { IVAR }
+| "trait" { TRAIT }
 | "new" { NEW }
 (*| "say" { SAY }*)
 | eof { EOF }

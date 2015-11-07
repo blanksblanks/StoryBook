@@ -3,7 +3,7 @@ type var_type =
   | Boolean
   | String
   | Char
-  | Object of string
+  | Object of string (* string is typename of object *)
  (* | Character*) (* object *)
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
@@ -35,9 +35,9 @@ Block of stmt list (* { ... } *)
 type param_decl = 
   Parameter of var_type * string
 
-type var_decl =
-  U_Var of var_type * string
-  |I_Var of var_type * string * expr
+type var_decl = 
+  U_Var of var_type * string (* uninitialized *)
+  |I_Var of var_type * string * expr (*initialized *)
 
 type func_decl = {
 fname : string; (* Name of the function *)
@@ -55,7 +55,7 @@ type action = {
 
 type class_decl = {
  cname : string; (*name of the class *)
- ivars: param_decl list; (*instance vars as (type, name) tuples *)
+ traits: param_decl list; (*instance vars as (type, name) tuples *)
  actions: action list; (*lists of actions (methods) *)
 }
 
