@@ -9,3 +9,6 @@ parser.output
 *.cmi
 *.out
 *.diff
+
+test/test_results.txt
+
