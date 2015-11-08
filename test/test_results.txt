@@ -5,8 +5,10 @@ tree_add_accept.txt
 SUCCESS: tree_add_accept.txt
 tree_emptyFunc_accept.txt
 SUCCESS: tree_emptyFunc_accept.txt
-tree_functStmtVar_accept.txt
-SUCCESS: tree_functStmtVar_accept.txt
+tree_funcStmtVar_accept.txt
+SUCCESS: tree_funcStmtVar_accept.txt
+tree_string_accept.txt
+SUCCESS: tree_string_accept.txt
 ****************************
 Reject Tests:
 tree_addGarbage_reject.txt
