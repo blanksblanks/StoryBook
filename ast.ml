@@ -50,7 +50,7 @@ return_type : var_type;
 body : stmt list; 
 }
 
-type action = {
+type action_decl = {
   action_name : string;
   formals: param_decl list;
   return_type : var_type;
@@ -61,7 +61,7 @@ type class_decl = {
  cname : string; (*name of the class *)
  formals: param_decl list;
  instance_vars : var_decl list; (*instance vars as (type, name) tuples *)
- actions: action list; (*lists of actions (methods) *)
+ actions: action_decl list; (*lists of actions (methods) *)
 }
 
 type program = class_decl list * func_decl list (* classes, funcs. no global vars *)
