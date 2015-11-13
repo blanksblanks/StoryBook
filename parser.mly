@@ -46,6 +46,7 @@ fdecl:
    FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
      { { fname = $2;
 	       formals = $4;
+         return_type = $7;
 	       body = List.rev $9 } }
 
 formals_opt:
@@ -93,6 +94,7 @@ adecl:
   {{
      action_name = $2;
      formals = $4;
+     return_type = $7;
      body = List.rev $9;
   }}
 

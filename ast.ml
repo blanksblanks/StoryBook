@@ -46,13 +46,14 @@ type func_decl = {
 fname : string; (* Name of the function *)
 formals : param_decl list; (* Formal argument (type,name) tuples *)
 (*locals : var_decl list; Local variables as (type, name) tuples *)
+return_type : var_type;
 body : stmt list; 
 }
 
 type action = {
   action_name : string;
   formals: param_decl list;
- (* locals: var_decl list;*)
+  return_type : var_type;
   body : stmt list;
 }
 

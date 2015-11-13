@@ -5,13 +5,6 @@ type var_type =
   | Char
   | Object of class_decl (* what the heck is this *)
 
- type class_decl = {
-   cname : string; (*name of the class *)
-   check_formals:  check_variable_decl list;
-   check_instance_vars: check_variable_decl list; (*instance vars as (type, name) tuples *)
-   actions: check_action list; (*lists of actions (methods) *)
-}
-
 type check_variable_decl =
   U_Var of var_type * string (* uninitialized *)
   |I_Var of var_type * string * check_expr
@@ -41,4 +34,25 @@ Block of stmt list (* { ... } *)
 | For of expression * expression * expression * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 | While of expression * stmt (* while (i<10) { i = i + 1 } *)
 | Var_Decl of var_decl
+
+type func_decl = {
+  fname : string; (* Name of the function *)
+  check_formals : check_variable_decl list; (* Formal argument (type,name) tuples *)
+  return_type: var_type;
+  body : stmt list; 
+}
+
+type action = {
+  action_name : string;
+  check_formals: check_variable_decl list;
+  return_type : var_type;
+  body : stmt list;
+}
+
+ type class_decl = {
+   cname : string; (*name of the class *)
+   check_formals:  check_variable_decl list;
+   check_instance_vars: check_variable_decl list; (*instance vars as (type, name) tuples *)
+   actions: check_action list; (*lists of actions (methods) *)
+}
 
