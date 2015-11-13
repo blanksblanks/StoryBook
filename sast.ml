@@ -1,23 +1,21 @@
 open Ast
 
-type check_variable_decl =
-  | U_Var of var_type * string (* uninitialized *)
-  | I_Var of var_type * string * expression
-
-and class_decl = {
-   cname : string; (*name of the class *)
-   cformals:  check_variable_decl list;
-   cinstvars: check_variable_decl list; (*instance vars as (type, name) tuples *)
-   cactions: action_decl list; (*lists of actions (methods) *)
-}
-
-and var_type =
+type var_type =
   | Number
   | Boolean
   | String
   | Char
   | Object of class_decl (* what the heck is this *)
 
+and var_decl =
+  | U_Var of var_type * string (* uninitialized *)
+  | I_Var of var_type * string * expression
+
+(* Example: "Number x is 5" would have var_decl_checked of:
+  ((Number, x), Number). First number is x's type, second Number is
+  5's type *)
+and var_decl_checked =
+  var_decl * var_type (* second var_type is type of expr for I_Var above *)
 
 and expr_detail = (* Expressions *)
   Lit_int of int (* 42 *)
@@ -25,8 +23,8 @@ and expr_detail = (* Expressions *)
 | Lit_string of string (* "foo_quoted" *)
 | Lit_char of char (* 'c' *)
 | Noexpr (* for (;;) *)
-| Id of check_variable_decl (* foo_unquoted *)
-| Assign of check_variable_decl * expression (* foo = 42 *)
+| Id of var_decl_checked (* foo_unquoted *)
+| Assign of var_decl_checked * expression (* foo = 42 *)
 | Access of string * string (* foo's name *)
 | Trait_Assign of string * string * expression (* object name, instance var name, expression *)
 | Binop of expression * op * expression (* a + b *)
@@ -47,16 +45,23 @@ Block of stmt list (* { ... } *)
 
 and func_decl = {
   fname : string; (* Name of the function *)
-  fformals : check_variable_decl list; (* Formal argument (type,name) tuples *)
+  fformals : var_decl_checked list; (* Formal argument (type,name) tuples *)
   freturn: var_type;
   fbody : stmt list; 
 }
 
 and action_decl = {
   aname : string;
-  aformals: check_variable_decl list;
+  aformals: var_decl_checked list;
   areturn : var_type;
   abody : stmt list;
+}
+
+and class_decl = {
+   cname : string; (*name of the class *)
+   cformals:  var_decl_checked list;
+   cinstvars: var_decl_checked list; (*instance vars as (type, name) tuples *)
+   cactions: action_decl list; (*lists of actions (methods) *)
 }
 
 
