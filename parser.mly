@@ -61,6 +61,7 @@ type_label:
  | BOOL    { Boolean }
  | STRING  { String }
  | CHAR    { Char }
+ | CHARACTER ID    { Object($2) }
 
 
 vdecl_list:
@@ -70,10 +71,10 @@ vdecl_list:
 vdecl:
   type_label ID PERIOD { U_Var($1, $2) } /* uninitialized variable of primitive type */
 | type_label TRAIT ID PERIOD { U_Var($1, $3) } /* uninitialized trait of primitive type */
-| CHARACTER ID ID PERIOD {U_Var(Object($2), $3)} /* uninitialized variable of character type */
+/*| ID ID PERIOD {U_Var(Object($1), $2)}  uninitialized variable of character type */
 | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized variable of primitive type */
 | type_label TRAIT ID ASSIGN expr PERIOD { I_Var($1, $3, $5) } /* initialized trait */
-| CHARACTER ID ID ASSIGN expr PERIOD {I_Var(Object($2), $3, $5)} /* initialized object */
+/*| ID ID ASSIGN expr PERIOD {I_Var(Object($1), $2, $4)}  initialized object */
 
 cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
