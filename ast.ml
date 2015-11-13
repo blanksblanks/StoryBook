@@ -43,25 +43,24 @@ Block of stmt list (* { ... } *)
 
 
 type func_decl = {
-fname : string; (* Name of the function *)
-formals : param_decl list; (* Formal argument (type,name) tuples *)
-(*locals : var_decl list; Local variables as (type, name) tuples *)
-return_type : var_type;
-body : stmt list; 
+  fname : string; (* Name of the function *)
+  fformals : param_decl list; (* Formal argument (type,name) tuples *)
+  freturn : var_type;
+  fbody : stmt list; 
 }
 
 type action_decl = {
-  action_name : string;
-  formals: param_decl list;
-  return_type : var_type;
-  body : stmt list;
+  aname : string;
+  aformals: param_decl list;
+  areturn : var_type;
+  abody : stmt list;
 }
 
 type class_decl = {
- cname : string; (*name of the class *)
- formals: param_decl list;
- instance_vars : var_decl list; (*instance vars as (type, name) tuples *)
- actions: action_decl list; (*lists of actions (methods) *)
+  cname : string; (*name of the class *)
+  cformals: param_decl list;
+  cinstvars : var_decl list; (*instance vars as (type, name) tuples *)
+  cactions: action_decl list; (*lists of actions (methods) *)
 }
 
 type program = class_decl list * func_decl list (* classes, funcs. no global vars *)

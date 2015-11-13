@@ -1,14 +1,14 @@
 open Ast
 
 type check_variable_decl =
-  U_Var of var_type * string (* uninitialized *)
-  |I_Var of var_type * string * expression
+  | U_Var of var_type * string (* uninitialized *)
+  | I_Var of var_type * string * expression
 
 and class_decl = {
    cname : string; (*name of the class *)
-   check_formals:  check_variable_decl list;
-   check_instance_vars: check_variable_decl list; (*instance vars as (type, name) tuples *)
-   actions: action_decl list; (*lists of actions (methods) *)
+   cformals:  check_variable_decl list;
+   cinstvars: check_variable_decl list; (*instance vars as (type, name) tuples *)
+   cactions: action_decl list; (*lists of actions (methods) *)
 }
 
 and var_type =
@@ -47,16 +47,16 @@ Block of stmt list (* { ... } *)
 
 and func_decl = {
   fname : string; (* Name of the function *)
-  check_formals : check_variable_decl list; (* Formal argument (type,name) tuples *)
-  return_type: var_type;
-  body : stmt list; 
+  fformals : check_variable_decl list; (* Formal argument (type,name) tuples *)
+  freturn: var_type;
+  fbody : stmt list; 
 }
 
 and action_decl = {
-  action_name : string;
-  check_formals: check_variable_decl list;
-  return_type : var_type;
-  body : stmt list;
+  aname : string;
+  aformals: check_variable_decl list;
+  areturn : var_type;
+  abody : stmt list;
 }
 
 

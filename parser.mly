@@ -45,9 +45,9 @@ decls:
 fdecl:
    FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
      { { fname = $2;
-	       formals = $4;
-         return_type = $7;
-	       body = List.rev $9 } }
+	       fformals = $4;
+         freturn = $7;
+	       fbody = List.rev $9 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -80,9 +80,9 @@ vdecl:
 cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
-      formals = $4;
-      instance_vars = $7;
-      actions = $8;
+      cformals = $4;
+      cinstvars = $7;
+      cactions = $8;
   }}  /* instance_vars = instance variables */
 
 action_list:
@@ -92,10 +92,10 @@ action_list:
 adecl:
   METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
   {{
-     action_name = $2;
-     formals = $4;
-     return_type = $7;
-     body = List.rev $9;
+     aname = $2;
+     aformals = $4;
+     areturn = $7;
+     abody = List.rev $9;
   }}
 
 stmt_list:
