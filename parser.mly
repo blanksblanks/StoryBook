@@ -79,9 +79,10 @@ vdecl:
 cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
-      traits = $4;
+      formals = $4;
+      instance_vars = $7;
       actions = $8;
-  }}  /* traits = instance variables */
+  }}  /* instance_vars = instance variables */
 
 action_list:
   /* nothing */ {[]}

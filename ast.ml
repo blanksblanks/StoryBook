@@ -58,7 +58,8 @@ type action = {
 
 type class_decl = {
  cname : string; (*name of the class *)
- traits: param_decl list; (*instance vars as (type, name) tuples *)
+ formals: param_decl list;
+ instance_vars : var_decl list; (*instance vars as (type, name) tuples *)
  actions: action list; (*lists of actions (methods) *)
 }
 
