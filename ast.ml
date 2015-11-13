@@ -56,10 +56,10 @@ type action = {
   body : stmt list;
 }
 
-type object_decl = {
+type class_decl = {
  cname : string; (*name of the class *)
  traits: param_decl list; (*instance vars as (type, name) tuples *)
  actions: action list; (*lists of actions (methods) *)
 }
 
-type program = object_decl list * func_decl list (* classes, funcs. no global vars *)
+type program = class_decl list * func_decl list (* classes, funcs. no global vars *)
