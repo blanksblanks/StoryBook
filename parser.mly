@@ -39,7 +39,7 @@ program:
 
 decls:
    /* nothing */ { [], [] }
- | decls classdecl { ($2 :: fst $1), snd $1 } /* change to class decl */
+ | decls cdecl { ($2 :: fst $1), snd $1 } /* change to class decl */
  | decls fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
@@ -73,7 +73,7 @@ vdecl:
    | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized primitive variable */
    | CHARACTER ID ID ASSIGN expr PERIOD {I_Var(Object($2), $3, $5)} /*initialized object */
 
-classdecl:
+cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
       traits = $4;
@@ -82,9 +82,9 @@ classdecl:
 
 action_list:
   /* nothing */ {[]}
-  | action_list actiondecl {$2::$1}
+  | action_list adecl {$2::$1}
 
-actiondecl:
+adecl:
   METHOD ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
   {{
      action_name = $2;
