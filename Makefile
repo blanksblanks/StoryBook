@@ -27,13 +27,18 @@ TARFILES = Makefile scanner.mll parser.mly \
 	$(TESTS:%=tests/test-%.mc) \
 	$(TESTS:%=tests/test-%.out)
 
-all: scanner.ml parser.ml sast.cmo ast.cmo parser.cmo scanner.cmo ast.cmi parser.cmi scanner.cmi
+all: scanner.ml parser.ml \
+	sast.cmo ast.cmo parser.cmo semantic_analyzer.cmo scanner.cmo \
+	sast.cmi ast.cmi parser.cmi semantic_analyzer.cmo scanner.cmi
 
 scanner.ml : scanner.mll
 	ocamllex scanner.mll
 
 parser.ml parser.mli : parser.mly
 	$(YACC) -v parser.mly
+
+semantic_analyzer.cmo : semantic_analyzer.ml
+	ocamlc -o semantic_analyzer.ml
 
 sast.cmo : sast.ml
 	ocamlc -c sast.ml
@@ -52,6 +57,9 @@ sast: ast
 
 ast.cmi : ast.ml
 	ocamlc -c ast.ml
+
+semantic_analyzer.cmi : semantic_analyzer.mli
+	ocamlc -c semantic_analyzer.mli
 
 parser.cmi : parser.mli
 	ocamlc -c parser.mli
