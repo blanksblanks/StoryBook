@@ -5,6 +5,7 @@ parser.mli
 parser.output
 
 *.swp
+*.swo
 *.cmo
 *.cmi
 *.out

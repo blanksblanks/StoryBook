@@ -4,7 +4,7 @@
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
 /*%token ENDWIDTH ELIF*/
-%token RETURNS IF ELSE FOR WHILE 
+%token RETURNS IF ELSE FOR WHILE
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
@@ -27,7 +27,7 @@
 %left TIMES DIVIDE MOD
 /* %right NEW */
 %right NOT
- %left COMMA APOST /* function call and member access */
+%left COMMA APOST /* function call and member access */
 
 %start program
 %type <Ast.program> program
@@ -62,22 +62,24 @@ type_label:
  | STRING  { String }
  | CHAR    { Char }
 
- 
+
 vdecl_list:
     /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
- 
+
 vdecl:
-   type_label ID PERIOD { U_Var($1, $2) } /* uninitialized variable */
-   | CHARACTER ID ID PERIOD {U_Var(Object($2), $3)} /* uninitialized character variable */
-   | type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized primitive variable */
-   | CHARACTER ID ID ASSIGN expr PERIOD {I_Var(Object($2), $3, $5)} /*initialized object */
+  type_label ID PERIOD { U_Var($1, $2) } /* uninitialized variable of primitive type */
+| type_label TRAIT ID PERIOD { U_Var($1, $3) } /* uninitialized trait of primitive type */
+| CHARACTER ID ID PERIOD {U_Var(Object($2), $3)} /* uninitialized variable of character type */
+| type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized variable of primitive type */
+| type_label TRAIT ID ASSIGN expr PERIOD { I_Var($1, $3, $5) } /* initialized trait */
+| CHARACTER ID ID ASSIGN expr PERIOD {I_Var(Object($2), $3, $5)} /* initialized object */
 
 cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
       traits = $4;
-      actions = $8; 
+      actions = $8;
   }}  /* traits = instance variables */
 
 action_list:
