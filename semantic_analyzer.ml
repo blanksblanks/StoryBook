@@ -143,10 +143,10 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	with Not_found ->
 		if f.fname = "say" then raise (Failure "A function cannot be named" ^ f.fname)
 		else
-			if f.fname = "Plot" then
+			if f.fname = "plot" then
 				(
 					if f.freturn <> Number || (List.length f.fformals) <> 0 then
-					raise (Failure "Plot function must return numbers and cannot contain parameters")
+					raise (Failure "plot function must return numbers and cannot contain parameters")
 					else
 						let func = check_func_decl env f in
 						env.found_plot <- true; func
