@@ -102,11 +102,11 @@ let library_funcs = [
                  vexpr = (Sast.Noexpr, Sast.String) (*will have to make void*)
                 }];
     freturn = Sast.Number;
-    fbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
+    funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
   }
 ]
 
-let analyze_func env fun_dcl =
+let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
   (*and old_formals = fun_dcl.fformals *)
   and old_ret_type = fun_dcl.freturn
@@ -114,14 +114,14 @@ let analyze_func env fun_dcl =
   let body = List.map (fun st -> stmt env st) old_body in
   let formals = [] in 
   let ret_type = convert_data_type old_ret_type in
-  Sast.function_decl(name, formals, ret_type, body)
+   {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
 
-let analyze_semantics prgm = 
+let analyze_semantics prgm: Sast.program = 
   let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
-  let env = {scope = prgrm_scope; return_type = Sast.Number} in
+  let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (_, func_decls) = prgm  in 
-  let new_func_decls = List.fold_left (fun new_list f -> analyze_func env f::new_list) library_funcs func_decls in
+  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
 
-  Sast.program([], List.fold_left analyze_func env new_func_decls)
+  ([], List.append new_func_decls library_funcs)
 
   

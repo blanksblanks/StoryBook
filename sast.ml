@@ -39,7 +39,7 @@ and function_decl = {
   fname : string; (* name of the function *)
   fformals : variable_decl list; (* formal params *)
   freturn : data_type; (* return type *)
-  fbody : statement list; (* statements, including local variable declarations *)
+  funcbody : statement list; (* statements, including local variable declarations *)
 }
 
 (* Actions *)
@@ -57,4 +57,4 @@ and class_decl = {
   cinstvars : variable_decl list; (*instance variables *)
   cactions: action_decl list; (*lists of actions (methods) *)
 }
-type program = class_decl list * function_decl list
+and program = class_decl list * function_decl list
