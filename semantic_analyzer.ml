@@ -111,14 +111,14 @@ let check_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			let rettype = check_var_type scope' rettype in
 			scope'.variables <- (strng, Sast.Variable(rettype, strng), rettype) :: scope'.variables; (Sast.Variable(rettype, strng), rettype) :: k
 	) [] f.fformals in
-	let statements = process_func_stmt scope' f.body rettype in
+	let statements = verify_func_stmt scope' f.body rettype in
 	(* if scope'.return_found then; we may not need return_found if we do not have voids *)
 	let f = { fname = f.fname; fformals = formals; freturn = rettype; fbody = statements } in
 	env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
 	else
 		raise (Failure ("No return for Chapter " ^ f.fname ^ " when return expected.")))
 
-let process_func_stmt (scope : symbol_table) (stmt_lst : Ast.stmt list) (ftype : Sast.var_types) =
+let verify_func_stmt (scope : symbol_table) (stmt_lst : Ast.stmt list) (ftype : Sast.var_types) =
 	List.fold_left (
 		fun a s -> let stmt = check_stmt scope s in
 		match stmt with
@@ -137,7 +137,7 @@ let process_func_stmt (scope : symbol_table) (stmt_lst : Ast.stmt list) (ftype :
 		| _ -> stmt :: a
 	) [] stmt_lst
 
-let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
+let verify_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try
 	(* Checks if function already exists *)
 		let _ = find_func env.scope.functions f.fname in
@@ -159,29 +159,29 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			else
 				check_func_decl env f
 
-(* let process_class_decl (env : translation_environment) (c : Ast.class_decl) =
+(* let verify_class_decl (env : translation_environment) (c : Ast.class_decl) =
 	try
 		let _ = find_class env.scope.classes c.cname in
 			raise (Failure ("Class already declared with name " ^ c.cname))
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 		let formals =
-		let instvars = List.fold_left ( fun a v -> process_var_decl scope' v :: a ) [] c.variable_decls in
+		let instvars = List.fold_left ( fun a v -> verify_var_decl scope' v :: a ) [] c.variable_decls in
 		let actions =
 		(* cname, cformals, cinstvars, cactions; param_decl, var decl, action_decl *)
 		env.scope.classes <- c :: env.scope.classes; c *)
 
-let check_program (p : Ast.program) =
+let verify_program (p : Ast.program) =
 	let s = { parent = None; classes = []; functions = []; return_plot = false } in
 	let env = { scope = s; found_plot = false } in
 	let (classes, funcs) = p in
 	(* let classes =
 		List.fold_left (
-			fun a s -> process_class_decl env s :: a
+			fun a s -> verify_class_decl env s :: a
 		) [] classes in *)
 	let classes = [] in
 	let funcs =
 		List.fold_left (
-			fun a f -> process_func_decl env f :: a
+			fun a f -> verify_func_decl env f :: a
 		) [] (List.rev funcs) in
   (if env.found_plot then classes, funcs else (raise (Failure "No plot defined.")))
