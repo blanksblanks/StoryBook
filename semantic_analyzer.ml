@@ -36,8 +36,9 @@ let is_Valid_Op t1 op t2 = match t1 with
 | _ -> true
 
 (* compare parameter types *)
-let rec compare_p_types formalVars actualExprs = function
-    |(_, _) -> true
+let rec compare_p_types formalVars actualExprs = match formalVars with
+    [] -> true
+    |x::tail -> true
 (* Expression Environment *)
 let rec expr env = function 
 
@@ -68,7 +69,7 @@ let rec expr env = function
       with Not_found -> raise (Failure("function not found"))
       in let formal_p_list = fdecl.fformals in
       
-      if (compare_p_types formal_p_list actual_p_typed) = true then Sast.FCall(fdecl, actual_p_typed)
+      if (compare_p_types formal_p_list actual_p_typed) = true then Sast.FCall(fdecl, actual_p_typed), Sast.Number
       else raise (Failure("invalid parameters to function"))
 
     | _ -> Sast.LitString(""), Sast.String
