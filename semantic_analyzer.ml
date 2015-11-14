@@ -35,6 +35,14 @@ let is_Valid_Op t1 op t2 = match t1 with
 | Sast.Number -> true
 | _ -> true
 
+let convert_data_type old_type = match old_type with
+  |Ast.Number -> Sast.Number
+  |Ast.Boolean -> Sast.Boolean
+  |Ast.String -> Sast.String
+  |Ast.Char -> Sast.Char
+  |Ast.Object(v) -> Sast.String
+
+
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars with
     [] -> true
@@ -85,4 +93,35 @@ let rec stmt env = function
       	Sast.If(sastexpr, stmt env s1, stmt env s2) (* Check then, else *)
       else raise(Failure("invalid if condition"))
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
+
+let library_funcs = [
+  {
+    fname = "say";
+    fformals = [{vtype = Sast.String;
+                 vname = "str";
+                 vexpr = (Sast.Noexpr, Sast.String) (*will have to make void*)
+                }];
+    freturn = Sast.Number;
+    fbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
+  }
+]
+
+let analyze_func env fun_dcl =
+  let name = fun_dcl.fname
+  (*and old_formals = fun_dcl.fformals *)
+  and old_ret_type = fun_dcl.freturn
+  and old_body = fun_dcl.fbody in 
+  let body = List.map (fun st -> stmt env st) old_body in
+  let formals = [] in 
+  let ret_type = convert_data_type old_ret_type in
+  Sast.function_decl(name, formals, ret_type, body)
+
+let analyze_semantics prgm = 
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
+  let env = {scope = prgrm_scope; return_type = Sast.Number} in
+  let (_, func_decls) = prgm  in 
+  let new_func_decls = List.fold_left (fun new_list f -> analyze_func env f::new_list) library_funcs func_decls in
+
+  Sast.program([], List.fold_left analyze_func env new_func_decls)
+
   
