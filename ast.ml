@@ -1,66 +1,70 @@
-type var_type =
+(* Possible data types *)
+type data_type =
   | Number
   | Boolean
   | String
   | Char
-  | Object of string (* string is typename of object *)
- (* | Character*) (* object *)
+  | Object of string (* string is typename of object, not id *)
 
-type param_decl = 
-  Parameter of var_type * string
-
-
+(* Operators *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
 OR | AND | NOT
 
-type expr = (* Expressions *)
-  Lit_int of int (* 42 *)
-| Lit_bool of bool
-| Lit_string of string (* "foo_quoted" *)
-| Lit_char of char (* 'c' *)
+(* Expressions *)
+type expr =
+  LitNum of int
+| LitBool of bool
+| LitString of string (* quoted string literal *)
+| LitChar of char (* 'c' *)
 | Noexpr (* for (;;) *)
 | Id of string (* foo_unquoted *)
-| Assign of string * expr (* foo = 42 *)
-| Access of string * string (* foo's name *)
-| Trait_Assign of string * string * expr (* object name, instance var name, expr *)
+| Assign of string * expr (* x is 5 *)
+| TraitAssign of string * string * expr (* SleepingBeauty's x is 5 *)
+| Access of string * string (* Member value access: SleepingBeauty's x *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr
-| FCall of string * expr list (* foo(1, 25 *)
-| ACall of string * string * expr list (* object id, action name, params *)
+| FCall of string * expr list (* chapter1() *)
+| ACall of string * string * expr list (* SleepingBeauty, setX(5) *)
 
-type var_decl = 
-  U_Var of var_type * string (* uninitialized *)
-  |I_Var of var_type * string * expr (*initialized *)
+(* Variable Declarations *)
+type var_decl = {
+  vtype: data_type;
+  vname : string;
+  vexpr : expr;
+}
 
-type stmt = (* Statements *)
-Block of stmt list (* { ... } *)
-| Expr of expr (* foo = bar + 3; *)
-| Return of expr (* return 42; *)
-| If of expr * stmt * stmt (* if (foo == 42) {} else {} *)
-| For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
-| While of expr * stmt (* while (i<10) { i = i + 1 } *)
-| Var_Decl of var_decl
+(* Statements *)
+type stmt =
+  Block of stmt list
+| Expr of expr
+| VarDecl of var_decl
+| Return of expr
+| If of expr * stmt * stmt
+| For of expr * expr * expr * stmt
+| While of expr * stmt
 
-
+(* Functions *)
 type func_decl = {
-  fname : string; (* Name of the function *)
-  fformals : param_decl list; (* Formal argument (type,name) tuples *)
-  freturn : var_type;
-  fbody : stmt list; 
+  fname : string; (* name of the function *)
+  fformals : var_decl list; (* formal params *)
+  freturn : data_type; (* return type *)
+  fbody : stmt list; (* statements, including local variable declarations *)
 }
 
-type action_decl = {
-  aname : string;
-  aformals: param_decl list;
-  areturn : var_type;
-  abody : stmt list;
+(* Actions *)
+type act_decl = {
+  aname : string; (* Name of the action *)
+  aformals: var_decl list; (* formal params *)
+  areturn : data_type; (* return type *)
+  abody : stmt list; (* statements, including local variable declarations *)
 }
 
-type class_decl = {
-  cname : string; (*name of the class *)
-  cformals: param_decl list;
-  cinstvars : var_decl list; (*instance vars as (type, name) tuples *)
-  cactions: action_decl list; (*lists of actions (methods) *)
+(* Class Declarations *)
+type cl_decl = {
+  cname : string; (* name of the class *)
+  cformals: var_decl list; (* formal params *)
+  cinstvars : var_decl list; (*instance variables *)
+  cactions: act_decl list; (*lists of actions (methods) *)
 }
 
-type program = class_decl list * func_decl list (* classes, funcs. no global vars *)
+type program = cl_decl list * func_decl list (* classes, funcs. no global vars *)

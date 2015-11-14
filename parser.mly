@@ -3,11 +3,11 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD APOST
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
-/*%token ENDWIDTH ELIF*/
+/*%token ENDWIDTH */
 %token RETURNS IF ELSE FOR WHILE
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
-/*%token SUBTYPE MAIN CLASS METHOD IVAR NEW SAY*/
+/*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW
 %token <int> LIT_INT
 %token <bool> LIT_BOOL
@@ -34,14 +34,16 @@
 
 %%
 
+/* Program is comprised of class declarations and function declarations */
 program:
   decls EOF { $1 }
 
 decls:
    /* nothing */ { [], [] }
- | decls cdecl { ($2 :: fst $1), snd $1 } /* change to class decl */
- | decls fdecl { fst $1, ($2 :: snd $1) }
+ | decls cdecl { ($2 :: fst $1), snd $1 } /* class decl */
+ | decls fdecl { fst $1, ($2 :: snd $1) } /* func decl */
 
+/* Function declarations */
 fdecl:
    FUNCTION ID LPAREN formals_opt RPAREN RETURNS type_label LBRACE stmt_list RBRACE
      { { fname = $2;
@@ -53,10 +55,19 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
+/* Formal param list. */
+/* Params are represented as variable declarations with no expr for assignment */
 formal_list:
-    type_label ID                   { [Parameter($1, $2)] } /* tuple (type, id) */
-  | formal_list SEMI type_label ID { Parameter($3, $4) :: $1 } /* params are separated by ';' */
+    type_label ID
+      { [ { vtype = $1;
+            vname = $2;
+            vexpr = Noexpr } ] }
+  | formal_list SEMI type_label ID
+      { { vtype = $3;
+          vname = $4;
+          vexpr = Noexpr } :: $1}
 
+/* Data type names */
 type_label:
    NUMBER  { Number }
  | BOOL    { Boolean }
@@ -64,27 +75,44 @@ type_label:
  | CHAR    { Char }
  | CHARACTER ID    { Object($2) }
 
-
+/* Variable Declarations */
 vdecl_list:
-    /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
+  /* nothing */ { [] }
+  | vdecl_list vdecl { $2 :: $1}
 
 vdecl:
-  type_label ID PERIOD { U_Var($1, $2) } /* uninitialized variable of primitive type */
-| type_label TRAIT ID PERIOD { U_Var($1, $3) } /* uninitialized trait of primitive type */
-/*| ID ID PERIOD {U_Var(Object($1), $2)}  uninitialized variable of character type */
-| type_label ID ASSIGN expr PERIOD { I_Var($1, $2, $4)} /*initialized variable of primitive type */
-| type_label TRAIT ID ASSIGN expr PERIOD { I_Var($1, $3, $5) } /* initialized trait */
-/*| ID ID ASSIGN expr PERIOD {I_Var(Object($1), $2, $4)}  initialized object */
+    /* Uninitialized regular variable */
+    type_label ID PERIOD
+      { { vtype=$1;
+          vname=$2;
+          vexpr = Noexpr } }
+  /* Uninitialized instance variable */
+  | type_label TRAIT ID PERIOD
+      { { vtype = $1;
+          vname = $3;
+          vexpr = Noexpr } }
 
+  /* Initialized regular variable */
+  | type_label ID ASSIGN expr PERIOD
+      { { vtype = $1;
+          vname = $2;
+          vexpr = $4 } }
+  /* Uninitialized instance variable */
+  | type_label TRAIT ID ASSIGN expr PERIOD
+      { { vtype = $1;
+          vname = $3;
+          vexpr = $5 } }
+
+/* Character (Class) Declarations */
 cdecl:
   CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
   {{  cname = $2;
       cformals = $4;
       cinstvars = $7;
       cactions = $8;
-  }}  /* instance_vars = instance variables */
+  }}
 
+/* Action (Method) Declarations */
 action_list:
   /* nothing */ {[]}
   | action_list adecl {$2::$1}
@@ -98,13 +126,15 @@ adecl:
      abody = List.rev $9;
   }}
 
+/* Statements */
 stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
+/* added vdecl to statements so that stmt list could include vdecls */
 stmt:
     expr PERIOD { Expr($1) }
-  | vdecl {Var_Decl($1)}
+  | vdecl {VarDecl($1)}
   | RETURNS expr SEMI { Return($2) }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
@@ -112,15 +142,17 @@ stmt:
   | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+
+/* Expressions */
 expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
 
 expr:
-    LIT_INT          {Lit_int($1)}
-  | LIT_BOOL         {Lit_bool($1)}
-  | LIT_STRING       {Lit_string($1)}
-  | LIT_CHAR         {Lit_char($1)}
+    LIT_INT          {LitNum($1)}
+  | LIT_BOOL         {LitBool($1)}
+  | LIT_STRING       {LitString($1)}
+  | LIT_CHAR         {LitChar($1)}
   | ID               {Id($1)}
   | expr PLUS   expr {Binop($1, Add, $3)}
   | expr MINUS  expr {Binop($1, Sub, $3)}
@@ -138,13 +170,13 @@ expr:
   | NOT expr {Unop(NOT, $2)}
   | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
   | ID APOST ID      {Access($1, $3)} /* member access */
-  | ID APOST ID ASSIGN expr {Trait_Assign($1, $3, $5)} /* member assign */
+  | ID APOST ID ASSIGN expr {TraitAssign($1, $3, $5)} /* member assign */
   | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
  /* | NEW ID LPAREN actuals_opt RPAREN {0} object declaration  */
   | LPAREN expr RPAREN {$2}
 
-
+/* Actual Parameters */
 actuals_opt:
     /* nothing */ { [] }
   | actuals_list  { List.rev $1 }
