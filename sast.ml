@@ -57,3 +57,4 @@ and class_decl = {
   cinstvars : variable_decl list; (*instance variables *)
   cactions: action_decl list; (*lists of actions (methods) *)
 }
+type program = class_decl list * function_decl list

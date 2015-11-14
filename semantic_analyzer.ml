@@ -50,8 +50,8 @@ let rec compare_p_types formalVars actualExprs = match formalVars with
 (* Expression Environment *)
 let rec expr env = function 
 
-    (* Simple evaluation of primitives *)
-    Ast.LitNum(v) -> Sast.LitNum(v), Sast.Number
+      (* Simple evaluation of primitives *)
+      Ast.LitNum(v) -> Sast.LitNum(v), Sast.Number
     | Ast.LitChar(v) -> Sast.LitChar(v), Sast.Char
     | Ast.LitBool(v) -> Sast.LitBool(v), Sast.Boolean
     | Ast.LitString(v) -> Sast.LitString(v), Sast.String
