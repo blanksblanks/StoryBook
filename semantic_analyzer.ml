@@ -60,7 +60,7 @@ let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
 							let expr = check_expr scope c in
 							let (_, t2) = expr in
 							if t <> t2
-							then raise (Failure "Wrong types in function  params")
+							then raise (Failure "Wrong types in function params")
 							else expr :: a
 					) [] f.fformals expr_list in
         Sast.Call(f, exprs), f.freturn
@@ -68,8 +68,8 @@ let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
 				if id = "say" then match expr_list with
 					| hd :: [] -> let expr = check_expr scope hd in
 						let (_, t) = expr in
-						if (t = Sast.String || t = Sast.Number) then Sast.Call(print_func, [expr]), Sast.Number else raise (Failure "Print takes only type string or int")
-					| _ -> raise (Failure "Print only takes one argument")
+						if (t = Sast.String || t = Sast.Number) then Sast.Call(print_func, [expr]), Sast.Number else raise (Failure "Say takes only type string or int")
+					| _ -> raise (Failure "Say only takes one argument")
         )
       | _ -> raise(Failure "Not a call")
 
