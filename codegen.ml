@@ -1,13 +1,14 @@
 open Ast
 open Sast
+open Semantic_Analyzer
+open Lexing
 
 let sast =
-	let lexbuf = Lexing.from_channel stdin get_instance_name
+	let lexbuf = Lexing.from_channel stdin get_instance_name in
 	let ast = Parser.program Scanner.token lexbuf in 
 	check_program ast
 
-let 
-let print_op = function
+(*let print_op = function
 	Add -> print_string "+ "
 	| Sub -> print_string "- "
 	| Mult -> print_string "* "
@@ -21,20 +22,21 @@ let print_op = function
 	| Geq -> print_string ">= "
 	| OR -> print_string "|| "
 	| AND -> print_string "&& "
-	| NOT -> print_string "!" 
+	| NOT -> print_string "!" *)
 
 
-let rec print_expr = function
-    Lit_int(val) -> print_string (string_of_int val)
+let rec print_expr (expr : Sast.expression) =
+	let (expr_det, _) = expr_det in match  expr_det with
+    (*Lit_int(val) -> print_string (string_of_int val) *)
     | Lit_bool(val) -> print_string (string_of_bool val)
     | Lit_string(val) -> print_string (val)
-    | Lit_char(val) -> print_string (string_of_char val)
+    | Lit_Char(val) -> print_string (string_of_char val)
     | Noexpr -> print_string ""
     (* ids are stored as U-Vars, not I-Vars--just type and label *)
     | Id(var) -> let (type_label, name) = var in print_string (name) ^ " .")
 	(* this is a hack. fix later *)
 	| FCall(f, param_list) ->
-		if f.fname = "print" then print_string "\n\t std::printf(%s," ^ (Array.get param_list 0) ^ ");"
+		if f.fname = "say" then print_string "\n\t std::printf(%s," ^ (Array.get param_list 0) ^ ");"
 
 let rec print_stmt = function
 	Block(stmt_list) -> print_string "{";  List.iter print_stmt (List.rev stmt_list); print_string "}\n"

@@ -26,8 +26,8 @@ let print_func = {
 let find_func(l : function_decl list) f =
   List.find(fun k -> k.fname = f)
 
-let find_class(c : class_decl list) class =
-	List.find(fun k -> k.cname = class) c
+let find_class(c : class_decl list) klass =
+	List.find(fun k -> k.cname = klass) c
 
 let rec check_id (scope : symbol_table) id =
 	try
@@ -112,9 +112,9 @@ let check_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			scope'.variables <- (strng, Sast.Variable(rettype, strng), rettype) :: scope'.variables; (Sast.Variable(rettype, strng), rettype) :: k
 	) [] f.fformals in
 	let statements = verify_func_stmt scope' f.body rettype in
-	(* if scope'.return_found then; we may not need return_found if we do not have voids *)
-	let f = { fname = f.fname; fformals = formals; freturn = rettype; fbody = statements } in
-	env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
+	if scope'.return_found then (* we may not need return_found if we do not have voids *)
+		let f = { fname = f.fname; fformals = formals; freturn = rettype; fbody = statements } in
+		env.scope.functions <- f :: env.scope.functions; f
 	else
 		raise (Failure ("No return for Chapter " ^ f.fname ^ " when return expected.")))
 
