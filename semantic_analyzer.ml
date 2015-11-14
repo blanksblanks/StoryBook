@@ -106,6 +106,7 @@ let check_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	let rettype = check_var_type env.scope f.freturn in
 	let formals = List.fold_left (
 		fun k f -> match f with
+		(* Pattern match each parameter to make sure it's a valid type *)
 		Ast.Parameter(rettype, strng) -> (* Parameter of var_type * string *)
 			let rettype = check_var_type scope' rettype in
 			scope'.variables <- (strng, Sast.Variable(rettype, strng), rettype) :: scope'.variables; (Sast.Variable(rettype, strng), rettype) :: k
@@ -138,11 +139,14 @@ let process_func_stmt (scope : symbol_table) (stmt_lst : Ast.stmt list) (ftype :
 
 let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try
+	(* Checks if function already exists *)
 		let _ = find_func env.scope.functions f.fname in
 			raise (Failure ("Function already declared with name " ^ f.fname))
 	with Not_found ->
+	(* If not found, check if reserved function keyword e.g. say *)
 		if f.fname = "say" then raise (Failure "A function cannot be named" ^ f.fname)
 		else
+		(* Check if it's main function *)
 			if f.fname = "plot" then
 				(
 					if f.freturn <> Number || (List.length f.fformals) <> 0 then
@@ -151,6 +155,7 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 						let func = check_func_decl env f in
 						env.found_plot <- true; func
 					)
+			(* Treat as normal function *)
 			else
 				check_func_decl env f
 
@@ -179,4 +184,4 @@ let check_program (p : Ast.program) =
 		List.fold_left (
 			fun a f -> process_func_decl env f :: a
 		) [] (List.rev funcs) in
-  (if env.found_plot then classes, funcs else (raise (Failure "No Plot defined.")))
+  (if env.found_plot then classes, funcs else (raise (Failure "No plot defined.")))
