@@ -9,7 +9,7 @@ let type_as_string t = match t with
   |Sast.Boolean -> "bool"
   |_ -> "int"
 
-let write_params params f = 
+let write_params params f =
 	fprintf f " ( ";
     List.iter (fun v -> fprintf f " %s " v.vname) params;
 	fprintf f ") "
@@ -36,9 +36,9 @@ let write_func funcdec f =
 	fprintf f " } \n"
 
 let generate_code pgm =
-	let (cdecs, funcdecs) = pgm in 
+	let (cdecs, funcdecs) = pgm in
     let cfile = open_out "HelloWorld.c" in
-    fprintf cfile "#include <cstdio> Program {\n\n\t";
+    fprintf cfile "#include <stdio.h> \n\n\t";
     write_func (List.nth funcdecs 0) cfile;
     close_out cfile
 
@@ -47,5 +47,3 @@ let generate_code pgm =
 	let ast = Parser.program Scanner.token lexbuf
 	let sast = analyze_semantics ast
 	let _ = generate_code sast
-
-
