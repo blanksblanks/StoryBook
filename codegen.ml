@@ -22,14 +22,21 @@ let rec write_expr (e, t) f = match e with
 						   List.iter (fun e -> write_expr e f) e_l;
 						   fprintf f " )";
 | _ -> fprintf f ""
+(*and print_expr_semi (e : Sast.expression) = 
+        write_expr e; write_string ";\n"*)
+
 
 let write_stmt s f = match s with
-| Sast.Expression(e) -> write_expr e f; fprintf f ".\n"
-| _ -> write_expr (LitString(""), Sast.String) f; fprintf f ".\n"
+| Sast.Expression(e) -> write_expr e f; fprintf f ";\n"
+| _ -> write_expr (LitString(""), Sast.String) f; fprintf f ";\n"
 
 let write_func funcdec f =
 	fprintf f "%s " (type_as_string funcdec.freturn);
-	if funcdec.fname = "plot" then fprintf f " main" else fprintf f " %s" funcdec.fname;
+	if funcdec.fname = "plot" 
+        then fprintf f " main" 
+        (*else if funcdec.fname = "say"
+        then fprintf f " printf"*)
+        else fprintf f " %s" funcdec.fname;
 	write_params funcdec.fformals f;
 	fprintf f " { \n";
 	List.iter (fun s -> write_stmt s f) funcdec.funcbody;
