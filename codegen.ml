@@ -15,13 +15,17 @@ let write_params params f =
 	fprintf f ") "
 
 (* Takes expression tuple and file to write to *)
-let write_expr (e, t) f = match e with
+let rec write_expr (e, t) f = match e with
 | Sast.LitString(s) -> fprintf f "\t%s" s
+| Sast.FCall (f_d, e_l) -> fprintf f " \t%s " f_d.fname;
+						   fprintf f " (";
+						   List.iter (fun e -> write_expr e f) e_l;
+						   fprintf f " )";
 | _ -> fprintf f ""
 
 let write_stmt s f = match s with
-| Sast.Expression(e) -> write_expr e f; fprintf f "."
-| _ -> write_expr (LitString(""), Sast.String) f; fprintf f "."
+| Sast.Expression(e) -> write_expr e f; fprintf f ".\n"
+| _ -> write_expr (LitString(""), Sast.String) f; fprintf f ".\n"
 
 let write_func funcdec f =
 	fprintf f "%s " (type_as_string funcdec.freturn);
