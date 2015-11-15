@@ -39,7 +39,7 @@ let write_func funcdec f =
 
 let generate_code pgm =
 	let (cdecs, funcdecs) = pgm in
-    let cfile = open_out "HelloWorld.c" in
+    let cfile = open_out "helloWorld.c" in
     fprintf cfile "#include <stdio.h> \n\n\t";
     write_func (List.nth funcdecs 0) cfile;
     close_out cfile
