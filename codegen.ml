@@ -16,14 +16,11 @@ let write_params params f =
 
 (* Takes expression tuple and file to write to *)
 let rec write_expr (e, t) f = match e with
-| Sast.LitString(s) -> fprintf f "\t%s" s
-| Sast.FCall (f_d, e_l) -> fprintf f " \t%s " f_d.fname;
-						   fprintf f " (";
-						   List.iter (fun e -> write_expr e f) e_l;
-						   fprintf f " )";
+| Sast.LitString(s) -> fprintf f "%s" s
+| Sast.FCall (f_d, e_l) -> 
+    if f_d.fname = "say" then (fprintf f "\tprintf"; (*fprintf f " ( "; List.iter (fun e -> write_expr e f) e_l; fprintf f " )"*))
+    else fprintf f  "\t %s " f_d.fname;	fprintf f " ("; List.iter (fun e -> write_expr e f) e_l; fprintf f " )";
 | _ -> fprintf f ""
-(*and print_expr_semi (e : Sast.expression) = 
-        write_expr e; write_string ";\n"*)
 
 
 let write_stmt s f = match s with
@@ -34,8 +31,6 @@ let write_func funcdec f =
 	fprintf f "%s " (type_as_string funcdec.freturn);
 	if funcdec.fname = "plot" 
         then fprintf f " main" 
-        (*else if funcdec.fname = "say"
-        then fprintf f " printf"*)
         else fprintf f " %s" funcdec.fname;
 	write_params funcdec.fformals f;
 	fprintf f " { \n";
