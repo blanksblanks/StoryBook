@@ -18,8 +18,12 @@ let write_params params f =
 let rec write_expr (e, t) f = match e with
 | Sast.LitString(s) -> fprintf f "%s" s
 | Sast.FCall (f_d, e_l) -> 
-    if f_d.fname = "say" then (fprintf f "\tprintf"; (*fprintf f " ( "; List.iter (fun e -> write_expr e f) e_l; fprintf f " )"*))
-    else fprintf f  "\t %s " f_d.fname;	fprintf f " ("; List.iter (fun e -> write_expr e f) e_l; fprintf f " )";
+    if f_d.fname = "say" then begin fprintf f "\tprintf"; fprintf f " ( ";
+        let (strExp, typ) = (List.nth e_l 0) in match strExp with
+        |Sast.LitString(s) -> let newStr = (Sast.LitString((String.sub s 0 (String.length s - 1))^("\\n\"")), Sast.String) in write_expr newStr f; fprintf f ")"
+        | _ -> fprintf f ""
+    end
+    else begin fprintf f  "\t %s " f_d.fname;  fprintf f " ("; List.iter (fun e -> write_expr e f) e_l; fprintf f " )"end;
 | _ -> fprintf f ""
 
 

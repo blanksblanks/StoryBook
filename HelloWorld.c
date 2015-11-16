@@ -1,5 +1,5 @@
-#include <cstdio> Program {
+#include <stdio.h> 
 
 	int  main ( )  { 
- 	say  (	"Once upon a time" ).
+	printf ( "Once upon a time\n");
  } 
