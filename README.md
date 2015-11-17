@@ -18,6 +18,7 @@ ocamlc -c codegen.ml
 ```
 
 To set up the StoryBook compiler (only do once):
+
 1. `chmod +x ./storybook`
 2. Append the StoryBook directory (you can get this with `pwd`) to the `PATH` variable in your `.bashrc` or `.zshrc` file. For example:
 ```
@@ -34,6 +35,7 @@ To remove the machine-generated files, just run `make clean`.
 ## Testing StoryBook
 
 To run tests:
+
 1. Go to test directory `cd test`
 2. Make test script executable `chmod +x test.sh` (only do once)
 3. Run all tests: `./test.sh`
