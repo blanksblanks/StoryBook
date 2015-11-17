@@ -41,7 +41,7 @@ To run tests:
 3. Run all tests: `./test.sh`
 4. See test results: `cat test_results.txt`
 
-According to (Real World OCaml)[https://realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html], "Menhir is an alternative parser generator that is generally superior to the venerable ocamlyacc, which dates back quite a few years." Menhir allows you to convert a stream of tokens to an AST, as the example of an empty function declaration shows.
+According to [Real World OCaml](https://realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html), "Menhir is an alternative parser generator that is generally superior to the venerable ocamlyacc, which dates back quite a few years." Menhir allows you to convert a stream of tokens to an AST, as the example of an empty function declaration shows.
 To run parser with menhir:
 ```
 menhir --interpret --interpret-show-cst parser.mly
