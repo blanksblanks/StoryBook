@@ -2,5 +2,6 @@
 
 # Compile c file and run
 ./run < $1
-gcc -g helloWorld.c -o helloWorld
-./helloWorld
+base=`basename helloWorld.sbk .sbk`
+gcc -g $base.c -o $base
+./$base
