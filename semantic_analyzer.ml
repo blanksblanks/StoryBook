@@ -19,7 +19,7 @@ let rec find_function (scope: symbol_table) name =
 	with Not_found ->
 	match scope.parent with
 		Some(parent) -> find_function parent name
-	| _ -> raise (Failure("function not found"))
+	| _ -> raise (Failure("function '" ^ name ^ "' not found"))
 
 (* Find Variable *)
 let rec find_variable (scope : symbol_table) name =
@@ -48,7 +48,7 @@ let rec compare_p_types formalVars actualExprs = match formalVars with
     [] -> true
     |x::tail -> true
 (* Expression Environment *)
-let rec expr env = function 
+let rec expr env = function
 
       (* Simple evaluation of primitives *)
       Ast.LitNum(v) -> Sast.LitNum(v), Sast.Number
@@ -72,11 +72,11 @@ let rec expr env = function
 
     | Ast.FCall(fname, params) ->
       let actual_p_typed = List.map (fun e -> expr env e) params in
-      let fdecl = try 
+      let fdecl = try
         find_function env.scope fname
-      with Not_found -> raise (Failure("function not found"))
+      with Not_found -> raise (Failure("function '" ^ fname ^ "' not found"))
       in let formal_p_list = fdecl.fformals in
-      
+
       if (compare_p_types formal_p_list actual_p_typed) = true then Sast.FCall(fdecl, actual_p_typed), Sast.Number
       else raise (Failure("invalid parameters to function"))
 
@@ -110,18 +110,16 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
   (*and old_formals = fun_dcl.fformals *)
   and old_ret_type = fun_dcl.freturn
-  and old_body = fun_dcl.fbody in 
+  and old_body = fun_dcl.fbody in
   let body = List.map (fun st -> stmt env st) old_body in
-  let formals = [] in 
+  let formals = [] in
   let ret_type = convert_data_type old_ret_type in
    {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
 
-let analyze_semantics prgm: Sast.program = 
+let analyze_semantics prgm: Sast.program =
   let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
-  let (_, func_decls) = prgm  in 
+  let (_, func_decls) = prgm  in
   let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
 
   ([], List.append new_func_decls library_funcs)
-
-  
