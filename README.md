@@ -1,7 +1,7 @@
 # StoryBook
 A language of our own design with story-like syntax
 
-### Running StoryBook
+## Running StoryBook
 
 To run, just type `make` from the CLI. It will execute the following commands:
 ```
@@ -31,7 +31,7 @@ You can `cat HelloWorld.c` to see the generated C code.
 
 To remove the machine-generated files, just run `make clean`.
 
-### Testing StoryBook
+## Testing StoryBook
 
 To run tests:
 1. Go to test directory `cd test`
