@@ -2,6 +2,14 @@
 
 # Compile c file and run
 ./run < $1
-base=`basename helloWorld.sbk .sbk`
-gcc -g $base.c -o $base
-./$base
+program=`basename $1 .sbk`
+if [ -f "$program.c" ]
+then
+  gcc -g $program.c -o $program
+  ./$program
+else
+	echo "  /\_/\\ !! _
+=( °∩° )= //
+  )   (  //
+ (__ __)//"
+fi
