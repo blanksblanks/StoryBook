@@ -11,6 +11,8 @@ parser.output
 *.out
 *.diff
 *.dSYM
+*.c
 
+helloWorld
 test/test_results.txt
 
