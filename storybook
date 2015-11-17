@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Runnign the
+# Compile c file and run
 ./run < $1
 gcc -g helloWorld.c -o helloWorld
 ./helloWorld
