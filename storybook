@@ -7,8 +7,10 @@ if [ -f "$program.c" ]
 then
   gcc -g $program.c -o $program
   ./$program
+  ./$program > "${program}Out.txt"
+  diff "${program}Out.txt" "${program}Exp.txt"
 else
-	echo "  /\_/\\ !! _
+echo "  /\_/\\ !! _
 =( °∩° )= //
   )   (  //
  (__ __)//"
