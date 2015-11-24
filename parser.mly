@@ -9,7 +9,7 @@
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW
-%token <int> LIT_INT
+%token <float> LIT_NUM
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
 %token <char> LIT_CHAR
@@ -149,7 +149,7 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LIT_INT          {LitNum($1)}
+    LIT_NUM          {LitNum($1)}
   | LIT_BOOL         {LitBool($1)}
   | LIT_STRING       {LitString($1)}
   | LIT_CHAR         {LitChar($1)}

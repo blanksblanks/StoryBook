@@ -1,73 +1,78 @@
 { open Parser }
 
+let whitespace = [' ' '\t' '\r' '\n']
+let digit = ['0'-'9']
+
 rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| "~"     { comment lexbuf }           (* Comments *)
-(* Punctuation *)
-| '('      { LPAREN }
-| ')'      { RPAREN }
-| '{'      { LBRACE }
-| '}'      { RBRACE }
-| '['      { LBRACK }
-| ']'      { RBRACK }
-| ';'      { SEMI }
-| ','      { COMMA }
-| '.'      { PERIOD }
-|"'s"      { APOST }
+  whitespace { token lexbuf } (* Whitespace *)
 
-(* Binary Operators *)
-| '+'      { PLUS }
-| '-'      { MINUS }
-| '*'      { TIMES }
-| '/'      { DIVIDE }
-| '%'      { MOD }
-| "<"      { LT }
-| "<="     { LEQ }
-| ">"      { GT }
-| ">="     { GEQ }
-| "="      { EQ }
-| "!="     { NEQ }
-| "is"     { ASSIGN }
+  (* Comments *)
+  | "~"     { comment lexbuf }
 
-(* Logical Operators *)
-| "not"    { NOT }
-| "and"    { AND }
-| "or"     { OR }
+  (* Punctuation *)
+  | '('      { LPAREN }
+  | ')'      { RPAREN }
+  | '{'      { LBRACE }
+  | '}'      { RBRACE }
+  | '['      { LBRACK }
+  | ']'      { RBRACK }
+  | ';'      { SEMI }
+  | ','      { COMMA }
+  | '.'      { PERIOD }
+  | "'s"      { APOST }
 
-(* Control flow *)
-| "if"     { IF }
-| "else"   { ELSE }
-(*| "elseif" { ELIF }*)
-| "repeatfor" { FOR }
-| "repeatwhile" { WHILE }
-(*| "endwith" { ENDWITH }*)
-| "returns" { RETURNS }
+  (* Binary Operators *)
+  | '+'      { PLUS }
+  | '-'      { MINUS }
+  | '*'      { TIMES }
+  | '/'      { DIVIDE }
+  | '%'      { MOD }
+  | "<"      { LT }
+  | "<="     { LEQ }
+  | ">"      { GT }
+  | ">="     { GEQ }
+  | "="      { EQ }
+  | "!="     { NEQ }
+  | "is"     { ASSIGN }
 
-(* Primitives--booleans, chars, strings, numbers *)
-| "tof"     { BOOL }
-| "true" as bool_val    { LIT_BOOL(bool_of_string bool_val)}
-| "false" as bool_val   { LIT_BOOL(bool_of_string bool_val)}
-| "number"  { NUMBER }
-| "words"   { STRING }
-| "letter"  { CHAR } (*
-| "list"    { LIST }
-| "null"    { NULL }
-| "subtype" { SUBTYPE }
-| "Plot"    { MAIN }*)
-| "Chapter" { FUNCTION }
-| "Character" { CHARACTER }
-| "Action" { METHOD }
-| "trait" { TRAIT }
-| "new" { NEW }
-(*| "say" { SAY }*)
-| eof { EOF }
-| ['-']?['0'-'9']+ as lxm { LIT_INT(int_of_string lxm) }
-(* String regex modified from:
- realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html *)
-| '"'( ('\\'('/'|'\\'| 'b' | 'f' | 'n' | 'r' | 't'))|([^'"']) )*'"' as lxm { LIT_STRING(lxm) }
-| ['\''] (_ as l) ['\''] {LIT_CHAR(l) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+  (* Logical Operators *)
+  | "not"    { NOT }
+  | "and"    { AND }
+  | "or"     { OR }
+
+  (* Control flow *)
+  | "if"     { IF }
+  | "else"   { ELSE }
+  (*| "elseif" { ELIF }*)
+  | "repeatfor" { FOR }
+  | "repeatwhile" { WHILE }
+  (*| "endwith" { ENDWITH }*)
+  | "returns" { RETURNS }
+
+  (* Primitives--booleans, chars, strings, numbers *)
+  | "tof"     { BOOL }
+  | "true" as bool_val    { LIT_BOOL(bool_of_string bool_val)}
+  | "false" as bool_val   { LIT_BOOL(bool_of_string bool_val)}
+  | "number"  { NUMBER }
+  | "words"   { STRING }
+  | "letter"  { CHAR } (*
+  | "list"    { LIST }
+  | "null"    { NULL }
+  | "subtype" { SUBTYPE }
+  | "Plot"    { MAIN }*)
+  | "Chapter" { FUNCTION }
+  | "Character" { CHARACTER }
+  | "Action" { METHOD }
+  | "trait" { TRAIT }
+  | "new" { NEW }
+  | eof { EOF }
+  | ['-']?(digit+'.'digit*)|['-']?(digit*'.'digit+)|['-']?(digit+) as lxm { LIT_NUM(float_of_string lxm) }
+  (* String regex modified from:
+   realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html *)
+  | '"'( ('\\'('/'|'\\'| 'b' | 'f' | 'n' | 'r' | 't'))|([^'"']) )*'"' as lxm { LIT_STRING(lxm) }
+  | ['\''] (_ as l) ['\''] {LIT_CHAR(l) }
+  | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+  | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
   "~" { token lexbuf }
