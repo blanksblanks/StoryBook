@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # Compile c file and run
+.././run < $1
+
 program=`basename $1 .sbk`
 if [ -f "$program.c" ]
 then

@@ -122,4 +122,9 @@ let analyze_semantics prgm: Sast.program =
   let (_, func_decls) = prgm  in
   let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
 
+  (* Search for plot *)
+  let plotdecl = try
+        find_function env.scope "plot"
+      with Not_found -> raise (Failure("No plat was found.")) in
+
   ([], List.append new_func_decls library_funcs)
