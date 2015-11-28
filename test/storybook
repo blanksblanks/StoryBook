@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Compile c file and run
+program=`basename $1 .sbk`
+if [ -f "$program.c" ]
+then
+  gcc -g $program.c -o $program
+  ./$program
+  ./$program > "${program}Out.txt"
+  diff "${program}Out.txt" "${program}Exp.txt"
+else
+echo "  /\_/\\ !! _
+=( °∩° )= //
+  )   (  //
+ (__ __)//"
+fi
