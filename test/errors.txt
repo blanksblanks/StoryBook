@@ -1,0 +1,5 @@
+Test: HelloWorld
+Test: HelloBadFunc
+Fatal error: exception Failure("function 'print' not found")
+Test: HelloNoPlot
+Fatal error: exception Failure("No plot found")
