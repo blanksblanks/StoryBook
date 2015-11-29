@@ -35,13 +35,24 @@ let analyze_op (scope: symbol_table) op t1 t2 = match op with
 Add -> 
 	if (t1 <> Sast.Number || t2 <> Sast.Number) then 
 		if (t1 <> Sast.String || t2 <> Sast.String) then 
-			if (t1 <> Sast.Boolean || t2 <> Sast.String) then raise (Failure("cannot use + for operand(s)" )) (* first operand should be string, second operand should be boolean *)
+			if (t1 <> Sast.Boolean || t2 <> Sast.String) then raise (Failure("Invalid use of + for operands' types")) (* first operand should be string, second operand should be boolean *)
 			else Sast.String			
 		else Sast.String
 	else Sast.Number
-| Sub -> if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("cannot use + for operand(s)" )) else Sast.Number
-
-| _ -> Sast.Boolean
+| Sub -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of - for operands' types")) else Sast.Number
+| Mult -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of * for operands' types")) else Sast.Number
+| Div -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of / for operands' types")) else Sast.Number
+| Equal -> 	if (t1 <> t2) then raise (Failure("Invalid use of = for operands' types")) else Sast.Boolean 
+| Neq -> 	if (t1 <> t2) then raise (Failure("Invalid use of not= for operands' types")) else Sast.Boolean 
+| Less ->  	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of < for operands' types")) else Sast.Number
+| Leq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of <= for operands' types")) else Sast.Number
+| Greater ->	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of > for operands' types")) else Sast.Number
+| Geq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of >= for operands' types")) else Sast.Number
+| Mod -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of % for operands' types")) else Sast.Number
+| OR -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of or for operands' types")) else Sast.Boolean
+| AND -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of and for operands' types")) else Sast.Boolean
+| NOT -> 	raise (Failure("Unary operator"))
+| _ ->		raise (Failure("Invalid operator"))
 
 let convert_data_type old_type = match old_type with
   |Ast.Number -> Sast.Number
