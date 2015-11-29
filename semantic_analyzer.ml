@@ -71,8 +71,8 @@ let rec analyze_expr env = function
 	  let e1 = analyze_expr env e1 (* Check left and right children *)
 	  and e2 = analyze_expr env e2 in
 	  let _, t1 = e1 (* Get the type of each child *)
-	  and _, t2 = e2 in let valid = analyze_op env op t1 t2 in
-	  if valid = false then raise (Failure("invalid operation:"))
+	  and _, t2 = e2 in let valid = analyze_op env.scope op t1 t2 in
+	  if valid = Sast.Boolean then raise (Failure("invalid operation:"))
       else Sast.Binop(e1, op, e2), Sast.Number (* Success: result is int *)
 
     | Ast.FCall(fname, params) ->
