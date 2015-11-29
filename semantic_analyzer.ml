@@ -33,11 +33,14 @@ let rec find_variable (scope : symbol_table) name =
 (* Are types valid for this operation? *)
 let analyze_op (scope: symbol_table) op t1 t2 = match op with
 Add -> 
-	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then 
-		if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("cannot use + on a tof and number"))
-		else Sast.Number
-		
-	else Sast.Boolean
+	if (t1 <> Sast.Number || t2 <> Sast.Number) then 
+		if (t1 <> Sast.String || t2 <> Sast.String) then 
+			if (t1 <> Sast.Boolean || t2 <> Sast.String) then raise (Failure("cannot use + for operand(s)" )) (* first operand should be string, second operand should be boolean *)
+			else Sast.String			
+		else Sast.String
+	else Sast.Number
+| Sub -> if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("cannot use + for operand(s)" )) else Sast.Number
+
 | _ -> Sast.Boolean
 
 let convert_data_type old_type = match old_type with
