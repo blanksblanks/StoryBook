@@ -2,21 +2,30 @@
 
 cd ../
 make clean
-cd test/tree
-echo "Accept Tests:" >> test_results.txt
-for filename in tree*accept.txt; do
-        menhir --interpret ../../parser.mly < "$filename" | { 
-        if grep -q "ACCEPT"; then echo "SUCCESS: $filename" >> test_results.txt;
-        else echo "FAILURE: $filename" >> test_results.txt;
+make
+
+cd test
+for sbkname in *.sbk;do
+        program=`basename $sbkname .sbk`
+        .././run < "$sbkname" > "${program}.c"
+        if [ -s "$program.c" ]
+        then
+          gcc -g $program.c -o $program
+          if [ -f "$program" ]
+          then
+            ./$program
+            ./$program > "${program}Out.txt"
+            diff "${program}Out.txt" "${program}Exp.txt"
+          else 
+            echo "      /\_/\\ !! _
+            =( °∩° )= //
+              )   (  //
+             (__ __)//"          
+          fi
+        else
+        echo "          /\_/\\ !! _
+        =( °∩° )= //
+          )   (  //
+         (__ __)//"
         fi
-        }
-done
-echo "****************************" >> test_results.txt
-echo "Reject Tests:" >> test_results.txt
-for filename in tree*reject.txt; do
-        menhir --interpret ../../parser.mly < "$filename" | { 
-        if grep -q "REJECT"; then echo "SUCCESS: $filename" >> test_results.txt;
-        else echo "FAILURE: $filename" >> test_results.txt;
-        fi 
-        }
 done

@@ -21,6 +21,12 @@ let rec find_function (scope: symbol_table) name =
 		Some(parent) -> find_function parent name
 	| _ -> raise (Failure("function '" ^ name ^ "' not found"))
 
+let find_plot (l : Sast.function_decl list) =
+      try
+         List.find(fun f -> f.fname = "plot") l
+      with Not_found -> raise (Failure("No plot found"))
+
+
 (* Find Variable *)
 let rec find_variable (scope : symbol_table) name =
   try
@@ -123,8 +129,7 @@ let analyze_semantics prgm: Sast.program =
   let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
 
   (* Search for plot *)
-  let plotdecl = try
-        find_function env.scope "plot"
-      with Not_found -> raise (Failure("No plat was found.")) in
-
+  let _  = try
+        find_plot new_func_decls
+      with Not_found -> raise (Failure("No plot was found.")) in
   ([], List.append new_func_decls library_funcs)
