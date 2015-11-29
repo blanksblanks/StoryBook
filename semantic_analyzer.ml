@@ -98,6 +98,7 @@ let rec stmt env = function
       if typ = Sast.Boolean then
       	Sast.If(sastexpr, stmt env s1, stmt env s2) (* Check then, else *)
       else raise(Failure("invalid if condition"))
+  | Ast.Return(e) -> let sastexpr = expr env e in Sast.Return(sastexpr)
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [

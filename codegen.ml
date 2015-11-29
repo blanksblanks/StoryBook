@@ -17,6 +17,7 @@ let write_params params =
 (* Takes expression tuple and file to write to *)
 let rec write_expr (e, t) = match e with
 | Sast.LitString(s) -> print_string s
+| Sast.LitNum(n) -> print_float n
 | Sast.FCall (f_d, e_l) -> 
     if f_d.fname = "say" then begin print_string "\tprintf"; print_string " ( ";
         let (strExp, typ) = (List.nth e_l 0) in match strExp with
@@ -29,6 +30,7 @@ let rec write_expr (e, t) = match e with
 
 let write_stmt s = match s with
 | Sast.Expression(e) -> write_expr e; print_string ";\n"
+| Sast.Return(e) -> print_string "return "; write_expr e; print_string ";\n"
 | _ -> write_expr (LitString(""), Sast.String); print_string ";\n"
 
 let write_func funcdec =
@@ -46,7 +48,6 @@ let generate_code pgm =
     print_string "#include <stdio.h> \n\n\t";
     write_func (List.nth funcdecs 0);
     flush
-
 
 	let lexbuf = Lexing.from_channel stdin
 	let ast = Parser.program Scanner.token lexbuf

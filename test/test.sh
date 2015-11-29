@@ -16,16 +16,20 @@ for acceptname in *_Accept.sbk;do
           if [ -f "$program" ]
           then
             ./$program > "${program}_Out.txt"
-            diff "${program}_Out.txt" "${program}_Exp.txt"
-            rm $program
-            rm "$program.c"
-            echo "SUCCESS: $program" >> test_results.txt;
+            if  diff -q "${program}_Out.txt" "${program}_Exp.txt" 
+            then
+              rm $program
+              rm "$program.c"
+              echo "SUCCESS: $program" >> test_results.txt;
+            else
+              echo "FAILURE: $program -- Compiled and ran, but wrong output." >> test_results.txt
+            fi
           else
             echo "      /\_/\\ !! _
             =( °∩° )= //
               )   (  //
              (__ __)//"  
-             echo "FAILURE: $program" >> test_results.txt; 
+             echo "FAILURE: $program -- C Code wouldn't compile" >> test_results.txt; 
              echo "FAILURE: $program"       
           fi
         else
@@ -33,8 +37,8 @@ for acceptname in *_Accept.sbk;do
         =( °∩° )= //
           )   (  //
          (__ __)//"
-        echo "FAILURE: $program" >> test_results.txt; 
-        echo "FAILURE: $program"   
+        echo "FAILURE: $program -- Storybook didn't compile" >> test_results.txt; 
+        echo "FAILURE: $program -- Storybook didn't compile"   
         fi
 done
 
@@ -48,8 +52,8 @@ for rejectname in *_Reject.sbk;do
           rm "$program.c"
           
         else
-          echo "FAILURE: $program" >> test_results.txt
-          echo "FAILURE: $program"
+          echo "FAILURE: $program -- Storybook compiled but should not have" >> test_results.txt
+          echo "FAILURE: $program -- Storybook compiled but should not have"
         echo "          /\_/\\ !! _
         =( °∩° )= //
           )   (  //
