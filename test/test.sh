@@ -15,9 +15,10 @@ for acceptname in *_Accept.sbk;do
           gcc -g $program.c -o $program
           if [ -f "$program" ]
           then
-            ./$program > "${program}Out.txt"
-            diff "${program}Out.txt" "${program}_Exp.txt"
+            ./$program > "${program}_Out.txt"
+            diff "${program}_Out.txt" "${program}_Exp.txt"
             rm $program
+            rm "$program.c"
             echo "SUCCESS: $program" >> test_results.txt;
           else
             echo "      /\_/\\ !! _
