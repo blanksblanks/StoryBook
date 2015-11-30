@@ -30,8 +30,8 @@ let rec find_variable (scope : symbol_table) name =
       Some(parent) -> find_variable parent name
     | _ -> raise (Failure("variable not found"))
 
-(* Are types valid for this operation? *)
-let analyze_op (scope: symbol_table) op t1 t2 = match op with
+(* Checking types for binop; takes the op anad the two types to do checking *)
+let analyze_binop (scope: symbol_table) op t1 t2 = match op with
 Add -> 
 	if (t1 <> Sast.Number || t2 <> Sast.Number) then 
 		if (t1 <> Sast.String || t2 <> Sast.String) then 
@@ -51,8 +51,12 @@ Add ->
 | Mod -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of % for operands' types")) else Sast.Number
 | OR -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of or for operands' types")) else Sast.Boolean
 | AND -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of and for operands' types")) else Sast.Boolean
-| NOT -> 	raise (Failure("Unary operator"))
-| _ ->		raise (Failure("Invalid operator"))
+| NOT -> 	raise (Failure("Invalid use of ! for two operands"))
+(*| _ ->		raise (Failure("Invalid binary operator")) if this line uncomment, get a case unused warning *)
+
+let analyze_unop (scope: symbol_table) op t1 = match op with
+NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
+| _ -> 		raise (Failure("Invalid unary operator")) 
 
 let convert_data_type old_type = match old_type with
   |Ast.Number -> Sast.Number
@@ -85,9 +89,19 @@ let rec analyze_expr env = function
 	  let e1 = analyze_expr env e1 (* Check left and right children *)
 	  and e2 = analyze_expr env e2 in
 	  let _, t1 = e1 (* Get the type of each child *)
-	  and _, t2 = e2 in let valid = analyze_op env.scope op t1 t2 in
-	  if valid = Sast.Boolean then raise (Failure("invalid operation:"))
-      else Sast.Binop(e1, op, e2), Sast.Number (* Success: result is int *)
+	  and _, t2 = e2 in (*let valid = *)
+	  let validbinop = try
+		analyze_binop env.scope op t1 t2
+	  with Not_found -> raise (Failure("Invalid binary operator"))
+	  in Sast.Binop(e1, op, e2), validbinop (* Success: result is int *)
+
+    | Ast.Unop(op, e1) ->
+	  let e1 = analyze_expr env e1 in
+	  let _, t1 = e1 in 
+	  let validunop = try
+		analyze_unop env.scope op t1
+	  with Not_found -> raise (Failure("Invalid unary operator"))
+	  in Sast.Unop(op, e1), validunop
 
     | Ast.FCall(fname, params) ->
       let actual_p_typed = List.map (fun e -> analyze_expr env e) params in
