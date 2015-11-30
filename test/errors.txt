@@ -1,0 +1,12 @@
+Test: HelloWorld
+./test.sh: line 12: .././run: No such file or directory
+Test: ReturnNum
+./test.sh: line 12: .././run: No such file or directory
+Test: BadFunc
+./test.sh: line 48: .././run: No such file or directory
+Test: NoPlot
+./test.sh: line 48: .././run: No such file or directory
+Test: NoReturn
+./test.sh: line 48: .././run: No such file or directory
+Test: WrongReturnStringNotNumber
+./test.sh: line 48: .././run: No such file or directory

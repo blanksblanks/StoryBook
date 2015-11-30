@@ -7,7 +7,7 @@ type data_type =
   | Char
   | Object of class_decl
 and expr_detail =
-    LitNum of int
+    LitNum of float
   | LitBool of bool
   | LitString of string (* quoted string literal *)
   | LitChar of char (* 'c' *)

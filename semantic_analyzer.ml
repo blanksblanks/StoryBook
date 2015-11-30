@@ -21,6 +21,12 @@ let rec find_function (scope: symbol_table) name =
 		Some(parent) -> find_function parent name
 	| _ -> raise (Failure("function '" ^ name ^ "' not found"))
 
+let find_plot (l : Sast.function_decl list) =
+      try
+         List.find(fun f -> f.fname = "plot") l
+      with Not_found -> raise (Failure("No plot found"))
+
+
 (* Find Variable *)
 let rec find_variable (scope : symbol_table) name =
   try
@@ -125,6 +131,7 @@ let rec analyze_stmt env = function
       if typ = Sast.Boolean then
       	Sast.If(sastexpr, analyze_stmt env s1, analyze_stmt env s2) (* Check then, else *)
       else raise(Failure("invalid if condition"))
+  | Ast.Return(e) -> let sastexpr = expr env e in Sast.Return(sastexpr)
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [
@@ -140,6 +147,17 @@ let library_funcs = [
   }
 ]
 
+(* Checks to see if a statement is a return statement, and checks if it returns the right type *)
+let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
+  Sast.Return(e) -> let (_, typ) = e in if expTyp = typ  then true else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
+  | _ -> false
+  
+(* Looks for a return statement in function body *)
+let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
+  try
+     List.find(check_ret expTyp env) body_l
+  with Not_found -> raise (Failure("No return found"))
+
 (* looks at list of function types in the s/ast *)
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
@@ -149,6 +167,7 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let body = List.map (fun st -> analyze_stmt env st) old_body in (* stmt = analyze_stmt, just going through body and checking each statement *)
   let formals = [] in
   let ret_type = convert_data_type old_ret_type in
+  let _ = find_return body env ret_type in
    {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
 
 
@@ -159,6 +178,10 @@ let analyze_semantics prgm: Sast.program =
   let (_, func_decls) = prgm  in (* the anything supposed to be the character declrations. *)
   let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in (* checks every single func in the Sast using analyze_func,  *)
 
+  (* Search for plot *)
+  let _  = try
+        find_plot new_func_decls
+      with Not_found -> raise (Failure("No plot was found.")) in
   ([], List.append new_func_decls library_funcs)
 
 

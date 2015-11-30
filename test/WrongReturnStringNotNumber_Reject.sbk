@@ -1,0 +1,4 @@
+Chapter plot() returns number {
+  say ("Once Upon a time").
+  endwith ("cow").
+}

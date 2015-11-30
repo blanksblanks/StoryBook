@@ -13,6 +13,11 @@ parser.output
 *.dSYM
 *.c
 
+run
 helloWorld
 test/test_results.txt
 
+# Ignore files without extensions
+*
+!*.*
+!*/
