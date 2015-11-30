@@ -113,6 +113,15 @@ let library_funcs = [
   }
 ]
 
+let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
+  Sast.Return(e) -> let (_, typ) = e in if expTyp = typ  then true else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
+  | _ -> false
+  
+let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
+  try
+     List.find(check_ret expTyp env) body_l
+  with Not_found -> raise (Failure("No return found"))
+
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
   (*and old_formals = fun_dcl.fformals *)
@@ -121,6 +130,7 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let body = List.map (fun st -> stmt env st) old_body in
   let formals = [] in
   let ret_type = convert_data_type old_ret_type in
+  let _ = find_return body env ret_type in
    {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
 
 let analyze_semantics prgm: Sast.program =
