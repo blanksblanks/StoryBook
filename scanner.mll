@@ -46,7 +46,7 @@ rule token = parse
   (*| "elseif" { ELIF }*)
   | "repeatfor" { FOR }
   | "repeatwhile" { WHILE }
-  (*| "endwith" { ENDWITH }*)
+  | "endwith" { ENDWITH }
   | "returns" { RETURNS }
 
   (* Primitives--booleans, chars, strings, numbers *)
