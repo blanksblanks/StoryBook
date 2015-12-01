@@ -131,7 +131,7 @@ let rec analyze_stmt env = function
       if typ = Sast.Boolean then
       	Sast.If(sastexpr, analyze_stmt env s1, analyze_stmt env s2) (* Check then, else *)
       else raise(Failure("invalid if condition"))
-  | Ast.Return(e) -> let sastexpr = expr env e in Sast.Return(sastexpr)
+  | Ast.Return(e) -> let sastexpr = analyze_expr env e in Sast.Return(sastexpr)
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [
@@ -183,22 +183,4 @@ let analyze_semantics prgm: Sast.program =
         find_plot new_func_decls
       with Not_found -> raise (Failure("No plot was found.")) in
   ([], List.append new_func_decls library_funcs)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

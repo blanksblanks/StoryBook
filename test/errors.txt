@@ -1,12 +1,291 @@
 Test: HelloWorld
-./test.sh: line 12: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(plot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ID(say)
+State 38: shift to state 56
+State 56: read token LPAREN
+State 56: shift to state 71
+State 71: read token LIT_STRING("Once upon a time...")
+State 71: shift to state 54
+State 54: reduce by rule 39
+State 100: read token RPAREN
+State 100: reduce by rule 64
+State 102: reduce by rule 63
+State 101: shift to state 126
+State 126: reduce by rule 59
+State 58: read token PERIOD
+State 58: shift to state 75
+State 75: reduce by rule 27
+State 59: reduce by rule 26
+State 38: read token ENDWITH
+State 38: shift to state 48
+State 48: read token LPAREN
+State 48: shift to state 67
+State 67: read token LIT_NUM(0)
+State 67: shift to state 52
+State 52: reduce by rule 37
+State 95: read token RPAREN
+State 95: shift to state 122
+State 122: read token PERIOD
+State 122: shift to state 132
+State 132: reduce by rule 29
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
 Test: ReturnNum
-./test.sh: line 12: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(plot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ENDWITH
+State 38: shift to state 48
+State 48: read token LPAREN
+State 48: shift to state 67
+State 67: read token LIT_NUM(0)
+State 67: shift to state 52
+State 52: reduce by rule 37
+State 95: read token RPAREN
+State 95: shift to state 122
+State 122: read token PERIOD
+State 122: shift to state 132
+State 132: reduce by rule 29
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
 Test: BadFunc
-./test.sh: line 48: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(plot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ID(print)
+State 38: shift to state 56
+State 56: read token LPAREN
+State 56: shift to state 71
+State 71: read token LIT_STRING("Once upon a time")
+State 71: shift to state 54
+State 54: reduce by rule 39
+State 100: read token RPAREN
+State 100: reduce by rule 64
+State 102: reduce by rule 63
+State 101: shift to state 126
+State 126: reduce by rule 59
+State 58: read token PERIOD
+State 58: shift to state 75
+State 75: reduce by rule 27
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
+Fatal error: exception Failure("function 'print' not found")
 Test: NoPlot
-./test.sh: line 48: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(noPlot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ID(say)
+State 38: shift to state 56
+State 56: read token LPAREN
+State 56: shift to state 71
+State 71: read token LIT_STRING("Once upon a time")
+State 71: shift to state 54
+State 54: reduce by rule 39
+State 100: read token RPAREN
+State 100: reduce by rule 64
+State 102: reduce by rule 63
+State 101: shift to state 126
+State 126: reduce by rule 59
+State 58: read token PERIOD
+State 58: shift to state 75
+State 75: reduce by rule 27
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
+Fatal error: exception Failure("No return found")
 Test: NoReturn
-./test.sh: line 48: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(plot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ID(say)
+State 38: shift to state 56
+State 56: read token LPAREN
+State 56: shift to state 71
+State 71: read token LIT_STRING("Once upon a time...")
+State 71: shift to state 54
+State 54: reduce by rule 39
+State 100: read token RPAREN
+State 100: reduce by rule 64
+State 102: reduce by rule 63
+State 101: shift to state 126
+State 126: reduce by rule 59
+State 58: read token PERIOD
+State 58: shift to state 75
+State 75: reduce by rule 27
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
+Fatal error: exception Failure("No return found")
 Test: WrongReturnStringNotNumber
-./test.sh: line 48: .././run: No such file or directory
+State 0: shift to state 1
+State 1: reduce by rule 2
+State 4: read token FUNCTION
+State 4: shift to state 5
+State 5: read token ID(plot)
+State 5: shift to state 10
+State 10: read token LPAREN
+State 10: shift to state 12
+State 12: read token RPAREN
+State 12: reduce by rule 6
+State 19: shift to state 24
+State 24: read token RETURNS
+State 24: shift to state 28
+State 28: read token NUMBER
+State 28: shift to state 14
+State 14: reduce by rule 10
+State 31: read token LBRACE
+State 31: shift to state 34
+State 34: reduce by rule 25
+State 38: read token ID(say)
+State 38: shift to state 56
+State 56: read token LPAREN
+State 56: shift to state 71
+State 71: read token LIT_STRING("Once Upon a time")
+State 71: shift to state 54
+State 54: reduce by rule 39
+State 100: read token RPAREN
+State 100: reduce by rule 64
+State 102: reduce by rule 63
+State 101: shift to state 126
+State 126: reduce by rule 59
+State 58: read token PERIOD
+State 58: shift to state 75
+State 75: reduce by rule 27
+State 59: reduce by rule 26
+State 38: read token ENDWITH
+State 38: shift to state 48
+State 48: read token LPAREN
+State 48: shift to state 67
+State 67: read token LIT_STRING("cow")
+State 67: shift to state 54
+State 54: reduce by rule 39
+State 95: read token RPAREN
+State 95: shift to state 122
+State 122: read token PERIOD
+State 122: shift to state 132
+State 132: reduce by rule 29
+State 59: reduce by rule 26
+State 38: read token RBRACE
+State 38: shift to state 46
+State 46: reduce by rule 5
+State 9: reduce by rule 4
+State 4: read token EOF
+State 4: shift to state 7
+State 7: reduce by rule 1
+State 3: reduce by rule 66
+Fatal error: exception Failure("Incorrect return type")

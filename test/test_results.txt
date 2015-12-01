@@ -1,6 +1,6 @@
 Accept Tests:
-FAILURE: HelloWorld -- Storybook didn't compile
-FAILURE: ReturnNum -- Storybook didn't compile
+SUCCESS: HelloWorld
+SUCCESS: ReturnNum
 SUCCESS: BadFunc
 SUCCESS: NoPlot
 SUCCESS: NoReturn
