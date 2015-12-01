@@ -4,6 +4,22 @@ open Sast
 open Semantic_analyzer
 open Lexing
 
+let print_op o f = match o with 
+        Add -> fprintf f "+ "
+        | Sub -> fprintf f "- "
+        | Mult -> fprintf f "* "
+        | Div -> fprintf f "/ "
+        | Mod -> fprintf f "+ "
+        | Equal -> fprintf f "== "
+        | Neq -> fprintf f "!= "
+        | Less -> fprintf f "< " 
+        | Leq -> fprintf f "<= "
+        | Greater -> fprintf f "> "
+        | Geq -> fprintf f ">= "
+        | OR -> fprintf f "|| "
+        | AND -> fprintf f "&& "
+        | NOT -> fprintf f "!" 
+
 let type_as_string t = match t with
   |Sast.Number -> "int"
   |Sast.Boolean -> "bool"
@@ -17,10 +33,15 @@ let write_params params f =
 (* Takes expression tuple and file to write to *)
 let rec write_expr (e, t) f = match e with
 | Sast.LitString(s) -> fprintf f "%s" s
+| Sast.LitNum(n) -> fprintf f "%d" n
+| Sast.Unop(op, expr) -> print_op op f; fprintf f "("; write_expr expr f; fprintf f ")"
+| Sast.Binop(expr1, op, expr2) -> write_expr expr1 f; print_op op f; write_expr expr2 f
 | Sast.FCall (f_d, e_l) -> 
     if f_d.fname = "say" then begin fprintf f "\tprintf"; fprintf f " ( ";
         let (strExp, typ) = (List.nth e_l 0) in match strExp with
         |Sast.LitString(s) -> let newStr = (Sast.LitString((String.sub s 0 (String.length s - 1))^("\\n\"")), Sast.String) in write_expr newStr f; fprintf f ")"
+	(* trynna implement numbers and try to get them to print so that i can check binop and unop *)
+	|Sast.LitNum(n) -> let newNum = (Sast.LitNum(n), Sast.Number) in write_expr newNum f; fprintf f ")"
         | _ -> fprintf f ""
     end
     else begin fprintf f  "\t %s " f_d.fname;  fprintf f " ("; List.iter (fun e -> write_expr e f) e_l; fprintf f " )"end;
