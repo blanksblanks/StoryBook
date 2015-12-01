@@ -57,7 +57,8 @@ rule token = parse
   | "words"   { STRING }
   | "letter"  { CHAR } (*
   | "list"    { LIST }
-  | "null"    { NULL }
+  | "null"    { NULL } *)
+  | "nothing" { VOID } (*)
   | "subtype" { SUBTYPE }
   | "Plot"    { MAIN }*)
   | "Chapter" { FUNCTION }

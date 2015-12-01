@@ -42,11 +42,12 @@ let is_Valid_Op t1 op t2 = match t1 with
 | _ -> true
 
 let convert_data_type old_type = match old_type with
-  |Ast.Number -> Sast.Number
-  |Ast.Boolean -> Sast.Boolean
-  |Ast.String -> Sast.String
-  |Ast.Char -> Sast.Char
-  |Ast.Object(v) -> Sast.String
+  | Ast.Void -> Sast.Void 
+  | Ast.Number -> Sast.Number
+  | Ast.Boolean -> Sast.Boolean
+  | Ast.String -> Sast.String
+  | Ast.Char -> Sast.Char
+  | Ast.Object(v) -> Sast.String
 
 
 (* compare parameter types *)
@@ -114,13 +115,16 @@ let library_funcs = [
 ]
 
 let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
-  Sast.Return(e) -> let (_, typ) = e in if expTyp = typ  then true else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
+  Sast.Return(e) -> let (_, typ) = e in 
+    if expTyp = typ  then true 
+    else if expTyp = Sast.Void then raise (Failure("Void function cannot return a value")) 
+    else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
   | _ -> false
-  
+
 let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
   try
-     List.find(check_ret expTyp env) body_l
-  with Not_found -> raise (Failure("No return found"))
+     List.find(check_ret expTyp env) body_l 
+  with Not_found -> if expTyp <> Sast.Void then raise (Failure("No return found")) else Expression(Noexpr, Void)
 
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
