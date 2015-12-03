@@ -1,5 +1,6 @@
 (* Possible data types *)
 type data_type =
+  | Void
   | Number
   | Boolean
   | String

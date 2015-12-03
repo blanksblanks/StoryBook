@@ -1,11 +1,13 @@
 open Ast
 
 type data_type =
-  Number
+    Void
+  | Number
   | Boolean
   | String
   | Char
   | Object of class_decl
+
 and expr_detail =
     LitNum of float
   | LitBool of bool

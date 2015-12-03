@@ -6,7 +6,7 @@
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
 /*%token LIST NULL */
-%token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
+%token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW
 %token <float> LIT_NUM
@@ -69,7 +69,8 @@ formal_list:
 
 /* Data type names */
 type_label:
-   NUMBER  { Number }
+   VOID    { Void }
+ | NUMBER  { Number }
  | BOOL    { Boolean }
  | STRING  { String }
  | CHAR    { Char }

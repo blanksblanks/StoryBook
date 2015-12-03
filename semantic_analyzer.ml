@@ -69,11 +69,12 @@ NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for opera
 | _ -> 		raise (Failure("Invalid unary operator")) 
 
 let convert_data_type old_type = match old_type with
-  |Ast.Number -> Sast.Number
-  |Ast.Boolean -> Sast.Boolean
-  |Ast.String -> Sast.String
-  |Ast.Char -> Sast.Char
-  |Ast.Object(v) -> Sast.String
+  | Ast.Void -> Sast.Void 
+  | Ast.Number -> Sast.Number
+  | Ast.Boolean -> Sast.Boolean
+  | Ast.String -> Sast.String
+  | Ast.Char -> Sast.Char
+  | Ast.Object(v) -> Sast.String
 
 
 (* compare parameter types *)
@@ -140,7 +141,7 @@ let rec analyze_stmt env = function
 
 let library_funcs = [
   {
-    (* Say is always going to evaluate to a String. Even if there are numbers as formals (e.g. say(1+1). it'll evaluate the 1+1 and print out the result as a String *)
+
     fname = "say";
     fformals = [{vtype = (Sast.String);
                  vname = "str";
@@ -151,36 +152,37 @@ let library_funcs = [
   }
 ]
 
-(* Checks to see if a statement is a return statement, and checks if it returns the right type *)
 let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
-  Sast.Return(e) -> let (_, typ) = e in if expTyp = typ  then true else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
+  Sast.Return(e) -> let (_, typ) = e in 
+    if expTyp = typ  then true 
+    else if expTyp = Sast.Void then raise (Failure("Void function cannot return a value")) 
+    else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
   | _ -> false
-  
-(* Looks for a return statement in function body *)
+
 let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
   try
-     List.find(check_ret expTyp env) body_l
-  with Not_found -> raise (Failure("No return found"))
+     List.find(check_ret expTyp env) body_l 
+  with Not_found -> if expTyp <> Sast.Void then raise (Failure("No return found")) else Expression(Noexpr, Void)
 
-(* looks at list of function types in the s/ast *)
+
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname
   (*and old_formals = fun_dcl.fformals *)
   and old_ret_type = fun_dcl.freturn
   and old_body = fun_dcl.fbody in (*?*)
-  let body = List.map (fun st -> analyze_stmt env st) old_body in (* stmt = analyze_stmt, just going through body and checking each statement *)
+  let body = List.map (fun st -> analyze_stmt env st) old_body in 
   let formals = [] in
   let ret_type = convert_data_type old_ret_type in
   let _ = find_return body env ret_type in
    {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
 
 
-(* the main of the program, goes through the scope, stores list of all declared lists and variables *)
+
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in (* parent scope is the starting out scope *)
-  let env = {scope = prgm_scope; return_type = Sast.Number} in (* main is always returning a number; might have to change to return type void; return type of the current function that you're in, so environment changes for every function *)
-  let (_, func_decls) = prgm  in (* the anything supposed to be the character declrations. *)
-  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in (* checks every single func in the Sast using analyze_func,  *)
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in 
+  let env = {scope = prgm_scope; return_type = Sast.Number} in 
+  let (_, func_decls) = prgm  in 
+  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in 
 
   (* Search for plot *)
   let _  = try
