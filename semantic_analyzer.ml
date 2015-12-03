@@ -3,8 +3,8 @@ open Sast
 
 type symbol_table = {
   parent : symbol_table option;
-  functions: Sast.function_decl list;
-  variables : Sast.variable_decl list;
+  mutable functions: Sast.function_decl list;
+  mutable variables : Sast.variable_decl list;
 }
 
 type translation_environment = {
@@ -29,40 +29,40 @@ let find_plot (l : Sast.function_decl list) =
 
 (* Find Variable *)
 let rec find_variable (scope : symbol_table) name =
-  try
+  (* try *)
     List.find (fun v -> v.vname = name) scope.variables
-  with Not_found ->
+(*   with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found"))
+    | _ -> raise (Failure("variable not found")) *)
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
-Add -> 
-	if (t1 == Sast.String || t2 == Sast.String) then Sast.String
-	else if (t1 == Sast.Number || t2 == Sast.Number) then 
-		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
-		else if (t1 == Sast.Number && t2 == Sast.Number) then Sast.Number
-		else Sast.String
-	else if (t1 == Sast.Char || t2 == Sast.Char) then 
-		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
-		else Sast.String
-	else raise (Failure("Invalid use of + for operands' types"))			
-	
-| Sub -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of - for operands' types")) else Sast.Number
-| Mult -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of * for operands' types")) else Sast.Number
-| Div -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of / for operands' types")) else Sast.Number
-| Equal -> 	if (t1 <> t2) then raise (Failure("Invalid use of = for operands' types")) else Sast.Boolean 
-| Neq -> 	if (t1 <> t2) then raise (Failure("Invalid use of not= for operands' types")) else Sast.Boolean 
-| Less ->  	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of < for operands' types")) else Sast.Number
-| Leq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of <= for operands' types")) else Sast.Number
-| Greater ->	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of > for operands' types")) else Sast.Number
-| Geq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of >= for operands' types")) else Sast.Number
-| Mod -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of % for operands' types")) else Sast.Number
-| OR -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of or for operands' types")) else Sast.Boolean
-| AND -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of and for operands' types")) else Sast.Boolean
-| NOT -> 	raise (Failure("Invalid use of ! for two operands"))
-(*| _ ->		raise (Failure("Invalid binary operator")) if this line uncomment, get a case unused warning *)
+  Add -> 
+  	if (t1 == Sast.String || t2 == Sast.String) then Sast.String
+  	else if (t1 == Sast.Number || t2 == Sast.Number) then 
+  		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
+  		else if (t1 == Sast.Number && t2 == Sast.Number) then Sast.Number
+  		else Sast.String
+  	else if (t1 == Sast.Char || t2 == Sast.Char) then 
+  		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
+  		else Sast.String
+  	else raise (Failure("Invalid use of + for operands' types"))			
+  	
+  | Sub -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of - for operands' types")) else Sast.Number
+  | Mult -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of * for operands' types")) else Sast.Number
+  | Div -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of / for operands' types")) else Sast.Number
+  | Equal -> 	if (t1 <> t2) then raise (Failure("Invalid use of = for operands' types")) else Sast.Boolean 
+  | Neq -> 	if (t1 <> t2) then raise (Failure("Invalid use of not= for operands' types")) else Sast.Boolean 
+  | Less ->  	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of < for operands' types")) else Sast.Number
+  | Leq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of <= for operands' types")) else Sast.Number
+  | Greater ->	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of > for operands' types")) else Sast.Number
+  | Geq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of >= for operands' types")) else Sast.Number
+  | Mod -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of % for operands' types")) else Sast.Number
+  | OR -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of or for operands' types")) else Sast.Boolean
+  | AND -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of and for operands' types")) else Sast.Boolean
+  | NOT -> 	raise (Failure("Invalid use of ! for two operands"))
+  (*| _ ->		raise (Failure("Invalid binary operator")) if this line uncomment, get a case unused warning *)
 
 let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
@@ -75,6 +75,7 @@ let convert_data_type old_type = match old_type with
   | Ast.String -> Sast.String
   | Ast.Char -> Sast.Char
   | Ast.Object(v) -> Sast.String
+  | _ -> raise(Failure("Data type does not exist"))
 
 
 (* compare parameter types *)
@@ -91,7 +92,7 @@ let rec analyze_expr env = function
     | Ast.LitString(v) -> Sast.LitString(v), Sast.String
     | Ast.Id(vname) ->
       let vdecl = try
-	    find_variable env.scope vname (* locate a variable by name *)
+	     find_variable env.scope vname (* locate a variable by name *)
       with Not_found ->
         raise (Failure("undeclared identifier " ^ vname))
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
@@ -126,10 +127,24 @@ let rec analyze_expr env = function
 
     | _ -> Sast.LitString(""), Sast.String
 
+let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
+  let typ = convert_data_type var.vtype in
+    let (e, expr_typ) = analyze_expr env var.vexpr in
+          if typ <> expr_typ then raise(Failure("Variable assignment does not match variable type"))
+          else let v =  { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) } in
+            env.scope.variables <- v :: env.scope.variables
+
 
 let rec analyze_stmt env = function
   Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
   (* If statement: verify the predicate is integer *)
+  | Ast.VarDecl(var_decl) -> 
+       try
+         let _ = 
+            find_variable env.scope var_decl.vname in
+            raise(Failure("Variable already declared in this scope")) 
+         with Not_found ->
+            check_var_decl env var_decl
   | Ast.If(e, s1, s2) ->
       let sastexpr = analyze_expr env e in (* Check the predicate *)
       let (_, typ) = sastexpr in
@@ -137,6 +152,22 @@ let rec analyze_stmt env = function
       	Sast.If(sastexpr, analyze_stmt env s1, analyze_stmt env s2) (* Check then, else *)
       else raise(Failure("invalid if condition"))
   | Ast.Return(e) -> let sastexpr = analyze_expr env e in Sast.Return(sastexpr)
+  | Ast.For(e1, e2, e3, s) ->
+      let sastexpr1 = analyze_expr env e1 in 
+      let sastexpr2 = analyze_expr env e2 in
+      let (_, typ) =  sastexpr2 in
+      if typ <> Sast.Boolean then
+        raise(Failure("For loop must have boolean condition"))
+      else let sastexpr3 = analyze_expr env e3 in
+      let s = analyze_stmt env s in
+      Sast.For(sastexpr1, sastexpr2, sastexpr3, s)
+  | Ast.While(e, s) ->
+      let sastexpr = analyze_expr env e in
+      let (_, typ) = sastexpr in
+      if typ <> Sast.Boolean then
+        raise(Failure("While condition must be a boolean expression"))
+      else let s = analyze_stmt env s in
+      Sast.While(sastexpr, s)
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [
@@ -166,9 +197,10 @@ let find_return (body_l : Sast.statement list) (env: translation_environment) (e
 
 
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
-  let name = fun_dcl.fname
+  let name = fun_dcl.fname in
+    if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
   (*and old_formals = fun_dcl.fformals *)
-  and old_ret_type = fun_dcl.freturn
+  else let old_ret_type = fun_dcl.freturn 
   and old_body = fun_dcl.fbody in (*?*)
   let body = List.map (fun st -> analyze_stmt env st) old_body in 
   let formals = [] in
