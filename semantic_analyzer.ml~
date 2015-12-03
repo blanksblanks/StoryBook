@@ -47,7 +47,7 @@ Add ->
 	else if (t1 == Sast.Char || t2 == Sast.Char) then 
 		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
 		else Sast.String
-	else raise (Failure("Invalid use of + for operands' types"))			
+	else Sast.String			
 	
 | Sub -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of - for operands' types")) else Sast.Number
 | Mult -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of * for operands' types")) else Sast.Number

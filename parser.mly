@@ -3,13 +3,13 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PERIOD APOST
 %token PLUS MINUS TIMES DIVIDE ASSIGN MOD
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
-/*%token ENDWIDTH */
+%token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
 /*%token LIST NULL */
 %token NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW
-%token <int> LIT_INT
+%token <float> LIT_NUM
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
 %token <char> LIT_CHAR
@@ -135,7 +135,7 @@ stmt_list:
 stmt:
     expr PERIOD { Expr($1) }
   | vdecl {VarDecl($1)}
-  | RETURNS expr SEMI { Return($2) }
+  | ENDWITH LPAREN expr RPAREN PERIOD { Return($3) }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -149,7 +149,7 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LIT_INT          {LitNum($1)}
+    LIT_NUM          {LitNum($1)}
   | LIT_BOOL         {LitBool($1)}
   | LIT_STRING       {LitString($1)}
   | LIT_CHAR         {LitChar($1)}

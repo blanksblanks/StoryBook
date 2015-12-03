@@ -7,7 +7,7 @@ type data_type =
   | Char
   | Object of class_decl
 and expr_detail =
-    LitNum of int
+    LitNum of float
   | LitBool of bool
   | LitString of string (* quoted string literal *)
   | LitChar of char (* 'c' *)
@@ -15,6 +15,7 @@ and expr_detail =
   | Id of variable_decl
   | FCall of function_decl * expression list
   | Binop of expression * op * expression (* a + b *)
+  | Unop of op * expression
 
 and expression = expr_detail * data_type
 

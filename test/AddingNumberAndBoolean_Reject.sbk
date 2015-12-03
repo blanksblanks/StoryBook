@@ -1,0 +1,4 @@
+hapter plot() returns number {
+    say(1 + True).
+    endwith (0).
+}

@@ -12,7 +12,7 @@ OR | AND | NOT
 
 (* Expressions *)
 type expr =
-  LitNum of int
+  LitNum of float
 | LitBool of bool
 | LitString of string (* quoted string literal *)
 | LitChar of char (* 'c' *)
