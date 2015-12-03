@@ -52,7 +52,8 @@ let rec write_expr (e, t) = match e with
 	|Sast.LitNum(n) -> let newNum = (Sast.LitNum(n), Sast.Number) in write_expr newNum ; print_string ")"
         | _ -> print_string ""
 
-       
+        |Sast.LitString(s) -> let newStr = (Sast.LitString((String.sub s 0 (String.length s - 1))^("\\n\"")), Sast.String) in write_expr newStr; print_string ")"
+        | _ -> print_string ""
 
     end
     else begin print_string  ("\t "^f_d.fname^" ");  print_string " ("; List.iter (fun e -> write_expr e) e_l; print_string " )"end;

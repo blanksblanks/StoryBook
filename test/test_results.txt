@@ -1,7 +1,0 @@
-Accept Tests:
-SUCCESS: HelloWorld
-SUCCESS: ReturnNum
-SUCCESS: BadFunc
-SUCCESS: NoPlot
-SUCCESS: NoReturn
-SUCCESS: WrongReturnStringNotNumber
