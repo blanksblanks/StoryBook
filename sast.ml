@@ -15,6 +15,7 @@ and expr_detail =
   | LitChar of char (* 'c' *)
   | Noexpr (* for (;;) *)
   | Id of variable_decl
+  | Assign of string * expression (* x is 5 *)
   | FCall of function_decl * expression list
   | Binop of expression * op * expression (* a + b *)
   | Unop of op * expression
@@ -24,7 +25,7 @@ and expression = expr_detail * data_type
 and variable_decl = {
   vtype: data_type;
   vname : string;
-  vexpr : expression;
+  mutable vexpr : expression;
 }
 (* Statements *)
 and statement =

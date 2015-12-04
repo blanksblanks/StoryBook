@@ -29,12 +29,12 @@ let find_plot (l : Sast.function_decl list) =
 
 (* Find Variable *)
 let rec find_variable (scope : symbol_table) name =
-  (* try *)
-    List.find (fun v -> v.vname = name) scope.variables
-(*   with Not_found ->
+  try
+    List.find(fun v -> v.vname = name) scope.variables
+  with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found")) *)
+    | _ -> raise (Failure("variable not found"))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -75,7 +75,6 @@ let convert_data_type old_type = match old_type with
   | Ast.String -> Sast.String
   | Ast.Char -> Sast.Char
   | Ast.Object(v) -> Sast.String
-  | _ -> raise(Failure("Data type does not exist"))
 
 
 (* compare parameter types *)
@@ -96,7 +95,16 @@ let rec analyze_expr env = function
       with Not_found ->
         raise (Failure("undeclared identifier " ^ vname))
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
-
+    | Ast.Assign(vname, expr) ->
+        let vdecl = try
+          find_variable env.scope vname 
+        with Not_found ->
+          raise (Failure("undeclared identifier " ^ vname))  
+        in let (e, expr_typ) = analyze_expr env expr 
+        in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type")) 
+        else 
+          let _ = vdecl.vexpr <- (e, expr_typ) in (* change variable expr in symbol_table *)
+          Sast.Assign(vname, (e, expr_typ)), expr_typ 
     | Ast.Binop(e1, op, e2) ->
 	  let e1 = analyze_expr env e1 (* Check left and right children *)
 	  and e2 = analyze_expr env e2 in
@@ -127,24 +135,23 @@ let rec analyze_expr env = function
 
     | _ -> Sast.LitString(""), Sast.String
 
+(* convert ast.var_decl to sast.variable_decl*)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let typ = convert_data_type var.vtype in
     let (e, expr_typ) = analyze_expr env var.vexpr in
           if typ <> expr_typ then raise(Failure("Variable assignment does not match variable type"))
-          else let v =  { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) } in
-            env.scope.variables <- v :: env.scope.variables
-
+          else { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }  
 
 let rec analyze_stmt env = function
   Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
-  (* If statement: verify the predicate is integer *)
-  | Ast.VarDecl(var_decl) -> 
-       try
-         let _ = 
-            find_variable env.scope var_decl.vname in
+  | Ast.VarDecl(var_decl) ->
+          if List.exists (fun x -> x.vname = var_decl.vname) env.scope.variables then
             raise(Failure("Variable already declared in this scope")) 
-         with Not_found ->
-            check_var_decl env var_decl
+          else 
+            let sast_var = check_var_decl env var_decl in
+            let _ = env.scope.variables <- sast_var :: env.scope.variables in
+            Sast.VarDecl(sast_var);  
+  (* If statement: verify the predicate is integer *)
   | Ast.If(e, s1, s2) ->
       let sastexpr = analyze_expr env e in (* Check the predicate *)
       let (_, typ) = sastexpr in
