@@ -101,10 +101,10 @@ let rec analyze_expr env = function
 	  and e2 = analyze_expr env e2 in
 	  let _, t1 = e1 (* Get the type of each child *)
 	  and _, t2 = e2 in (*let valid = *)
-	  let validbinop = try
-		analyze_binop env.scope op t1 t2
+	  let validbinop = try analyze_binop env.scope op t1 t2 
 	  with Not_found -> raise (Failure("Invalid binary operator"))
-	  in Sast.Binop(e1, op, e2), validbinop (* Success: result is int *)
+    in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
+      else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
 
     | Ast.Unop(op, e1) ->
 	  let e1 = analyze_expr env e1 in

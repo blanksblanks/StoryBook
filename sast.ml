@@ -16,7 +16,8 @@ and expr_detail =
   | Noexpr (* for (;;) *)
   | Id of variable_decl
   | FCall of function_decl * expression list
-  | Binop of expression * op * expression (* a + b *)
+  | StrCat of expression * expression
+  | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
 
 and expression = expr_detail * data_type
