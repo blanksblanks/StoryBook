@@ -1,3 +1,4 @@
 Chapter plot() returns number {
   print("Once upon a time").
+  endwith(0).
 }
