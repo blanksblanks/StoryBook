@@ -1,0 +1,12 @@
+Accept Tests:
+SUCCESS: AddingBooleanAndString
+SUCCESS: AddingNumberAndString
+SUCCESS: HelloWorld
+SUCCESS: ReturnNum
+SUCCESS: ReturnVoid
+SUCCESS: AddingNumberAndBoolean
+SUCCESS: BadFunc
+SUCCESS: NoPlot
+SUCCESS: NoReturn
+SUCCESS: ReturnVoid
+SUCCESS: WrongReturnStringNotNumber
