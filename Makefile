@@ -1,4 +1,4 @@
-OBJS = parser.cmo scanner.cmo semantic_analyzer.cmo ast.cmo sast.cmo codegen.cmo
+OBJS = parser.cmo scanner.cmo semantic_analyzer.cmo ast.cmo sast.cmo cast.cmo codegen.cmo pretty_print.cmo
 
 # TARFILES = Makefile scanner.mll parser.mly \
 # 	$(TESTS:%=tests/test-%.mc) \

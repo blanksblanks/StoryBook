@@ -23,6 +23,7 @@ for acceptname in *_Accept.sbk;do
               echo "SUCCESS: $program" >> test_results.txt;
             else
               echo "FAILURE: $program -- Compiled and ran, but wrong output." >> test_results.txt
+              echo "FAILURE: $program -- Compiled and ran, but wrong output."
             fi
           else
             echo "      /\_/\\ !! _

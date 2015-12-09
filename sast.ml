@@ -17,7 +17,8 @@ and expr_detail =
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
   | FCall of function_decl * expression list
-  | Binop of expression * op * expression (* a + b *)
+  | StrCat of expression * expression
+  | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
 
 and expression = expr_detail * data_type

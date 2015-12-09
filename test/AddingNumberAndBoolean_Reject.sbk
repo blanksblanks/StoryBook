@@ -1,4 +1,4 @@
-hapter plot() returns number {
+Chapter plot() returns number {
     say(1 + True).
     endwith (0).
 }
