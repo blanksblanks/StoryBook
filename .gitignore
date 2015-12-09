@@ -19,7 +19,3 @@ test/test_results.txt
 test/*_Out.txt
 test/errors.txt
 
-# Ignore files without extensions
-*
-!*.*
-!*/
