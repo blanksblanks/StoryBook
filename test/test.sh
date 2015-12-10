@@ -21,7 +21,6 @@ for acceptname in *_Accept.sbk;do
             if  diff -q "${program}_Out.txt" "${program}_Exp.txt" 
             then
               rm $program
-              rm "$program.c"
               let "passcount += 1"
               echo "SUCCESS: $program" >> test_results.txt;
             else
@@ -57,7 +56,6 @@ for rejectname in *_Reject.sbk;do
         then
           let "passcount += 1"
           echo "SUCCESS: $program" >> test_results.txt
-          rm "$program.c"
           
         else
           let "failcount += 1"
