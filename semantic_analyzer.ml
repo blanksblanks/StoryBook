@@ -186,7 +186,8 @@ let library_funcs = [
                  vexpr = (Sast.Noexpr, Sast.String) (*will have to make void*)
                 }];
     freturn = Sast.Number;
-    funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)]; 	   
+    funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
+    isLib = true; 	   
   }
 ]
 
@@ -213,7 +214,7 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let formals = [] in
   let ret_type = convert_data_type old_ret_type in
   let _ = find_return body env ret_type in
-   {fname = name; fformals = formals; freturn = ret_type; funcbody= body}
+   {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false}
 
 
 

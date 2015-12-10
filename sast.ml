@@ -45,6 +45,7 @@ and function_decl = {
   fformals : variable_decl list; (* formal params *)
   freturn : data_type; (* return type *)
   funcbody : statement list; (* statements, including local variable declarations *)
+  isLib : bool;
 }
 
 (* Actions *)

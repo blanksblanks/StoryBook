@@ -111,8 +111,9 @@ let write_func funcdec =
 let print_code pgm =
 	let (cdecs, funcdecs) = pgm in
     print_string "#include <stdio.h> \n #include <string.h> \n\n\t";
-    write_func (List.nth funcdecs 0);
-    flush
+    let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
+      List.iter (fun f -> write_func f) userFuncs;
+  flush
 
 	let lexbuf = Lexing.from_channel stdin
 	let ast = Parser.program Scanner.token lexbuf
