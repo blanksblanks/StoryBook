@@ -1,0 +1,6 @@
+~~Hello, this is a single line comment.
+
+Chapter plot() returns number {
+  say("Once upon a time...").
+  endwith (0).
+}

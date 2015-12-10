@@ -1,13 +1,14 @@
 { open Parser }
 
 let whitespace = [' ' '\t' '\r' '\n']
+let comment = "~~" [^ '\n']* "\n"
 let digit = ['0'-'9']
 
 rule token = parse
-  whitespace { token lexbuf } (* Whitespace *)
-
-  (* Comments *)
-  | "~"     { comment lexbuf }
+  (* Whitespace and Comments *)
+  whitespace { token lexbuf }
+  | comment  { token lexbuf }
+  | '~'      { comment lexbuf }
 
   (* Punctuation *)
   | '('      { LPAREN }
@@ -19,7 +20,7 @@ rule token = parse
   | ';'      { SEMI }
   | ','      { COMMA }
   | '.'      { PERIOD }
-  | "'s"      { APOST }
+  | "'s"     { APOST }
 
   (* Binary Operators *)
   | '+'      { PLUS }
@@ -76,5 +77,5 @@ rule token = parse
   | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
-  "~" { token lexbuf }
+  "~"  { token lexbuf }
 | _    { comment lexbuf }
