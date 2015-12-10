@@ -149,7 +149,7 @@ let rec analyze_stmt env = function
             raise(Failure("Variable already declared in this scope")) 
           else 
             let sast_var = check_var_decl env var_decl in
-            let _ = env.scope.variables <- sast_var :: env.scope.variables in
+            let _ = env.scope.variables <- sast_var :: env.scope.variables in (* save new var_decl in symbol table *)
             Sast.VarDecl(sast_var);  
   (* If statement: verify the predicate is integer *)
   | Ast.If(e, s1, s2) ->
