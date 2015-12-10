@@ -1,0 +1,4 @@
+Chapter plot() returns number {
+    say("hello" + (1+1)).
+        endwith (0).
+        }
