@@ -1,0 +1,5 @@
+Chapter plot() returns number {
+    say("This is " + "Sparta!").
+        endwith (0).
+   }
+
