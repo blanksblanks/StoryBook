@@ -1,0 +1,4 @@
+Chapter plot() returns nothing {
+	tof x is false.
+	say(x).
+}
