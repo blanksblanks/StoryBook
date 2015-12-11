@@ -59,14 +59,12 @@ let rec get_expr (e, t) = match e with
       and (_, typ2) = expr2 in
       let v_name = get_next_var_name() in
       let buf_name = "buf_" ^ v_name in
-      let convert_expr1 = 
-      match typ1 with
+      let convert_expr1 = match typ1 with
         | Sast.Number -> "sprintf(" ^ buf_name ^ " , \"%f\", " ^ expr1_str ^");\n"
         | Sast.Boolean -> "sprintf(" ^ buf_name ^ ", " ^ expr1_str ^" ? \"true\" : \"false\");\n"
         | Sast.String -> "sprintf(" ^ buf_name ^ ", " ^expr1_str^");\n"
         | Sast.Char -> "sprintf(" ^ buf_name ^ ", \"%c\", \'" ^ expr1_str ^ "\');\n"
         | _ -> "" in
-
 
       let convert_expr2 =   match typ2 with
         | Sast.Number -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%f\", " ^ expr2_str ^");\n"
@@ -80,6 +78,7 @@ let rec get_expr (e, t) = match e with
   | Sast.FCall (f_d, e_l) -> 
       if f_d.fname = "say" then begin
           let (strExp, typ) = (List.nth e_l 0) in match strExp with
+
           | Sast.LitString(s) -> let lit_str = (String.sub s 0 (String.length s - 1))^("\\n\"") in
              ("\tprintf" ^ " ( " ^ lit_str^ ")", "")
           | Sast.LitNum(n) -> ("\tprintf" ^ " ( " ^ (string_of_float n)^ ")", "")
@@ -142,31 +141,39 @@ let get_formals params =
   p_list
 
 let write_func funcdec =
-	print_string ((type_as_string funcdec.freturn) ^ " ");
-	if funcdec.fname = "plot"
+  print_string ((type_as_string funcdec.freturn) ^ " ");
+  if funcdec.fname = "plot"
     then print_string " main"
   else
     print_string (" " ^ funcdec.fname);
-	let forms = get_formals funcdec.fformals in
+  let forms = get_formals funcdec.fformals in
   print_string ("(" ^ forms ^ ")");
-	print_string " { \n";
-	List.iter (fun s -> write_stmt s) funcdec.funcbody;
-	print_string " } \n"
+  print_string " { \n";
+  List.iter (fun s -> write_stmt s) funcdec.funcbody;
+  print_string " } \n"
 
 let print_code pgm =
+<<<<<<< HEAD
 	let (cdecs, funcdecs) = pgm in
 <<<<<<< HEAD
     print_string "#include <stdio.h> \n #include <string.h> \n #include <stdbool.h>\n\t";
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
 =======
+=======
+  let (cdecs, funcdecs) = pgm in
+>>>>>>> 8c330c6482d6d86cb669a3fdc312fb43ad666a80
   print_string "#include <stdio.h> \n #include <string.h> \n\n\t";
-  
+
   let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
+<<<<<<< HEAD
 >>>>>>> a4856ee696a29189adc8fbd3bcde4f89b3ed2d30
       List.iter (fun f -> write_func f) userFuncs;
+=======
+    List.iter (fun f -> write_func f) userFuncs;
+>>>>>>> 8c330c6482d6d86cb669a3fdc312fb43ad666a80
   flush
 
-	let lexbuf = Lexing.from_channel stdin
-	let ast = Parser.program Scanner.token lexbuf
-	let sast = analyze_semantics ast
-	let _ = print_code sast
+  let lexbuf = Lexing.from_channel stdin
+  let ast = Parser.program Scanner.token lexbuf
+  let sast = analyze_semantics ast
+  let _ = print_code sast
