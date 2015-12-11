@@ -47,7 +47,6 @@ let analyze_binop (scope: symbol_table) op t1 t2 = match op with
   		else Sast.String
   	else if (t1 == Sast.Char || t2 == Sast.Char) then
   		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
-      else if (t1 == Sast.Number || t2 == Sast.Number) then raise (Failure("Invalid use of + for operands' types"))
       else Sast.String
   	else raise (Failure("Invalid use of + for operands' types"))
 
