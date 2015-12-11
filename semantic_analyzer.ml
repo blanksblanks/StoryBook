@@ -38,22 +38,23 @@ let rec find_variable (scope : symbol_table) name =
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
-  Add -> 
+  Add ->
   	if (t1 == Sast.String || t2 == Sast.String) then Sast.String
-  	else if (t1 == Sast.Number || t2 == Sast.Number) then 
+  	else if (t1 == Sast.Number || t2 == Sast.Number) then
   		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
   		else if (t1 == Sast.Number && t2 == Sast.Number) then Sast.Number
+      else if (t1 == Sast.Char || t2 == Sast.Char) then raise (Failure("Invalid use of + for operands' types"))
   		else Sast.String
-  	else if (t1 == Sast.Char || t2 == Sast.Char) then 
+  	else if (t1 == Sast.Char || t2 == Sast.Char) then
   		if (t1 == Sast.Boolean || t2 == Sast.Boolean) then raise (Failure("Invalid use of + for operands' types"))
-  		else Sast.String
-  	else raise (Failure("Invalid use of + for operands' types"))			
-  	
+      else Sast.String
+  	else raise (Failure("Invalid use of + for operands' types"))
+
   | Sub -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of - for operands' types")) else Sast.Number
   | Mult -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of * for operands' types")) else Sast.Number
   | Div -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of / for operands' types")) else Sast.Number
-  | Equal -> 	if (t1 <> t2) then raise (Failure("Invalid use of = for operands' types")) else Sast.Boolean 
-  | Neq -> 	if (t1 <> t2) then raise (Failure("Invalid use of not= for operands' types")) else Sast.Boolean 
+  | Equal -> 	if (t1 <> t2) then raise (Failure("Invalid use of = for operands' types")) else Sast.Boolean
+  | Neq -> 	if (t1 <> t2) then raise (Failure("Invalid use of not= for operands' types")) else Sast.Boolean
   | Less ->  	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of < for operands' types")) else Sast.Number
   | Leq -> 	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of <= for operands' types")) else Sast.Number
   | Greater ->	if (t1 <> Sast.Number || t2 <> Sast.Number) then raise (Failure("Invalid use of > for operands' types")) else Sast.Number
@@ -66,10 +67,10 @@ let analyze_binop (scope: symbol_table) op t1 t2 = match op with
 
 let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
-| _ -> 		raise (Failure("Invalid unary operator")) 
+| _ -> 		raise (Failure("Invalid unary operator"))
 
 let convert_data_type old_type = match old_type with
-  | Ast.Void -> Sast.Void 
+  | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
   | Ast.Boolean -> Sast.Boolean
   | Ast.String -> Sast.String
@@ -97,27 +98,27 @@ let rec analyze_expr env = function
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
     | Ast.Assign(vname, expr) ->
         let vdecl = try
-          find_variable env.scope vname 
+          find_variable env.scope vname
         with Not_found ->
-          raise (Failure("undeclared identifier " ^ vname))  
-        in let (e, expr_typ) = analyze_expr env expr 
-        in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type")) 
-        else 
+          raise (Failure("undeclared identifier " ^ vname))
+        in let (e, expr_typ) = analyze_expr env expr
+        in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
+        else
           let _ = vdecl.vexpr <- (e, expr_typ) in (* change variable expr in symbol_table *)
-          Sast.Assign(vname, (e, expr_typ)), expr_typ 
+          Sast.Assign(vname, (e, expr_typ)), expr_typ
     | Ast.Binop(e1, op, e2) ->
 	  let e1 = analyze_expr env e1 (* Check left and right children *)
 	  and e2 = analyze_expr env e2 in
 	  let _, t1 = e1 (* Get the type of each child *)
 	  and _, t2 = e2 in (*let valid = *)
-	  let validbinop = try analyze_binop env.scope op t1 t2 
+	  let validbinop = try analyze_binop env.scope op t1 t2
 	  with Not_found -> raise (Failure("Invalid binary operator"))
     in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
       else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
 
     | Ast.Unop(op, e1) ->
 	  let e1 = analyze_expr env e1 in
-	  let _, t1 = e1 in 
+	  let _, t1 = e1 in
 	  let validunop = try
 		analyze_unop env.scope op t1
 	  with Not_found -> raise (Failure("Invalid unary operator"))
@@ -140,17 +141,17 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let typ = convert_data_type var.vtype in
     let (e, expr_typ) = analyze_expr env var.vexpr in
           if typ <> expr_typ then raise(Failure("Variable assignment does not match variable type"))
-          else { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }  
+          else { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
 
 let rec analyze_stmt env = function
   Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
   | Ast.VarDecl(var_decl) ->
           if List.exists (fun x -> x.vname = var_decl.vname) env.scope.variables then
-            raise(Failure("Variable already declared in this scope")) 
-          else 
+            raise(Failure("Variable already declared in this scope"))
+          else
             let sast_var = check_var_decl env var_decl in
             let _ = env.scope.variables <- sast_var :: env.scope.variables in (* save new var_decl in symbol table *)
-            Sast.VarDecl(sast_var);  
+            Sast.VarDecl(sast_var);
   (* If statement: verify the predicate is integer *)
   | Ast.If(e, s1, s2) ->
       let sastexpr = analyze_expr env e in (* Check the predicate *)
@@ -160,7 +161,7 @@ let rec analyze_stmt env = function
       else raise(Failure("invalid if condition"))
   | Ast.Return(e) -> let sastexpr = analyze_expr env e in Sast.Return(sastexpr)
   | Ast.For(e1, e2, e3, s) ->
-      let sastexpr1 = analyze_expr env e1 in 
+      let sastexpr1 = analyze_expr env e1 in
       let sastexpr2 = analyze_expr env e2 in
       let (_, typ) =  sastexpr2 in
       if typ <> Sast.Boolean then
@@ -187,20 +188,20 @@ let library_funcs = [
                 }];
     freturn = Sast.Number;
     funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
-    isLib = true; 	   
+    isLib = true;
   }
 ]
 
 let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
-  Sast.Return(e) -> let (_, typ) = e in 
-    if expTyp = typ  then true 
-    else if expTyp = Sast.Void then raise (Failure("Void function cannot return a value")) 
+  Sast.Return(e) -> let (_, typ) = e in
+    if expTyp = typ  then true
+    else if expTyp = Sast.Void then raise (Failure("Void function cannot return a value"))
     else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
   | _ -> false
 
 let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
   try
-     List.find(check_ret expTyp env) body_l 
+     List.find(check_ret expTyp env) body_l
   with Not_found -> if expTyp <> Sast.Void then raise (Failure("No return found")) else Expression(Noexpr, Void)
 
 
@@ -208,9 +209,9 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname in
     if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
   (*and old_formals = fun_dcl.fformals *)
-  else let old_ret_type = fun_dcl.freturn 
+  else let old_ret_type = fun_dcl.freturn
   and old_body = fun_dcl.fbody in (*?*)
-  let body = List.map (fun st -> analyze_stmt env st) old_body in 
+  let body = List.map (fun st -> analyze_stmt env st) old_body in
   let formals = [] in
   let ret_type = convert_data_type old_ret_type in
   let _ = find_return body env ret_type in
@@ -219,14 +220,13 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
 
 
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in 
-  let env = {scope = prgm_scope; return_type = Sast.Number} in 
-  let (_, func_decls) = prgm  in 
-  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in 
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
+  let env = {scope = prgm_scope; return_type = Sast.Number} in
+  let (_, func_decls) = prgm  in
+  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
 
   (* Search for plot *)
   let _  = try
         find_plot new_func_decls
       with Not_found -> raise (Failure("No plot was found.")) in
   ([], List.append new_func_decls library_funcs)
-

@@ -1,0 +1,4 @@
+Chapter plot() returns nothing {
+	number x is (5).
+	say(x).
+}
