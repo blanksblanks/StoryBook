@@ -150,14 +150,14 @@ let write_func funcdec =
   print_string " } \n"
 
 let print_code pgm =
-	let (cdecs, funcdecs) = pgm in
+  let (cdecs, funcdecs) = pgm in
   print_string "#include <stdio.h> \n #include <string.h> \n\n\t";
-  
+
   let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
-      List.iter (fun f -> write_func f) userFuncs;
+    List.iter (fun f -> write_func f) userFuncs;
   flush
 
-	let lexbuf = Lexing.from_channel stdin
-	let ast = Parser.program Scanner.token lexbuf
-	let sast = analyze_semantics ast
-	let _ = print_code sast
+  let lexbuf = Lexing.from_channel stdin
+  let ast = Parser.program Scanner.token lexbuf
+  let sast = analyze_semantics ast
+  let _ = print_code sast
