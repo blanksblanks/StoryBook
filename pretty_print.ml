@@ -139,15 +139,15 @@ let get_formals params =
 
 let write_func funcdec =
   print_string ((type_as_string funcdec.freturn) ^ " ");
-	if funcdec.fname = "plot"
+  if funcdec.fname = "plot"
     then print_string " main"
   else
     print_string (" " ^ funcdec.fname);
-	let forms = get_formals funcdec.fformals in
+  let forms = get_formals funcdec.fformals in
   print_string ("(" ^ forms ^ ")");
-	print_string " { \n";
-	List.iter (fun s -> write_stmt s) funcdec.funcbody;
-	print_string " } \n"
+  print_string " { \n";
+  List.iter (fun s -> write_stmt s) funcdec.funcbody;
+  print_string " } \n"
 
 let print_code pgm =
 	let (cdecs, funcdecs) = pgm in
