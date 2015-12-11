@@ -153,24 +153,10 @@ let write_func funcdec =
   print_string " } \n"
 
 let print_code pgm =
-<<<<<<< HEAD
 	let (cdecs, funcdecs) = pgm in
-<<<<<<< HEAD
     print_string "#include <stdio.h> \n #include <string.h> \n #include <stdbool.h>\n\t";
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
-=======
-=======
-  let (cdecs, funcdecs) = pgm in
->>>>>>> 8c330c6482d6d86cb669a3fdc312fb43ad666a80
-  print_string "#include <stdio.h> \n #include <string.h> \n\n\t";
-
-  let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
-<<<<<<< HEAD
->>>>>>> a4856ee696a29189adc8fbd3bcde4f89b3ed2d30
       List.iter (fun f -> write_func f) userFuncs;
-=======
-    List.iter (fun f -> write_func f) userFuncs;
->>>>>>> 8c330c6482d6d86cb669a3fdc312fb43ad666a80
   flush
 
   let lexbuf = Lexing.from_channel stdin
