@@ -140,7 +140,7 @@ stmt:
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-  | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN LBRACE stmt RBRACE
+  | FOR LPAREN expr SEMI expr SEMI expr RPAREN LBRACE stmt RBRACE
      { For($3, $5, $7, $10) }
   | WHILE LPAREN expr RPAREN LBRACE stmt RBRACE{ While($3, $6) }
 

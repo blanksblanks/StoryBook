@@ -33,17 +33,21 @@ let get_bool_str b = match b with
     | _ -> "0"
 
 let rec get_expr (e, t) = match e with
-| Sast.LitString(s) ->  (s, None)
-| Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, None)
-| Sast.LitNum(n) -> (string_of_float n, None)
-| Sast.Unop(op, expr) -> let op_str = get_op op in let (expr_str, _) = get_expr expr in
-    (op_str^ "("^ expr_str^")", None)
-| Sast.MathBinop(expr1, op, expr2) -> let (expr_str_1, _) = get_expr expr1 in let (expr_str_2, _) = get_expr expr2 in
-    let op_str = get_op op in (expr_str_1^op_str^expr_str_2, None)
-| Sast.StrCat(expr1, expr2) -> let (expr1_str, _) = get_expr expr1 in let (expr2_str, _) = get_expr expr2 in
-  let (_, typ1) = expr1 and (_, typ2) = expr2 in
-  let convert_expr1 = 
-  match typ1 with
+  | Sast.LitString(s) ->  (s, None)
+  | Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, None)
+  | Sast.LitNum(n) -> (string_of_float n, None)
+  | Sast.Id(var) -> let (expr_str, _ ) = get_expr var.vexpr in 
+      (expr_str, None)
+  | Sast.Assign(id, e) -> let (exp, _) = get_expr e in 
+      (id ^ " = " ^ exp, None)
+  | Sast.Unop(op, expr) -> let op_str = get_op op in let (expr_str, _) = get_expr expr in
+      (op_str^ "("^ expr_str^")", None)
+  | Sast.MathBinop(expr1, op, expr2) -> let (expr_str_1, _) = get_expr expr1 in let (expr_str_2, _) = get_expr expr2 in
+      let op_str = get_op op in (expr_str_1^op_str^expr_str_2, None)
+  | Sast.StrCat(expr1, expr2) -> let (expr1_str, _) = get_expr expr1 in let (expr2_str, _) = get_expr expr2 in
+    let (_, typ1) = expr1 and (_, typ2) = expr2 in
+    let convert_expr1 = 
+    match typ1 with
   | Sast.Number -> "sprintf(buf, \"%f\", " ^ expr1_str ^");\n"
   | Sast.Boolean -> "sprintf(buf, "^ expr1_str ^" ? \"true\" : \"false\");\n"
   | Sast.String -> "sprintf(buf, "^expr1_str^");\n"
@@ -66,6 +70,20 @@ let rec get_expr (e, t) = match e with
         | Sast.LitString(s) -> let lit_str = (String.sub s 0 (String.length s - 1))^("\\n\"") in
            ("\tprintf" ^ " ( " ^ lit_str^ ")", None)
         | Sast.LitNum(n) -> ("\tprintf" ^ " ( " ^ (string_of_float n)^ ")", None)
+        | Sast.Id(var) -> let (exp_det, _) = var.vexpr in 
+          (match exp_det with
+            | Sast.LitString(s) -> let lit_str = (String.sub s 0 (String.length s - 1))^("\\n\"") in
+             ("\tprintf" ^ " ( " ^ lit_str^ ")", None)
+            | Sast.LitNum(n) -> ("\tprintf" ^ " (\"%f\"," ^(string_of_float n) ^ ")", None)
+            | Sast.MathBinop(e1, op, e2) -> let (expr_str, _) = get_expr (strExp, typ) in
+            ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , None)
+            | Sast.StrCat(e1, e2) -> let (str_expr, prec_code) = get_expr (strExp, typ) in
+              let prec_code_str = match prec_code with
+              | Some(s) -> s
+              | None -> ""
+              in let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\","^str_expr ^ ")" in
+                (whole_str, None)
+              | _ -> ("", None))
         | Sast.MathBinop(e1, op, e2) -> let (expr_str, _) = get_expr (strExp, typ) in
             ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , None)
         | Sast.StrCat(e1, e2) -> let (str_expr, prec_code) = get_expr (strExp, typ) in
@@ -89,6 +107,9 @@ let get_form_param (v: variable_decl) =
 
 let write_stmt s = match s with
 | Sast.Expression(e) -> let (expr_str, _) = get_expr e in print_string expr_str; print_string ";\n"
+| Sast.VarDecl(vdecl) -> let vtyp = type_as_string vdecl.vtype in
+    let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
+    print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
 | Sast.Return(e) -> print_string "return "; let (expr_str, _) = get_expr e in print_string expr_str; print_string ";\n"
 | _ -> let (expr_str, _) = get_expr (LitString(""), Sast.String) in print_string expr_str; print_string ";\n"
 
