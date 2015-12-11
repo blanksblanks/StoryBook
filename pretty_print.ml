@@ -62,13 +62,13 @@ with Sast.LitString(s) -> (s, None)
      with Sast.Number -> "sprintf(buf, \"%f\", " ^ expr1_str ^ ");\n"
         | Sast.Boolean -> "sprintf(buf, " ^ expr1_str ^ " ? \"true\" : \"false\");\n"
         | Sast.String -> "sprintf(buf, " ^ expr1_str ^ ");\n"
-        | Sast.Char -> "sprintf(buf, \"%c\", " ^ expr1_str ^ ");\n"
+        | Sast.Char -> "sprintf(buf, \"%c\", \'" ^ expr1_str ^ "\');\n"
         | _ -> "" in
      let convert_expr2 = match typ2
      with Sast.Number -> "sprintf(buf + strlen(buf), \"%f\", " ^ expr2_str ^ ");\n"
         | Sast.Boolean -> "sprintf(buf + strlen(buf), " ^ expr2_str ^ " ? \"true\" : \"false\");\n"
         | Sast.String -> "sprintf(buf + strlen(buf), " ^ expr2_str ^ ");\n"
-        | Sast.Char -> "sprintf(buf + strlen(buf), \"%c\", " ^ expr2_str ^ ");\n"
+        | Sast.Char -> "sprintf(buf + strlen(buf), \"%c\", \'" ^ expr2_str ^ "\');\n"
         | _ -> "" in
    ("a", Some("char buf[100000];\n" ^ convert_expr1 ^ convert_expr2 ^ "char *a = buf;"))
    | Sast.FCall (f_d, e_l) ->
