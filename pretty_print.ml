@@ -38,6 +38,35 @@ let get_bool_str b = match b
 with true -> "1"
    | _ -> "0"
 
+let get_str_len expr_str typ = match typ
+with Sast.Number -> "5000"
+   | Sast.Boolean -> "5"
+   | Sast.String -> "strlen(" ^ expr_str ^ ")"
+   | Sast.Char -> "1"
+   | _ -> "10000"
+
+
+let get_str_cat_code expr1_str typ1 expr2_str typ2 v_name=
+     let buf_name = "buf_" ^ v_name in
+     let convert_expr1 = match typ1
+     with Sast.Number -> "sprintf(" ^ buf_name ^ " , \"%g\", " ^ expr1_str ^ ");\n"
+        | Sast.Boolean -> "sprintf(" ^ buf_name ^ ", " ^ expr1_str ^ " ? \"true\" : \"false\");\n"
+        | Sast.String -> "sprintf(" ^ buf_name ^ ", " ^ expr1_str ^ ");\n"
+        | Sast.Char -> "sprintf(" ^ buf_name ^ ", \"%c\", \'" ^ expr1_str ^ "\');\n"
+        | _ -> "" in
+     let convert_expr2 = match typ2
+     with Sast.Number -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%g\", " ^ expr2_str ^ ");\n"
+        | Sast.Boolean -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ " ? \"true\" : \"false\");\n"
+        | Sast.String -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ ");\n"
+        | Sast.Char -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%c\", " ^ expr2_str ^ ");\n"
+        | _ -> "" in
+
+    let expr1_len = get_str_len expr1_str typ1 in
+    let expr2_len = get_str_len expr2_str typ2 in
+    let buf_code = "char " ^ buf_name ^ "[ " ^ expr1_len ^ " + " ^ expr2_len ^ " + 1];\n" in
+
+    buf_code ^ convert_expr1 ^ convert_expr2 ^ "char *" ^ v_name ^ " = buf_" ^ v_name ^ ";"
+
 let rec get_expr (e, t) = match e
 with Sast.LitString(s) ->  (s, "")
    | Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, "")
@@ -59,20 +88,9 @@ with Sast.LitString(s) ->  (s, "")
      let (expr2_str, prec_strcat2) = get_expr expr2 in
      let (_, typ1) = expr1 and (_, typ2) = expr2 in
      let v_name = get_next_var_name() in
-     let buf_name = "buf_" ^ v_name in
-     let convert_expr1 = match typ1
-     with Sast.Number -> "sprintf(" ^ buf_name ^ " , \"%f\", " ^ expr1_str ^ ");\n"
-        | Sast.Boolean -> "sprintf(" ^ buf_name ^ ", " ^ expr1_str ^ " ? \"true\" : \"false\");\n"
-        | Sast.String -> "sprintf(" ^ buf_name ^ ", " ^ expr1_str ^ ");\n"
-        | Sast.Char -> "sprintf(" ^ buf_name ^ ", \"%c\", \'" ^ expr1_str ^ "\');\n"
-        | _ -> "" in
-     let convert_expr2 =   match typ2
-     with Sast.Number -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%f\", " ^ expr2_str ^ ");\n"
-        | Sast.Boolean -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ " ? \"true\" : \"false\");\n"
-        | Sast.String -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ ");\n"
-        | Sast.Char -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%c\", " ^ expr2_str ^ ");\n"
-        | _ -> "" in
-     (v_name, prec_strcat1 ^ prec_strcat2 ^ "char " ^ buf_name ^ "[100000];\n" ^ convert_expr1 ^ convert_expr2 ^ "char *" ^ v_name ^ " = buf_" ^ v_name ^ ";")
+     let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
+     (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
+
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
         let (strExp, typ) = (List.nth e_l 0) in match strExp
@@ -96,12 +114,12 @@ with Sast.LitString(s) ->  (s, "")
                 with Sast.LitString(s) ->
                      let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
                      ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
-                   | Sast.LitNum(n) -> ("\tprintf" ^ " (\"%f\"," ^ (string_of_float n) ^ ")", "")
+                   | Sast.LitNum(n) -> ("\tprintf" ^ " (\"%g\"," ^ (string_of_float n) ^ ")", "")
                    | Sast.LitBool(b) -> ("\tprintf(\"%d\\n\", " ^ (get_bool_str b) ^ ")", "")
                    | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
                    | Sast.MathBinop(e1, op, e2) ->
                      let (expr_str, prec_exp) = get_expr (strExp, typ) in
-                     ("\tprintf ( \"%f\\n\", " ^ expr_str ^ ")" , prec_exp)
+                     ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")" , prec_exp)
                    | Sast.StrCat(e1, e2) ->
                      let (str_expr, prec_code) = get_expr (strExp, typ) in
                      let whole_str = prec_code ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
