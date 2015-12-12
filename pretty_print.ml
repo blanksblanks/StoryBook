@@ -104,6 +104,12 @@ with Sast.LitString(s) ->  (s, "")
                  then ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , prec_expr)
                else
                  ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
+           | Sast.Unop(op, e) ->
+               let (expr_str, prec_expr) = get_expr(strExp, typ) in
+               if typ = Sast.Number
+                 then ("\tprintf (\" oops, unops for numbers are not implemented \")", prec_expr)
+               else
+                 ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
            | Sast.StrCat(e1, e2) -> let (str_expr, prec_code_str) = get_expr (strExp, typ) in
                 let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
                 (whole_str, "")
