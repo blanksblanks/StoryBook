@@ -95,8 +95,8 @@ with Sast.LitString(s) ->  (s, "")
         with Sast.LitString(s) ->
              let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
              ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
-           | Sast.LitNum(n) -> ("\tprintf" ^ " ( " ^ (string_of_float n) ^ ")", "")
-           | Sast.LitBool(b) -> ("\tprintf( " ^ (get_bool_str b) ^ ")", "")
+           | Sast.LitNum(n) -> ("\tprintf" ^ " ( \"%g\", " ^ (string_of_float n) ^ ")", "")
+           | Sast.LitBool(b) -> ("\tprintf( \"%s\", " ^ (get_bool_str b) ^ " ? \"true\" : \"false\");\n", "")
            | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
            | Sast.MathBinop(e1, op, e2) ->
                let (expr_str, prec_expr) = get_expr (strExp, typ) in
