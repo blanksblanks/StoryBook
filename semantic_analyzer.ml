@@ -175,6 +175,9 @@ let rec analyze_stmt env = function
         raise(Failure("While condition must be a boolean expression"))
       else let s = analyze_stmt env s in
       Sast.While(sastexpr, s)
+
+  | Ast.Block(stmts) -> let sast_blck = List.map( fun s -> analyze_stmt env s) stmts in
+      Sast.Block(sast_blck)
   | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [

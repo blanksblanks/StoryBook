@@ -99,15 +99,15 @@ with Sast.LitString(s) ->  (s, "")
            | Sast.LitBool(b) -> ("\tprintf( " ^ (get_bool_str b) ^ ")", "")
            | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
            | Sast.MathBinop(e1, op, e2) ->
-             let (expr_str, prec_expr) = get_expr (strExp, typ) in
-             if typ = Sast.Number
-               then ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , prec_expr)
-             else
-               ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
-          | Sast.StrCat(e1, e2) -> let (str_expr, prec_code_str) = get_expr (strExp, typ) in
-            let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
-            (whole_str, "")
-          | Sast.Id(var) -> let typ = var.vtype in
+               let (expr_str, prec_expr) = get_expr (strExp, typ) in
+               if typ = Sast.Number
+                 then ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , prec_expr)
+               else
+                 ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
+           | Sast.StrCat(e1, e2) -> let (str_expr, prec_code_str) = get_expr (strExp, typ) in
+                let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
+                (whole_str, "")
+           | Sast.Id(var) -> let typ = var.vtype in
               ( match typ
                 with Sast.String -> ("\tprintf" ^ " ( \"%s\\n\", " ^ var.vname ^ ")", "")
                    | Sast.Number -> ("\tprintf" ^ " (\"%g\"," ^ var.vname ^ ")", "")
@@ -115,7 +115,7 @@ with Sast.LitString(s) ->  (s, "")
                    | Sast.Char -> ("\tprintf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
 
-  	| _ -> ("", "")
+  	        | _ -> ("char * = \"cow\"", "")
       end
       else begin
         let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
@@ -123,7 +123,7 @@ with Sast.LitString(s) ->  (s, "")
         ("\t " ^ f_d.fname ^ " " ^ " (" ^  param_str ^ " )", "") end;
 
   (* catch all *)
-  | _ -> ("", "")
+  | _ -> ("char * = \"meow\"", "")
 
 let get_form_param (v: variable_decl) =
   let typ = type_as_string v.vtype in
@@ -156,7 +156,7 @@ let rec write_stmt s = match s with
    | Sast.Return(e) -> print_string "return "; let (expr_str, _) = get_expr e in
       print_string expr_str; print_string ";\n"
    | _ -> 
-      let (expr_str, _) = get_expr (LitString(""), Sast.String) in
+      let (expr_str, _) = get_expr (LitString("cow"), Sast.String) in
       print_string expr_str; print_string ";\n"
 
 

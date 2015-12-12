@@ -1,7 +1,7 @@
 Chapter plot() returns nothing{
- number x is (4).
+ number x is (10).
  repeatwhile( x > 5){
 	say("hi").
-	x is (4).
+	x is (x - 1).
  }
 }
