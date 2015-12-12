@@ -178,7 +178,6 @@ let rec analyze_stmt env = function
 
   | Ast.Block(stmts) -> let sast_blck = List.map( fun s -> analyze_stmt env s) stmts in
       Sast.Block(sast_blck)
-  | _ -> Sast.Expression(Sast.LitString(""), Sast.String)
 
 let library_funcs = [
   {
