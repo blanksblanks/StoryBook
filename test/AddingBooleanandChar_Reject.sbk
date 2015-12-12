@@ -1,0 +1,4 @@
+Chapter plot() returns number {
+    say( true + 'c' ).
+    endwith (0).
+}
