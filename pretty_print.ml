@@ -72,9 +72,7 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, "")
    | Sast.LitNum(n) -> (string_of_float n, "")
    | Sast.LitChar(c) -> ("\'" ^ Char.escaped c ^ "\'", "")
-   | Sast.Id(var) ->
-     let (expr_str, prec_id) = get_expr var.vexpr in
-     (expr_str, prec_id)
+   | Sast.Id(var) -> (var.vname, "")
    | Sast.Assign(id, e) ->
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
