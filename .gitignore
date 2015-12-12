@@ -12,6 +12,7 @@ parser.output
 *.diff
 *.dSYM
 *.c
+.DS_Store
 
 run
 helloWorld
