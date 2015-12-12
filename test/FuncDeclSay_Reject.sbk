@@ -1,0 +1,7 @@
+Chapter say(words w) returns words {
+  endwith(w). 
+}
+
+Chapter plot() returns nothing {
+  say("Hello").
+}
