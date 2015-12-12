@@ -1,0 +1,4 @@
+Chapter plot() returns number {
+  say("Once upon a time...").
+    endwith 0.
+    }
