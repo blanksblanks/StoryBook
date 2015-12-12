@@ -101,7 +101,7 @@ with Sast.LitString(s) ->  (s, "")
            | Sast.MathBinop(e1, op, e2) ->
                let (expr_str, prec_expr) = get_expr (strExp, typ) in
                if typ = Sast.Number
-                 then ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , prec_expr)
+                 then ("\tprintf ( \"%f\\n\", " ^ expr_str ^ ")" , prec_expr)
                else
                  ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
            | Sast.Unop(op, e) ->
