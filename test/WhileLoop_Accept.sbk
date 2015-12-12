@@ -1,0 +1,7 @@
+Chapter plot() returns nothing{
+ number x is (4).
+ repeatwhile( x > 5){
+	say("hi").
+	x is (4).
+ }
+}

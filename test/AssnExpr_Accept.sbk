@@ -1,0 +1,5 @@
+Chapter plot() returns nothing {
+	number x is (0).
+	number y is (1).
+	x is y + (1).
+}

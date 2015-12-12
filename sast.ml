@@ -35,7 +35,7 @@ and statement =
 | VarDecl of variable_decl
 | Return of expression
 | If of expression * statement * statement
-| For of expression * expression * expression * statement
+| For of statement * expression * expression * statement
 | While of expression * statement
 
 
