@@ -18,9 +18,9 @@ for acceptname in *_Accept.sbk;do
           if [ -f "$program" ]
           then
             ./$program > "${program}_Out.txt"
+            rm $program
             if  diff -q "${program}_Out.txt" "${program}_Exp.txt" 
             then
-              rm $program
               let "passcount += 1"
               echo "SUCCESS: $program" >> test_results.txt;
             else
