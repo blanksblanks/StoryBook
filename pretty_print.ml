@@ -28,11 +28,11 @@ with Add -> "+ "
 
 let type_as_string t = match t
 with 
-     Sast.Number -> "int"
+     Sast.Number -> "float"
    | Sast.Boolean -> "bool"
    | Sast.String -> "char *"
    | Sast.Char -> "char"
-   | _ -> "int"
+   | _ -> "float"
 
 let get_bool_str b = match b
 with true -> "1"
@@ -109,21 +109,12 @@ with Sast.LitString(s) ->  (s, "")
           | Sast.StrCat(e1, e2) -> let (str_expr, prec_code_str) = get_expr (strExp, typ) in
             let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
             (whole_str, "")
-          | Sast.Id(var) -> let (exp_det, _) = var.vexpr in
-              ( match exp_det
-                with Sast.LitString(s) ->
-                     let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
-                     ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
-                   | Sast.LitNum(n) -> ("\tprintf" ^ " (\"%g\"," ^ (string_of_float n) ^ ")", "")
-                   | Sast.LitBool(b) -> ("\tprintf(\"%d\\n\", " ^ (get_bool_str b) ^ ")", "")
-                   | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
-                   | Sast.MathBinop(e1, op, e2) ->
-                     let (expr_str, prec_exp) = get_expr (strExp, typ) in
-                     ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")" , prec_exp)
-                   | Sast.StrCat(e1, e2) ->
-                     let (str_expr, prec_code) = get_expr (strExp, typ) in
-                     let whole_str = prec_code ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
-                     (whole_str, "")
+          | Sast.Id(var) -> let typ = var.vtype in
+              ( match typ
+                with Sast.String -> ("\tprintf" ^ " ( \"%s\\n\", " ^ var.vname ^ ")", "")
+                   | Sast.Number -> ("\tprintf" ^ " (\"%g\"," ^ var.vname ^ ")", "")
+                   | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ var.vname ^ ")", "")
+                   | Sast.Char -> ("\tprintf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
 
   	| _ -> ("", "")
@@ -176,12 +167,14 @@ let get_formals params =
   p_list
 
 let write_func funcdec =
-  print_string ((type_as_string funcdec.freturn) ^ " ");
+  let ret_and_name_str =
   if funcdec.fname = "plot"
-    then print_string " main"
-  else
-    print_string (" " ^ funcdec.fname);
+    then "int main"
+  else begin
+    let typ_str = type_as_string funcdec.freturn in typ_str ^ " " ^ funcdec.fname
+  end in
   let forms = get_formals funcdec.fformals in
+  print_string ret_and_name_str;
   print_string ("(" ^ forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;

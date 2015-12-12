@@ -1,5 +1,6 @@
 Chapter plot() returns nothing {
 	words x is "hi".
 	x is "bye".
+	x is "cow".
 	say(x).
 }

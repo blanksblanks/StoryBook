@@ -104,7 +104,6 @@ let rec analyze_expr env = function
         in let (e, expr_typ) = analyze_expr env expr
         in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
         else
-          let _ = vdecl.vexpr <- (e, expr_typ) in (* change variable expr in symbol_table *)
           Sast.Assign(vname, (e, expr_typ)), expr_typ
     | Ast.Binop(e1, op, e2) ->
 	  let e1 = analyze_expr env e1 (* Check left and right children *)
