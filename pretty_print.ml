@@ -27,8 +27,11 @@ with Add -> "+ "
    | NOT -> "!"
 
 let type_as_string t = match t
-with Sast.Number -> "int"
+with 
+     Sast.Number -> "int"
    | Sast.Boolean -> "bool"
+   | Sast.String -> "char *"
+   | Sast.Char -> "char"
    | _ -> "int"
 
 let get_bool_str b = match b
@@ -39,7 +42,7 @@ let rec get_expr (e, t) = match e
 with Sast.LitString(s) ->  (s, "")
    | Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, "")
    | Sast.LitNum(n) -> (string_of_float n, "")
-   | Sast.LitChar(c) -> (Char.escaped c, "")
+   | Sast.LitChar(c) -> ("\'" ^ Char.escaped c ^ "\'", "")
    | Sast.Id(var) ->
      let (expr_str, prec_id) = get_expr var.vexpr in
      (expr_str, prec_id)
@@ -67,7 +70,7 @@ with Sast.LitString(s) ->  (s, "")
      with Sast.Number -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%f\", " ^ expr2_str ^ ");\n"
         | Sast.Boolean -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ " ? \"true\" : \"false\");\n"
         | Sast.String -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), " ^ expr2_str ^ ");\n"
-        | Sast.Char -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%c\", \'" ^ expr2_str ^ "\');\n"
+        | Sast.Char -> "sprintf(" ^ buf_name ^ " + strlen(" ^ buf_name ^ "), \"%c\", " ^ expr2_str ^ ");\n"
         | _ -> "" in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ "char " ^ buf_name ^ "[100000];\n" ^ convert_expr1 ^ convert_expr2 ^ "char *" ^ v_name ^ " = buf_" ^ v_name ^ ";")
     | Sast.FCall (f_d, e_l) ->
@@ -78,7 +81,7 @@ with Sast.LitString(s) ->  (s, "")
              ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
            | Sast.LitNum(n) -> ("\tprintf" ^ " ( " ^ (string_of_float n) ^ ")", "")
            | Sast.LitBool(b) -> ("\tprintf( " ^ (get_bool_str b) ^ ")", "")
-           | Sast.LitChar(c) -> ("(\tprintf( \"%c\", \'" ^ Char.escaped c ^  ")", "")
+           | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
            | Sast.MathBinop(e1, op, e2) ->
              let (expr_str, prec_expr) = get_expr (strExp, typ) in
              if typ = Sast.Number
@@ -95,10 +98,10 @@ with Sast.LitString(s) ->  (s, "")
                      ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
                    | Sast.LitNum(n) -> ("\tprintf" ^ " (\"%f\"," ^ (string_of_float n) ^ ")", "")
                    | Sast.LitBool(b) -> ("\tprintf(\"%d\\n\", " ^ (get_bool_str b) ^ ")", "")
-                   | Sast.LitChar(c) -> ("(\tprintf( \"%c\", \'" ^ Char.escaped c ^  ")", "")
+                   | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
                    | Sast.MathBinop(e1, op, e2) ->
                      let (expr_str, prec_exp) = get_expr (strExp, typ) in
-                     ("\tprintf ( \"%d\\n\", " ^ expr_str ^ ")" , prec_exp)
+                     ("\tprintf ( \"%f\\n\", " ^ expr_str ^ ")" , prec_exp)
                    | Sast.StrCat(e1, e2) ->
                      let (str_expr, prec_code) = get_expr (strExp, typ) in
                      let whole_str = prec_code ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
@@ -120,18 +123,20 @@ let get_form_param (v: variable_decl) =
   typ ^ " " ^ v.vname
 
 
-let write_stmt s = match s
-with Sast.Expression(e) ->
-     let (expr_str, prec_expr) = get_expr e in
-     print_string prec_expr; print_string ";\n";
-     print_string expr_str; print_string ";\n"
-   | Sast.VarDecl(vdecl) -> let vtyp = type_as_string vdecl.vtype in
-     let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
-     print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
+let write_stmt s = match s with 
+    Sast.Expression(e) ->
+      let (expr_str, prec_expr) = get_expr e in
+      print_string prec_expr; print_string ";\n";
+      print_string expr_str; print_string ";\n"
+   | Sast.VarDecl(vdecl) -> 
+      let vtyp = type_as_string vdecl.vtype in
+      let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
+      print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
    | Sast.Return(e) -> print_string "return "; let (expr_str, _) = get_expr e in
-     print_string expr_str; print_string ";\n"
-   | _ -> let (expr_str, _) = get_expr (LitString(""), Sast.String) in
-     print_string expr_str; print_string ";\n"
+      print_string expr_str; print_string ";\n"
+   | _ -> 
+      let (expr_str, _) = get_expr (LitString(""), Sast.String) in
+      print_string expr_str; print_string ";\n"
 
 
 let get_formals params =

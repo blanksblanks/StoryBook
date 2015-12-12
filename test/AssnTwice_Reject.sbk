@@ -1,0 +1,5 @@
+Chapter plot() returns nothing {
+	words x is "hi".
+	number x is (7).
+	say(x).
+}

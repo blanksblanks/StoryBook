@@ -1,0 +1,4 @@
+Chapter plot() returns nothing {
+	letter x is 'h'.
+	say(x).
+}
