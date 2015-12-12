@@ -161,7 +161,7 @@ let rec analyze_stmt env = function
       else raise(Failure("invalid if condition"))
   | Ast.Return(e) -> let sastexpr = analyze_expr env e in Sast.Return(sastexpr)
   | Ast.For(e1, e2, e3, s) ->
-      let sastexpr1 = analyze_expr env e1 in
+      let sastexpr1 = analyze_stmt env e1 in
       let sastexpr2 = analyze_expr env e2 in
       let (_, typ) =  sastexpr2 in
       if typ <> Sast.Boolean then

@@ -141,15 +141,29 @@ let get_form_param (v: variable_decl) =
   typ ^ " " ^ v.vname
 
 
-let write_stmt s = match s with 
-    Sast.Expression(e) ->
+let rec write_stmt s = match s with 
+     Sast.Expression(e) ->
       let (expr_str, prec_expr) = get_expr e in
       print_string prec_expr; print_string ";\n";
       print_string expr_str; print_string ";\n"
+   | Sast.Block(stmts) -> List.iter (fun s -> write_stmt s) stmts
    | Sast.VarDecl(vdecl) -> 
       let vtyp = type_as_string vdecl.vtype in
       let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
       print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
+   | Sast.While(e, s) -> 
+      let (boolEx, _) = get_expr e in 
+      print_string ("while(" ^ boolEx ^ "){ \n"); 
+      write_stmt s;
+      print_string "}\n";
+   | Sast.For( ex1, ex2, ex3, s) -> 
+      let (boolEx, _) = get_expr ex2 in 
+      let (incr, _) = get_expr ex3 in
+      write_stmt ex1;
+      print_string ("while(" ^ boolEx ^ "){ \n"); 
+      write_stmt s;
+      print_string (incr ^ ";\n");
+      print_string "}\n";
    | Sast.Return(e) -> print_string "return "; let (expr_str, _) = get_expr e in
       print_string expr_str; print_string ";\n"
    | _ -> 

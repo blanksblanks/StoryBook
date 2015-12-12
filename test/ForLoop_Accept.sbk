@@ -1,0 +1,5 @@
+Chapter plot() returns nothing{
+ repeatfor(number i is (0).; i < 5; i is 6){
+	say("hi").
+ }
+}
