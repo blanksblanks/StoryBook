@@ -5,6 +5,7 @@ type symbol_table = {
   parent : symbol_table option;
   mutable functions: Sast.function_decl list;
   mutable variables : Sast.variable_decl list;
+  mutable characters: Sast.class_decl list;
 }
 
 type translation_environment = {
@@ -205,8 +206,7 @@ let find_return (body_l : Sast.statement list) (env: translation_environment) (e
      List.find(check_ret expTyp env) body_l
   with Not_found -> if expTyp <> Sast.Void then raise (Failure("No return found")) else Expression(Noexpr, Void)
 
-
-let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
+let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is env of type Sasy.function_decl??*)
   let name = fun_dcl.fname in
     if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
   (*and old_formals = fun_dcl.fformals *)
@@ -218,16 +218,48 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let _ = find_return body env ret_type in
    {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false}
 
+let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment) =
+  if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
+      raise(Failure("Trait already declared in this Character"))
+  else
+    let sast_var = check_var_decl class_env var in
+    let _ = class_env.scope.variables <- sast_var :: class_env.scope.variables in (* save new class variable in symbol table *)
+    sast_var
 
+let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
+  let name = act.aname in
+    if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
+    else 
+    let ret_type = convert_data_type act.areturn in 
+    let formals = List.map (fun param -> analyze_classvars param) act.aformals in
+    let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
+    {aname = name; aformals = formals; areturn = ret_type; abody = body}
+
+let analyze_class (clss_dcls : Ast.cl_decl) env: translation_environment = 
+  let name = clss_dcls.cname in 
+  if List.exists (fun x -> x.cname = name) env.scope.characters then
+    raise(Failure("Class " ^ name ^ " already exists"))
+  else
+    (* create new scope for the class *)
+    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
+    let class_env = {scope = class_scope; return_type = Sast.Number} in
+    let inst_vars = List.map (fun st -> analyze_classvars class_env st) clss_dcls.cinstvars in
+    let actions = List.map (fun a -> analyze_acts a class_env) clss_dcls.cactions in 
+    let new_class = {cname = name; cinstvars = inst_vars; cactions = actions} in
+    (* add the new class to the list of classes in the symbol table *) 
+    let _ = env.scope.characters <- new_class :: env.scope.characters inst_vars in 
+    new_class; 
 
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
-  let (_, func_decls) = prgm  in
-  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
-
+  let (class_decls, func_decls) = prgm  in
+  let new_func_decls = List.map (fun f -> analyze_func f env) func_decls in
+  (* let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in *)
   (* Search for plot *)
   let _  = try
         find_plot new_func_decls
       with Not_found -> raise (Failure("No plot was found.")) in
+(*   let buildList =  ([], List.append new_func_decls library_funcs) in
+  (List.append buildList new_class_decls) *)
   ([], List.append new_func_decls library_funcs)
