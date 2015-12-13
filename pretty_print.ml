@@ -195,9 +195,11 @@ let write_func funcdec =
     let typ_str = type_as_string funcdec.freturn in typ_str ^ " " ^ funcdec.fname
   end in
   let forms = get_formals funcdec.fformals in
-  let clean_forms = String.sub forms 0 (String.length forms - 2) in (* remove the extra comma from the formals list *)
+  let len = String.length forms in
+  let clean_forms = if len > 0 then  (String.sub forms 0 ((String.length forms) - 2))
+  else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
-  print_string ("(" ^ clean_forms ^ ")");
+  print_string ("(" ^ forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
   print_string " } \n"
