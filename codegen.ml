@@ -1,5 +1,4 @@
 open Sast
-open Sast
 open Cast
 open Semantic_analyzer
 
