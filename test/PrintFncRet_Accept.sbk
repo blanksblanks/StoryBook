@@ -1,5 +1,5 @@
 Chapter getSum() returns number {
-   endwith(5+3).
+   endwith(5 + 3).
 }
 Chapter plot() returns nothing {
    say(getSum()).

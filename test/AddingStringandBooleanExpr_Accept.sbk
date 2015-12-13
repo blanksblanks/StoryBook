@@ -1,4 +1,4 @@
 Chapter plot() returns number {
-    say(This is  + (1=1)).
+    say("This is " + (1 = 1)).
     endwith (0).
 }
