@@ -1,8 +1,10 @@
 open Printf
 open Ast
 open Sast
+open Cast
 open Semantic_analyzer
 open Lexing
+open Codegen
 
 let current_var = ref 0
 
@@ -146,7 +148,7 @@ with Sast.LitString(s) ->  (s, "")
   (* catch all *)
   | _ -> ("char * = \"meow\"", "")
 
-let get_form_param (v: variable_decl) =
+let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in
   typ ^ " " ^ v.vname
 
@@ -182,7 +184,7 @@ let rec write_stmt s = match s with
 
 
 let get_formals params =
-  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str) "" params in
+  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str ^ ",") "" params in (* need to remove the last comma if function not action*)
   p_list
 
 let write_func funcdec =
@@ -193,20 +195,46 @@ let write_func funcdec =
     let typ_str = type_as_string funcdec.freturn in typ_str ^ " " ^ funcdec.fname
   end in
   let forms = get_formals funcdec.fformals in
+  let clean_forms = String.sub forms 0 (String.length forms - 2) in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
-  print_string ("(" ^ forms ^ ")");
+  print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
   print_string " } \n"
 
+let write_action s_ptr action =
+  let ret_type = type_as_string action.areturn in 
+  let ret_and_name = ret_type ^ " " ^ action.aname in
+  let formals = get_formals action.aformals in
+  let ptr_name = (String.get s_ptr 0) in (* use the first letter of the character as the ptr id *)
+  let ptr = ("struct " ^ s_ptr ^ "*" ^ Char.escaped ptr_name) in 
+  let all_formals = (formals ^ ptr) in
+  print_string ret_and_name;
+  print_string ("(" ^ all_formals ^ ")");
+  print_string " { \n";
+  List.iter (fun s -> write_stmt s) action.abody;
+  print_string " } \n"
+
+let write_structs (cstruct: Cast.class_struct) =
+  let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
+  print_string ("struct " ^ cstruct.sname ^ "{");
+  List.iter (fun v -> print_string v) ivars;
+  print_string "}; \n"
+
 let print_code pgm =
-	let (cdecs, funcdecs) = pgm in
+	let (cstructs, cvtables, funcdecs) = pgm in
     print_string "#include <stdio.h> \n #include <string.h> \n #include <stdbool.h>\n\t";
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
+      List.iter (fun c -> write_structs c) cstructs;
+      List.iter (fun vtable -> List.iter (fun a -> write_action vtable.class_name a) vtable.vfuncs) cvtables;
   flush
 
   let lexbuf = Lexing.from_channel stdin
   let ast = Parser.program Scanner.token lexbuf
   let sast = analyze_semantics ast
-  let _ = print_code sast
+  let cast = sast_to_cast sast 
+  let _ = print_code cast
+
+
+
