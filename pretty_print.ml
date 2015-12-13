@@ -11,11 +11,11 @@ let increment_current_var() = current_var := !current_var + 1
 let get_next_var_name() = increment_current_var(); Char.escaped(Char.chr (!current_var + 97))
 
 let get_op o = match o
-with Add -> "+ "
-   | Sub -> "- "
+with Add -> " + "
+   | Sub -> " - "
    | Mult -> "* "
-   | Div -> "/ "
-   | Mod -> "+ "
+   | Div -> " / "
+   | Mod -> " % "
    | Equal -> " == "
    | Neq ->  " != "
    | Less -> " < "
@@ -79,8 +79,15 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
-   | Sast.MathBinop(expr1, op, expr2) -> let (expr_str_1, prec_bin1) = get_expr expr1 in let (expr_str_2, prec_bin2) = get_expr expr2 in
-     let op_str = get_op op in (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
+   | Sast.MathBinop(expr1, op, expr2) ->
+     let (expr_str_1, prec_bin1) = get_expr expr1 in
+     let (expr_str_2, prec_bin2) = get_expr expr2 in
+     if op = Mod then
+          let op_str = get_op op in
+          (" (int) (" ^ expr_str_1^ ") " ^op_str ^ " (int)( " ^ expr_str_2 ^ ")", prec_bin1^prec_bin2)
+     else
+         let op_str = get_op op in
+         (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
    | Sast.StrCat(expr1, expr2) ->
      let (expr1_str, prec_strcat1) = get_expr expr1 in
      let (expr2_str, prec_strcat2) = get_expr expr2 in
@@ -101,7 +108,7 @@ with Sast.LitString(s) ->  (s, "")
            | Sast.MathBinop(e1, op, e2) ->
                let (expr_str, prec_expr) = get_expr (strExp, typ) in
                if typ = Sast.Number
-                 then ("\tprintf ( \"%f\\n\", " ^ expr_str ^ ")" , prec_expr)
+                 then ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")" , prec_expr)
                else
                  ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
            | Sast.Unop(op, e) ->
@@ -115,12 +122,20 @@ with Sast.LitString(s) ->  (s, "")
                 (whole_str, "")
            | Sast.Id(var) -> let typ = var.vtype in
               ( match typ
-                with Sast.String -> ("\tprintf" ^ " ( \"%s\\n\", " ^ var.vname ^ ")", "")
-                   | Sast.Number -> ("\tprintf" ^ " (\"%g\"," ^ var.vname ^ ")", "")
+                with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ var.vname ^ ")", "")
+                   | Sast.Number -> ("\tprintf (\"%g\"," ^ var.vname ^ ")", "")
                    | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ var.vname ^ ")", "")
                    | Sast.Char -> ("\tprintf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
 
+            | Sast.FCall(f_d_inner, e_l_inner) ->
+                 let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
+                 ( match typ
+                  with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", "")
+                     | Sast.Number -> ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", "")
+                     | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", "")
+                     | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", "")
+                     | _ -> ("", "") )
   	        | _ -> ("char * = \"cow\"", "")
       end
       else begin

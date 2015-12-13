@@ -12,6 +12,10 @@ type translation_environment = {
   return_type : Sast.data_type; (* Function’s return type *)
 }
 
+type func_wrapper = 
+  Some of Sast.function_decl
+  | None
+
 (* Find Function *)
 let rec find_function (scope: symbol_table) name =
 	try
@@ -20,6 +24,17 @@ let rec find_function (scope: symbol_table) name =
 	match scope.parent with
 		Some(parent) -> find_function parent name
 	| _ -> raise (Failure("function '" ^ name ^ "' not found"))
+
+
+let rec is_func_name_already_used (scope: symbol_table) name : func_wrapper =
+  try
+     Some(List.find(fun f -> f.fname = name) scope.functions)
+  with Not_found ->
+  match scope.parent with
+    Some(parent) -> is_func_name_already_used parent name
+  | _ -> None
+
+
 
 let find_plot (l : Sast.function_decl list) =
       try
@@ -208,15 +223,26 @@ let find_return (body_l : Sast.statement list) (env: translation_environment) (e
 
 let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl =
   let name = fun_dcl.fname in
-    if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
-  (*and old_formals = fun_dcl.fformals *)
-  else let old_ret_type = fun_dcl.freturn
-  and old_body = fun_dcl.fbody in (*?*)
-  let body = List.map (fun st -> analyze_stmt env st) old_body in
-  let formals = [] in
-  let ret_type = convert_data_type old_ret_type in
-  let _ = find_return body env ret_type in
-   {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false}
+  if name = "say"
+    then raise(Failure("Cannot use library function name: " ^ name))
+  else begin
+    let is_name_taken = is_func_name_already_used env.scope name in
+    if is_name_taken != None then raise(Failure("Function name: " ^ name ^ "is already in use."))
+
+    (*and old_formals = fun_dcl.fformals *)
+    else begin
+      let old_ret_type = fun_dcl.freturn
+      and old_body = fun_dcl.fbody in (*?*)
+      let body = List.map (fun st -> analyze_stmt env st) old_body in
+      let formals = [] in
+      let ret_type = convert_data_type old_ret_type in
+      let _ = find_return body env ret_type in
+      let sast_func_dec =    {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false} in
+      env.scope.functions <- List.append env.scope.functions [sast_func_dec];
+      sast_func_dec
+    end
+  end
+
 
 
 
@@ -224,7 +250,7 @@ let analyze_semantics prgm: Sast.program =
   let prgm_scope = {parent = None; functions = library_funcs; variables = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (_, func_decls) = prgm  in
-  let new_func_decls = List.map (fun f -> analyze_func f env)func_decls in
+  let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev func_decls) in
 
   (* Search for plot *)
   let _  = try
