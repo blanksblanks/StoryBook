@@ -3,6 +3,7 @@ Chapter whatTimeIsIt() returns words {
 }
 
 Chapter plot() returns number {
-  whatTimeIsIt().
+  say("What time is it?").
+  say(whatTimeIsIt()).
   endwith (0).
 }
