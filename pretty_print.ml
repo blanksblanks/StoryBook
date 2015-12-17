@@ -52,8 +52,8 @@ with Sast.Number -> "5000"
 let get_str_cat_code expr1_str typ1 expr2_str typ2 v_name=
      let buf_name = "buf_" ^ v_name in
      let convert_expr1 = match typ1
-     with Sast.Number -> "sprintf(" ^ buf_name ^ " , \"%g\", " ^ expr1_str ^ ");\n"
-        | Sast.Boolean -> "sprintf(" ^ buf_name ^ ",\"%s\", " ^ expr1_str ^ " ? \"true\" : \"false\");\n"
+     with Sast.Number -> "sprintf(" ^ buf_name ^ ", \"%g\"," ^ expr1_str ^ ");\n"
+        | Sast.Boolean -> "sprintf(" ^ buf_name ^ ", \"%s\", " ^ expr1_str ^ " ? \"true\" : \"false\");\n"
         | Sast.String -> "sprintf(" ^ buf_name ^ ", \"%s\"," ^ expr1_str ^ ");\n"
         | Sast.Char -> "sprintf(" ^ buf_name ^ ", \"%c\", \'" ^ expr1_str ^ "\');\n"
         | _ -> "" in
@@ -91,7 +91,7 @@ with Sast.LitString(s) ->  (s, "")
      let (expr_str_2, prec_bin2) = get_expr expr2 in
      if op = Mod then
           let op_str = get_op op in
-          (" (int) (" ^ expr_str_1^ ") " ^op_str ^ " (int)( " ^ expr_str_2 ^ ")", prec_bin1^prec_bin2)
+          ("(double)" ^ "((int) (" ^ expr_str_1^ ") " ^op_str ^ "(int) ( " ^ expr_str_2 ^ "))", prec_bin1^prec_bin2)
      else
          let op_str = get_op op in
          (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
