@@ -1,0 +1,10 @@
+Character Monster( words n, number s ) {
+  words name = n.
+  number size = s.
+}
+
+Chapter plot() returns nothing {
+  Character Monster Frank is new Monster("Frankenstein"; 99).
+  say(Frank's name).
+  say(Frank's size).
+}
