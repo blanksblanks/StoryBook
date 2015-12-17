@@ -62,6 +62,10 @@ let rec find_class_decl (scope: symbol_table) name =
     Some(parent) -> find_class_decl parent name
   | _ -> raise (Failure("function '" ^ name ^ "' not found"))
 
+let rec find_class_var (scope: symbol_table) c_dec name =
+  try List.find(fun v-> v.vname = name) c_dec.cinstvars
+  with Not_found -> raise(Failure("invalid trait name" ^ name))
+
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
   Add ->
@@ -151,26 +155,33 @@ let rec analyze_expr env = function
             (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
       else raise (Failure("invalid parameters to function"))
     | Ast.Access(objName, varName) ->
-        let objName = try find_variable env.scope varName
+        let objDec = try find_variable env.scope objName
         with Not_found ->
-          raise(Failure("object variable not found" ^ varName))
+          raise(Failure("object variable not found" ^ objName))
+        in let class_var =
+        try var = find_class_var env.scope objDec varName
+        with Not_found ->
+          raise(Failure("instace variable not found" ^ varName))
+        in class_var
+
+
     | Ast.Binop(e1, op, e2) ->
-	  let e1 = analyze_expr env e1 (* Check left and right children *)
-	  and e2 = analyze_expr env e2 in
-	  let _, t1 = e1 (* Get the type of each child *)
-	  and _, t2 = e2 in (*let valid = *)
-	  let validbinop = try analyze_binop env.scope op t1 t2
-	  with Not_found -> raise (Failure("Invalid binary operator"))
-    in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
-      else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
+  	  let e1 = analyze_expr env e1 (* Check left and right children *)
+  	  and e2 = analyze_expr env e2 in
+  	  let _, t1 = e1 (* Get the type of each child *)
+  	  and _, t2 = e2 in (*let valid = *)
+  	  let validbinop = try analyze_binop env.scope op t1 t2
+  	  with Not_found -> raise (Failure("Invalid binary operator"))
+      in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
+        else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
 
     | Ast.Unop(op, e1) ->
-	  let e1 = analyze_expr env e1 in
-	  let _, t1 = e1 in
-	  let validunop = try
-		analyze_unop env.scope op t1
-	  with Not_found -> raise (Failure("Invalid unary operator"))
-	  in Sast.Unop(op, e1), validunop
+  	  let e1 = analyze_expr env e1 in
+  	  let _, t1 = e1 in
+  	  let validunop = try
+  		analyze_unop env.scope op t1
+  	  with Not_found -> raise (Failure("Invalid unary operator"))
+  	  in Sast.Unop(op, e1), validunop
 
     | Ast.FCall(fname, params) ->
       let actual_p_typed = List.map (fun e -> analyze_expr env e) params in
