@@ -1,0 +1,8 @@
+Character Monster () {
+}
+
+Chapter plot() returns number {
+  say("hello world").
+
+  endwith(0).
+}
