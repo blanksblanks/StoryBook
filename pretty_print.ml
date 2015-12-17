@@ -34,7 +34,8 @@ with
    | Sast.Boolean -> "bool"
    | Sast.String -> "char *"
    | Sast.Char -> "char"
-   | _ -> "float"
+   | Sast.Void -> "void"
+   | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
 
 let get_bool_str b = match b
 with true -> "1"
@@ -78,6 +79,10 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.Assign(id, e) ->
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
+   | Sast.Instantiate(c_dec, exprs) ->
+        ("(struct " ^ c_dec.cname ^ " *)malloc((int)sizeof(struct "
+              ^ c_dec.cname ^ " ))", "")
+
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -167,7 +172,7 @@ let rec write_stmt s = match s with
       let (boolEx, _) = get_expr e in 
       print_string ("while(" ^ boolEx ^ "){ \n"); 
       write_stmt s;
-      print_string "}\n";
+      print_string "\n\n}\n";
    | Sast.For( ex1, ex2, ex3, s) -> 
       let (boolEx, _) = get_expr ex2 in 
       let (incr, _) = get_expr ex3 in
@@ -175,7 +180,7 @@ let rec write_stmt s = match s with
       print_string ("while(" ^ boolEx ^ "){ \n"); 
       write_stmt s;
       print_string (incr ^ ";\n");
-      print_string "}\n";
+      print_string "\n}\n";
    | Sast.Return(e) ->  let (expr_str, prec_code_str) = get_expr e in
       print_string prec_code_str; print_string "return "; print_string expr_str; print_string ";\n"
    | _ -> 
@@ -197,13 +202,13 @@ let write_func funcdec =
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
   let clean_forms =
-    if len > 0 then begin print_string (string_of_int len); print_string forms; (String.sub forms 0 ((String.length forms) - 1)) end
+    if len > 0 then begin print_string ("****" ^ (string_of_int len)); print_string forms; (String.sub forms 0 ((String.length forms) - 1)) end
     else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
-  print_string " } \n"
+  print_string " \n} \n"
 
 let write_action s_ptr action =
   let ret_type = type_as_string action.areturn in 
@@ -216,17 +221,17 @@ let write_action s_ptr action =
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) action.abody;
-  print_string " } \n"
+  print_string " \n} \n"
 
 let write_structs (cstruct: Cast.class_struct) =
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
   print_string ("struct " ^ cstruct.sname ^ "{");
   List.iter (fun v -> print_string (v ^ "; \n")) ivars;
-  print_string "}; \n"
+  print_string "\n}; \n"
 
 let print_code pgm =
 	let (cstructs, cvtables, funcdecs) = pgm in
-    print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n\t";
+    print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n #include <stdlib.h> \n\t";
     List.iter (fun c -> write_structs c) cstructs;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;

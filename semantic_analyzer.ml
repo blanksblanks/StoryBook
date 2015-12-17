@@ -53,6 +53,19 @@ let rec find_variable (scope : symbol_table) name =
       Some(parent) -> find_variable parent name
     | _ -> raise (Failure("variable not found" ^ name))
 
+(* Find Function *)
+let rec find_class_decl (scope: symbol_table) name =
+  try
+     List.find(fun c -> c.cname = name) scope.characters
+  with Not_found ->
+  match scope.parent with
+    Some(parent) -> find_class_decl parent name
+  | _ -> raise (Failure("function '" ^ name ^ "' not found"))
+
+
+let rec find_class_var (scope: symbol_table) c_dec name =
+  try List.find(fun v-> v.vname = name) c_dec.cinstvars
+  with Not_found -> raise(Failure("invalid trait name" ^ name))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -87,20 +100,23 @@ let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
 | _ -> 		raise (Failure("Invalid unary operator"))
 
-let convert_data_type old_type = match old_type with
+let convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
   | Ast.Boolean -> Sast.Boolean
   | Ast.String -> Sast.String
   | Ast.Char -> Sast.Char
-  | Ast.Object(v) -> Sast.String
+  | Ast.Object(n) ->
+      let obj_dec = try find_class_decl env.scope n
+      with Not_found -> raise(Failure("classdecl not found")) in
+      Sast.Object(obj_dec)
 
 
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
     [], [] -> true
     |[], y::ytail  ->raise(Failure("wrong number of params"))
-    | x::xtail, [] ->raise(Failure("wrong number of params")) 
+    | x::xtail, [] -> raise(Failure("wrong number of params")) 
     |x::[], y::y2::ytail -> raise(Failure("wrong number of params"))
     |x::x2::[], y::[] -> raise(Failure("wrong number of params"))
     |x::xtail, y::ytail -> let (_, actual_typ) = y in
@@ -111,9 +127,9 @@ let rec analyze_expr env = function
 
       (* Simple evaluation of primitives *)
       Ast.LitNum(v) -> Sast.LitNum(v), Sast.Number
-    | Ast.LitChar(v) -> Sast.LitChar(v), Sast.Char
     | Ast.LitBool(v) -> Sast.LitBool(v), Sast.Boolean
     | Ast.LitString(v) -> Sast.LitString(v), Sast.String
+    | Ast.LitChar(v) -> Sast.LitChar(v), Sast.Char
     | Ast.Id(vname) ->
       let vdecl = try
 	     find_variable env.scope vname (* locate a variable by name *)
@@ -129,23 +145,46 @@ let rec analyze_expr env = function
         in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
+    | Ast.Instantiate(objType, exprs) ->
+        let objDecl = try
+          find_class_decl env.scope objType
+        with Not_found ->
+            raise (Failure("class not found " ^ objType))
+        in 
+        let actual_p_typed = List.map (fun e -> analyze_expr env e) exprs in
+        if (compare_p_types objDecl.cformals actual_p_typed) = true then
+            (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
+      else raise (Failure("invalid parameters to function"))
+   (* | Ast.Access(objName, varName) ->
+        let objDec = try find_variable env.scope objName
+          with Not_found ->
+          raise(Failure("object variable not found" ^ objName))
+        in let classDec = try find_class_decl env.scope objDec.vtype
+          with Not_found -> raise(Failure("class not found") ^ type_as_string (objDec.vtype))
+        in let class_var =
+        try find_class_var env.scope objDec varName
+          with Not_found ->
+          raise(Failure("instance variable not found" ^ varName))
+        in (Sast.Access(objDec, class_var), class_var.vtype) *)
+
+
     | Ast.Binop(e1, op, e2) ->
-	  let e1 = analyze_expr env e1 (* Check left and right children *)
-	  and e2 = analyze_expr env e2 in
-	  let _, t1 = e1 (* Get the type of each child *)
-	  and _, t2 = e2 in (*let valid = *)
-	  let validbinop = try analyze_binop env.scope op t1 t2
-	  with Not_found -> raise (Failure("Invalid binary operator"))
-    in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
-      else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
+  	  let e1 = analyze_expr env e1 (* Check left and right children *)
+  	  and e2 = analyze_expr env e2 in
+  	  let _, t1 = e1 (* Get the type of each child *)
+  	  and _, t2 = e2 in (*let valid = *)
+  	  let validbinop = try analyze_binop env.scope op t1 t2
+  	  with Not_found -> raise (Failure("Invalid binary operator"))
+      in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
+        else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
 
     | Ast.Unop(op, e1) ->
-	  let e1 = analyze_expr env e1 in
-	  let _, t1 = e1 in
-	  let validunop = try
-		analyze_unop env.scope op t1
-	  with Not_found -> raise (Failure("Invalid unary operator"))
-	  in Sast.Unop(op, e1), validunop
+  	  let e1 = analyze_expr env e1 in
+  	  let _, t1 = e1 in
+  	  let validunop = try
+  		analyze_unop env.scope op t1
+  	  with Not_found -> raise (Failure("Invalid unary operator"))
+  	  in Sast.Unop(op, e1), validunop
 
     | Ast.FCall(fname, params) ->
       let actual_p_typed = List.map (fun e -> analyze_expr env e) params in
@@ -170,20 +209,22 @@ with
    | Sast.Boolean -> "bool"
    | Sast.String -> "char *"
    | Sast.Char -> "char"
-   | _ -> "float"
+   | Sast.Void -> "void"
+   | Sast.Object(n) -> "object" ^ n.cname
 
 (* convert ast.var_decl to sast.variable_decl*)
 (* if there's an expression, we want to check it *)
 (* then add to scope's variable list *)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
-  let typ = convert_data_type var.vtype in
+  let typ = convert_data_type env var.vtype in
     let (e, expr_typ) = analyze_expr env var.vexpr in match e
     with Sast.Noexpr -> 
             let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
             in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
             sast_var_decl
     | _ ->  if typ <> expr_typ then begin
-            raise(Failure("Variable assignment does not match variable type"))
+            raise(Failure(
+              "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
             end
           else begin 
             let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
@@ -192,7 +233,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
           end
 
 let rec analyze_stmt env = function
-  Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
+    Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
   | Ast.VarDecl(var_decl) ->
           if List.exists (fun x -> x.vname = var_decl.vname) env.scope.variables then
             raise(Failure("Variable already declared in this scope"))
@@ -267,8 +308,8 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
       let old_ret_type = fun_dcl.freturn
       and old_body = fun_dcl.fbody in (*?*)
       let formals = List.map(fun st-> check_var_decl env st) fun_dcl.fformals in
-      let body = List.map (fun st -> analyze_stmt env st) old_body in
-      let ret_type = convert_data_type old_ret_type in
+      let body = List.map (fun st ->  analyze_stmt env st) old_body in
+      let ret_type = convert_data_type env old_ret_type in
       let _ = find_return body env ret_type in
       let sast_func_dec =    {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false} in
       env.scope.functions <- List.append env.scope.functions [sast_func_dec];
@@ -290,7 +331,7 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
   let name = act.aname in
     if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
     else 
-    let ret_type = convert_data_type act.areturn in 
+    let ret_type = convert_data_type class_env act.areturn in 
     let formals = List.map (fun param -> analyze_classvars param class_env) act.aformals in
     let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
     {aname = name; aformals = formals; areturn = ret_type; abody = body}
