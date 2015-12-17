@@ -21,6 +21,7 @@ type expr =
 | Id of string (* foo_unquoted *)
 | Assign of string * expr (* x is 5 *)
 | TraitAssign of string * string * expr (* SleepingBeauty's x is 5 *)
+| Instantiate of string * expr list (*object type and constructor parameters *)
 | Access of string * string (* Member value access: SleepingBeauty's x *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr

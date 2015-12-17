@@ -44,7 +44,6 @@ rule token = parse
   (* Control flow *)
   | "if"     { IF }
   | "else"   { ELSE }
-  (*| "elseif" { ELIF }*)
   | "repeatfor" { FOR }
   | "repeatwhile" { WHILE }
   | "endwith" { ENDWITH }
@@ -60,8 +59,7 @@ rule token = parse
   | "list"    { LIST }
   | "null"    { NULL } *)
   | "nothing" { VOID } (*)
-  | "subtype" { SUBTYPE }
-  | "Plot"    { MAIN }*)
+  | "subtype" { SUBTYPE } *)
   | "Chapter" { FUNCTION }
   | "Character" { CHARACTER }
   | "Action" { METHOD }

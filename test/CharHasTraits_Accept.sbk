@@ -1,6 +1,6 @@
-Character Monster( words n, number s ) {
-  words name = n.
-  number size = s.
+Character Monster( words n; number s ) {
+  words name is n.
+  number size is s.
 }
 
 Chapter plot() returns nothing {

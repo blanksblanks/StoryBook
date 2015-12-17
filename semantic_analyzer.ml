@@ -17,6 +17,7 @@ type func_wrapper =
   Some of Sast.function_decl
   | None
 
+
 (* Find Function *)
 let rec find_function (scope: symbol_table) name =
 	try
@@ -51,6 +52,7 @@ let rec find_variable (scope : symbol_table) name =
     match scope.parent with
       Some(parent) -> find_variable parent name
     | _ -> raise (Failure("variable not found" ^ name))
+
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -171,6 +173,8 @@ with
    | _ -> "float"
 
 (* convert ast.var_decl to sast.variable_decl*)
+(* if there's an expression, we want to check it *)
+(* then add to scope's variable list *)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let typ = convert_data_type var.vtype in
     let (e, expr_typ) = analyze_expr env var.vexpr in match e
@@ -291,17 +295,18 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
     let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
     {aname = name; aformals = formals; areturn = ret_type; abody = body}
 
-let analyze_class (clss_dcls : Ast.cl_decl) (env: translation_environment) = 
-  let name = clss_dcls.cname in 
+let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) = 
+  let name = clss_dcl.cname in 
   if List.exists (fun x -> x.cname = name) env.scope.characters then
     raise(Failure("Class " ^ name ^ " already exists"))
   else
     (* create new scope for the class *)
     let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
-    let class_env = {scope = class_scope; return_type = Sast.Number} in
-    let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcls.cinstvars in
-    let actions = List.map (fun a -> analyze_acts a class_env) clss_dcls.cactions in 
-    let new_class = {cname = name; cinstvars = inst_vars; cactions = actions; cformals = []} in
+    let class_env = {scope = class_scope; return_type = Sast.Void} in
+    let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
+    let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
+    let actions = List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions in 
+    let new_class = {cname = name; cinstvars = inst_vars; cactions = actions; cformals = newcformals} in
     (* add the new class to the list of classes in the symbol table *) 
     let _ = env.scope.characters <- new_class :: (env.scope.characters) in 
     new_class
@@ -310,8 +315,8 @@ let analyze_semantics prgm: Sast.program =
   let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
-  let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev(func_decls)) in
   let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in
+  let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev(func_decls)) in
   (* Search for plot *)
   let _  = try
         find_plot new_func_decls

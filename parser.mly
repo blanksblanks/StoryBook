@@ -25,7 +25,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
-/* %right NEW */
+%right NEW
 %right NOT
 %left COMMA APOST /* function call and member access */
 
@@ -170,7 +170,7 @@ expr:
   | ID APOST ID ASSIGN expr {TraitAssign($1, $3, $5)} /* member assign */
   | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
- /* | NEW ID LPAREN actuals_opt RPAREN {0} object declaration  */
+  | NEW ID LPAREN actuals_opt RPAREN {Instantiate($2, $4)} /*object declaration  */
   | LPAREN expr RPAREN {$2}
 
 /* Actual Parameters */

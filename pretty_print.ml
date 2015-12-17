@@ -197,7 +197,7 @@ let write_func funcdec =
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
   let clean_forms =
-    if len > 0 then  (String.sub forms 0 ((String.length forms) - 1))
+    if len > 0 then begin print_string (string_of_int len); print_string forms; (String.sub forms 0 ((String.length forms) - 1)) end
     else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
   print_string ("(" ^ clean_forms ^ ")");
@@ -221,15 +221,17 @@ let write_action s_ptr action =
 let write_structs (cstruct: Cast.class_struct) =
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
   print_string ("struct " ^ cstruct.sname ^ "{");
-  List.iter (fun v -> print_string v) ivars;
+  List.iter (fun v -> print_string (v ^ "; \n")) ivars;
   print_string "}; \n"
 
 let print_code pgm =
 	let (cstructs, cvtables, funcdecs) = pgm in
-    print_string "#include <stdio.h> \n #include <string.h> \n #include <stdbool.h>\n\t";
+    print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n\t";
+    List.iter (fun c -> write_structs c) cstructs;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
-      List.iter (fun c -> write_structs c) cstructs;
+      print_string "****************\n";
+      print_string(string_of_int (List.length cstructs));
       List.iter (fun vtable -> List.iter (fun a -> write_action vtable.class_name a) vtable.vfuncs) cvtables;
   flush
 

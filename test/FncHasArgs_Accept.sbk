@@ -1,0 +1,7 @@
+Chapter whatTimeIsIt(number x) returns words {
+  endwith("It's " + x + " o'clock." ).
+}
+Chapter plot() returns number {
+  whatTimeIsIt(9).
+  endwith (0).
+}
