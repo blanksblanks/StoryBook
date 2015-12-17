@@ -1,4 +1,5 @@
-Character Monster () {
+Character Monster (words n) {
+    
 }
 
 Chapter plot() returns number {
