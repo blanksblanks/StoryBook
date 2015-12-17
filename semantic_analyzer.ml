@@ -50,7 +50,7 @@ let rec find_variable (scope : symbol_table) name =
   with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found"))
+    | _ -> raise (Failure("variable not found" ^ name))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -95,9 +95,15 @@ let convert_data_type old_type = match old_type with
 
 
 (* compare parameter types *)
-let rec compare_p_types formalVars actualExprs = match formalVars with
-    [] -> true
-    |x::tail -> true
+let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
+    [], [] -> true
+    |[], y::ytail  ->raise(Failure("wrong number of params"))
+    | x::xtail, [] ->raise(Failure("wrong number of params")) 
+    |x::[], y::y2::ytail -> raise(Failure("wrong number of params"))
+    |x::x2::[], y::[] -> raise(Failure("wrong number of params"))
+    |x::xtail, y::ytail -> let (_, actual_typ) = y in
+        if(actual_typ) == x.vtype then begin compare_p_types xtail ytail end
+        else raise(Failure("wrong parameter type"))
 (* Expression Environment *)
 let rec analyze_expr env = function
 
@@ -145,18 +151,41 @@ let rec analyze_expr env = function
         find_function env.scope fname
       with Not_found -> raise (Failure("function '" ^ fname ^ "' not found"))
       in let formal_p_list = fdecl.fformals in
+      let ret_type = fdecl.freturn in
 
-      if (compare_p_types formal_p_list actual_p_typed) = true then Sast.FCall(fdecl, actual_p_typed), Sast.Number
-      else raise (Failure("invalid parameters to function"))
+      if fname <> "say" then begin
+        if (compare_p_types formal_p_list actual_p_typed) = true then begin Sast.FCall(fdecl, actual_p_typed), ret_type end
+        else raise (Failure("invalid parameters to function"))
+      end
+        else Sast.FCall(fdecl, actual_p_typed), ret_type
 
+    | Ast.Noexpr -> Sast.Noexpr, Sast.Void
     | _ -> Sast.LitString(""), Sast.String
+
+let type_as_string t = match t
+with 
+     Sast.Number -> "float"
+   | Sast.Boolean -> "bool"
+   | Sast.String -> "char *"
+   | Sast.Char -> "char"
+   | _ -> "float"
 
 (* convert ast.var_decl to sast.variable_decl*)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let typ = convert_data_type var.vtype in
-    let (e, expr_typ) = analyze_expr env var.vexpr in
-          if typ <> expr_typ then raise(Failure("Variable assignment does not match variable type"))
-          else { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
+    let (e, expr_typ) = analyze_expr env var.vexpr in match e
+    with Sast.Noexpr -> 
+            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
+            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+            sast_var_decl
+    | _ ->  if typ <> expr_typ then begin
+            raise(Failure("Variable assignment does not match variable type"))
+            end
+          else begin 
+            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
+            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+            sast_var_decl
+          end
 
 let rec analyze_stmt env = function
   Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
@@ -203,7 +232,7 @@ let library_funcs = [
                  vname = "str";
                  vexpr = (Sast.Noexpr, Sast.String) (*will have to make void*)
                 }];
-    freturn = Sast.Number;
+    freturn = Sast.String;
     funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
     isLib = true;
   }
@@ -233,8 +262,8 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
     else begin
       let old_ret_type = fun_dcl.freturn
       and old_body = fun_dcl.fbody in (*?*)
+      let formals = List.map(fun st-> check_var_decl env st) fun_dcl.fformals in
       let body = List.map (fun st -> analyze_stmt env st) old_body in
-      let formals = [] in
       let ret_type = convert_data_type old_ret_type in
       let _ = find_return body env ret_type in
       let sast_func_dec =    {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false} in
@@ -281,7 +310,7 @@ let analyze_semantics prgm: Sast.program =
   let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
-  let new_func_decls = List.map (fun f -> analyze_func f env) func_decls in
+  let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev(func_decls)) in
   let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in
   (* Search for plot *)
   let _  = try

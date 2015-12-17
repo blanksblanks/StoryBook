@@ -133,10 +133,10 @@ with Sast.LitString(s) ->  (s, "")
             | Sast.FCall(f_d_inner, e_l_inner) ->
                  let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
                  ( match typ
-                  with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", "")
-                     | Sast.Number -> ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", "")
-                     | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", "")
-                     | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", "")
+                  with Sast.String -> print_string inner_func_str; ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
+                     | Sast.Number -> print_string inner_func_str; ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", prec_inner_func)
+                     | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
+                     | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
                      | _ -> ("", "") )
   	        | _ -> ("char * = \"cow\"", "")
       end
@@ -176,8 +176,8 @@ let rec write_stmt s = match s with
       write_stmt s;
       print_string (incr ^ ";\n");
       print_string "}\n";
-   | Sast.Return(e) -> print_string "return "; let (expr_str, _) = get_expr e in
-      print_string expr_str; print_string ";\n"
+   | Sast.Return(e) ->  let (expr_str, prec_code_str) = get_expr e in
+      print_string prec_code_str; print_string "return "; print_string expr_str; print_string ";\n"
    | _ -> 
       let (expr_str, _) = get_expr (LitString("cow"), Sast.String) in
       print_string expr_str; print_string ";\n"
@@ -196,10 +196,11 @@ let write_func funcdec =
   end in
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
-  let clean_forms = if len > 0 then  (String.sub forms 0 ((String.length forms) - 2))
-  else forms in (* remove the extra comma from the formals list *)
+  let clean_forms =
+    if len > 0 then  (String.sub forms 0 ((String.length forms) - 1))
+    else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
-  print_string ("(" ^ forms ^ ")");
+  print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
   print_string " } \n"
