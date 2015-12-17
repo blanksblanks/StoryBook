@@ -230,8 +230,6 @@ let print_code pgm =
     List.iter (fun c -> write_structs c) cstructs;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
-      print_string "****************\n";
-      print_string(string_of_int (List.length cstructs));
       List.iter (fun vtable -> List.iter (fun a -> write_action vtable.class_name a) vtable.vfuncs) cvtables;
   flush
 
