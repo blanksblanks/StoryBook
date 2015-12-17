@@ -1,10 +1,10 @@
 Character Monster() {
   Action scare(words scream) returns nothing {
-    say scream.
+    say (scream).
   }
 }
 
 Chapter plot() returns nothing {
   Character Monster Frank is new Monster().
-  scream("GLABARGHHHHH!").
+  Frank, scream("GLABARGHHHHH!").
 }
