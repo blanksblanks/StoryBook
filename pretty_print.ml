@@ -188,7 +188,9 @@ with Sast.LitString(s) ->  (s, "")
                      | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
                      | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
                      | _ -> ("", "") )
-  	        | _ -> ("char * = \"meow\"", "")
+  	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
+
+            | _ -> ("char * = \"meow\"", "")
       end
       else begin
         let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
@@ -196,6 +198,12 @@ with Sast.LitString(s) ->  (s, "")
         ("\t " ^ f_d.fname ^ " " ^ " (" ^  param_str ^ " )", "") end;
 
   (* catch all *)
+  | Sast.ACall(objDec, actDec, exprs) ->
+     let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
+        str ^exp_str) "" exprs in 
+     let full_param_str = param_str ^ ", " ^ objDec.vname in 
+     ("\t " ^ actDec.aname ^ " " ^ " (" ^  full_param_str ^ " )", "")
+
   | _ -> ("char * = \"meow\"", "")
 
 let get_form_param (v: Sast.variable_decl) =
@@ -286,9 +294,9 @@ let print_code pgm =
     print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n #include <stdlib.h> \n\t";
     print_string ("void *ptrs[" ^ string_of_int !new_count ^ "];\n");
     List.iter (fun c -> write_structs c) cstructs;
+    List.iter (fun vtable -> List.iter (fun a -> write_action vtable.class_name a) vtable.vfuncs) cvtables;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
-      List.iter (fun vtable -> List.iter (fun a -> write_action vtable.class_name a) vtable.vfuncs) cvtables;
   flush
 
   let lexbuf = Lexing.from_channel stdin

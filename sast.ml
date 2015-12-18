@@ -20,6 +20,7 @@ and expr_detail =
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
   | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)
   | FCall of function_decl * expression list
+  | ACall of variable_decl * action_decl * expression list
   | StrCat of expression * expression
   | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression

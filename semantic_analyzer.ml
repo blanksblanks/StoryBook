@@ -76,6 +76,11 @@ let get_class_decl_from_type (scope: symbol_table) ctype =
   Sast.Object(typDecl) -> find_class_decl scope typDecl.cname
   | _ -> raise(Failure("not an object. can't access instance vars"))
 
+let find_action_decl (actions : Sast.action_decl list) name =
+  try
+    List.find(fun a -> a.aname = name) actions
+  with Not_found -> raise (Failure("variable not found" ^ name))
+
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
   Add ->
@@ -205,11 +210,31 @@ let rec analyze_expr env = function
       let ret_type = fdecl.freturn in
 
       if fname <> "say" then begin
-        if (compare_p_types formal_p_list actual_p_typed) = true then begin Sast.FCall(fdecl, actual_p_typed), ret_type end
+        if (compare_p_types formal_p_list actual_p_typed) = true then
+           (Sast.FCall(fdecl, actual_p_typed), ret_type)
         else raise (Failure("invalid parameters to function"))
       end
         else Sast.FCall(fdecl, actual_p_typed), ret_type
 
+    | Ast.ACall(objName, actName, expr_list) ->
+       (* Grab object variable *)
+       let objDec = try find_variable env.scope objName
+       with Not_found -> raise(Failure("variable not found " ^ objName))
+       (* Find corresponding class variable *)
+       in let classDec =  
+       get_class_decl_from_type env.scope objDec.vtype
+
+       (* Check that action is valid *)
+       in let actionDec = try find_action_decl classDec.cactions actName
+       with Not_found -> raise (Failure("action not found" ^ actName))
+       in
+          (*check that params are correct *)
+            let formal_p_list = actionDec.aformals in
+            let actual_p_typed = List.map( fun a -> analyze_expr env a) expr_list in
+            let ret_type = actionDec.areturn in
+              if (compare_p_types formal_p_list actual_p_typed) = true then
+                (Sast.ACall(objDec, actionDec, actual_p_typed), ret_type)
+              else raise (Failure("invalid parameters to action " ^ actName))
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
     | _ -> Sast.LitString(""), Sast.String
 
