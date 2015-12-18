@@ -65,7 +65,7 @@ let rec find_class_decl (scope: symbol_table) name =
   with Not_found ->
   match scope.parent with
     Some(parent) -> find_class_decl parent name
-  | _ -> raise (Failure("function '" ^ name ^ "' not found"))
+  | _ -> raise (Failure("Character '" ^ name ^ "' not found"))
 
 
 let rec find_class_var (scope: symbol_table) c_dec name =
