@@ -1,0 +1,9 @@
+Chapter plot() returns nothing {
+  if (1 = 2) {
+    say("nothing").
+  } else if (2 = 2) {
+    say("2 true!").
+  } else {
+    say("nothing").
+  }
+}
