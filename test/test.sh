@@ -8,7 +8,9 @@ cd test
 echo "Accept Tests:" >> test_results.txt
 failcount=0
 passcount=0
-for acceptname in *_Accept.sbk;do
+if [ -f $1*_Accept.sbk ]
+then
+    for acceptname in $1*_Accept.sbk;do
         program=`basename $acceptname _Accept.sbk`
         echo "Test: $program" >> errors.txt
         .././run < "$acceptname" > "${program}.c" 2>> errors.txt
@@ -40,9 +42,12 @@ for acceptname in *_Accept.sbk;do
         echo "❌ : $program -- Storybook didn't compile" >> test_results.txt;
         echo "❌ : $program -- Storybook didn't compile"
         fi
-done
+    done
+fi
 
-for rejectname in *_Reject.sbk;do
+if [ -f $1*_Reject.sbk ]
+then
+    for rejectname in $1*_Reject.sbk;do
         program=`basename $rejectname _Reject.sbk`
         echo "Test: $program" >> errors.txt
         .././run < "$rejectname" > "${program}.c" 2>> errors.txt
@@ -50,14 +55,15 @@ for rejectname in *_Reject.sbk;do
         then
           let "passcount += 1"
           echo "✅ : $program" >> test_results.txt
-
         else
           let "failcount += 1"
           echo "❌ : $program -- Storybook compiled but should not have" >> test_results.txt
           echo "❌ : $program -- Storybook compiled but should not have"
         echo "🙈"
         fi
-done
+    done
+fi
+
 echo "$passcount tests passed"
 echo "$failcount tests failed"
 rm -rf *.dSYM
