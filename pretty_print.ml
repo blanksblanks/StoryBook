@@ -226,7 +226,7 @@ let write_func funcdec =
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
-  if funcdec.fname = "plot" then 
+  if (funcdec.fname = "plot") && (!new_count > 0) then 
   print_string "\n\tfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
                       \tfree(ptrs[i]); }\n}\n "     
   else
