@@ -183,8 +183,8 @@ with Sast.LitString(s) ->  (s, "")
             | Sast.FCall(f_d_inner, e_l_inner) ->
                  let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
                  ( match typ
-                  with Sast.String -> print_string inner_func_str; ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
-                     | Sast.Number -> print_string inner_func_str; ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", prec_inner_func)
+                  with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
+                     | Sast.Number -> ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", prec_inner_func)
                      | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
                      | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
                      | _ -> ("", "") )
@@ -192,20 +192,48 @@ with Sast.LitString(s) ->  (s, "")
 
             | _ -> ("char * = \"meow\"", "")
       end
+      (* Regular function call --i.e., not "say" *)
       else begin
-        let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
-        str ^ exp_str ^ ", ") "" e_l in
-        let clean_param_str = if (String.length param_str) > 0 then (String.sub param_str 0 ((String.length param_str) - 2))
-        else param_str in 
-        ("\t " ^ f_d.fname ^ " " ^ " (" ^  clean_param_str ^ " )", "") end;
+       let (param_str, prev_code) = List.fold_left(fun str_tup e ->
+           let (cur_str, cur_prec_code) = get_expr e in
+           let (prev_str, prev_prec_code) = str_tup in 
+           (prev_str ^ cur_str ^ ", ", prev_prec_code ^ "\n" ^ cur_prec_code)
+         ) ("", "") e_l in 
+        let clean_param_str =
+          if (String.length param_str) > 0 then (String.sub param_str 0 ((String.length param_str) - 2))
+          else param_str in 
 
-  (* catch all *)
+        let fcall_str = "\t " ^ f_d.fname ^ " " ^ " (" ^  clean_param_str ^ " )" in 
+        match f_d.freturn with
+        | Sast.String ->
+            let ret_var = get_next_var_name() in
+            let call_and_store = "char *" ^ ret_var ^ " = " ^ fcall_str ^ ";\n" in 
+            let save_var = get_next_var_name() in 
+            let save_buf = "char " ^ save_var ^ "[strlen(" ^ ret_var ^ ")];\n" in 
+            let copy = "strcpy(" ^ save_var ^ ", " ^ ret_var ^ ");\n" in 
+            let free = "free(" ^ ret_var ^ ");\n" in 
+            (save_var, (prev_code ^ call_and_store ^ save_buf ^ copy ^ free))
+
+        | _ -> (fcall_str, prev_code)
+     end;
+
+  (* Action call: takes in object variable declaration, action declaration,
+     and actual parameters *)
   | Sast.ACall(objDec, actDec, exprs) ->
-     let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
-        str ^exp_str) "" exprs in 
-     let full_param_str = param_str ^ ", " ^ objDec.vname in 
-     ("\t " ^ actDec.aname ^ " " ^ " (" ^  full_param_str ^ " )", "")
-
+     let (param_str, prev_code) = List.fold_left(fun str_tup e ->
+         let (cur_str, cur_prec_code) = get_expr e in
+         let (prev_str, prev_prec_code) = str_tup in 
+         (prev_str ^ cur_str ^ ", ", prev_prec_code ^ "\n" ^ cur_prec_code)
+       ) ("", "") exprs in 
+     let full_param_str = param_str ^ objDec.vname in 
+    (* print_string "$$$$$$$$$$$$$";
+     print_string full_param_str;
+     print_string "%%%%%%%%%";
+     print_string prev_code;
+     print_string "!!!!!!!!"; *)
+     ("\t " ^ actDec.aname ^ " " ^ " (" ^  full_param_str ^ " )", prev_code)
+ 
+  (* catch all *)
   | _ -> ("char * = \"meow\"", "")
 
 let get_form_param (v: Sast.variable_decl) =
@@ -243,12 +271,23 @@ let rec write_stmt s = match s with
       print_string (incr ^ ";\n\t");
       print_string "\n}\n\t";
    | Sast.Return(e) ->  let (expr_str, prec_code) = get_expr e in
-      print_string (prec_code ^ "\t\n");
-      print_string "return "; print_string expr_str; print_string ";\n"
+     let (det, typ) = e in (match typ with
+     | Sast.String ->
+        (* If return type is a string, malloc *)
+        (* MUST FREE IN FUNCTION CALLER *)
+         let next_var = get_next_var_name() in 
+         let malloc_str = "char *" ^ next_var ^ " = " ^
+         "malloc(strlen(" ^ expr_str ^ "));\n" ^
+         "strcpy(" ^ next_var ^ ", " ^ expr_str ^ ");\n" in 
+         print_string(prec_code ^ "\t\n");
+         print_string(malloc_str ^ "return " ^ next_var ^ ";\n")
+     | _ -> print_string (prec_code ^ "\t\n");
+            print_string "return "; print_string expr_str; print_string ";\n")
    | _ -> 
       let (expr_str, prec_code) = get_expr (LitString("cow"), Sast.String) in
       print_string(prec_code ^ "\t\n");
       print_string expr_str; print_string ";\n\t"
+
 
 let write_func funcdec =
   let ret_and_name_str =
@@ -266,11 +305,15 @@ let write_func funcdec =
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
+
+
+  (* Free global pointers at the end of main *)
   if (funcdec.fname = "plot") && (!new_count > 0) then 
   print_string "\n\tfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
                       \tfree(ptrs[i]); }\n}\n "     
-  else
-  print_string " \n} \n"
+  else begin
+    print_string " \n} \n"
+  end
 
 let write_action s_ptr action =
   let ret_type = type_as_string action.areturn in 
