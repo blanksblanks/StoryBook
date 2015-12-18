@@ -8,7 +8,7 @@ cd test
 echo "Accept Tests:" >> test_results.txt
 failcount=0
 passcount=0
-if [ -f $1*_Accept.sbk ]
+if ls $1*_Accept.sbk 1> /dev/null 2>&1
 then
     for acceptname in $1*_Accept.sbk;do
         program=`basename $acceptname _Accept.sbk`
@@ -45,7 +45,7 @@ then
     done
 fi
 
-if [ -f $1*_Reject.sbk ]
+if ls $1*_Reject.sbk 1> /dev/null 2>&1
 then
     for rejectname in $1*_Reject.sbk;do
         program=`basename $rejectname _Reject.sbk`
