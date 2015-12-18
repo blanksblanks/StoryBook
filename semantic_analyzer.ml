@@ -10,6 +10,7 @@ type symbol_table = {
   mutable functions: Sast.function_decl list;
   mutable variables : Sast.variable_decl list;
   mutable characters: Sast.class_decl list;
+  mutable actions: Sast.action_decl list; 
 }
 
 type translation_environment = {
@@ -338,13 +339,18 @@ let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment)
     sast_var
 
 let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
+  if List.exists (fun x -> x.aname = act.aname) class_env.scope.actions then
+    raise(Failure("Action " ^ act.aname ^ " already declared for this character"))
+  else
   let name = act.aname in
     if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
     else 
     let ret_type = convert_data_type class_env act.areturn in 
     let formals = List.map (fun param -> analyze_classvars param class_env) act.aformals in
     let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
-    {aname = name; aformals = formals; areturn = ret_type; abody = body}
+    let sast_act = {aname = name; aformals = formals; areturn = ret_type; abody = body} in
+    let _ = class_env.scope.actions <- sast_act :: class_env.scope.actions in 
+    sast_act
 
 let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) = 
   let name = clss_dcl.cname in 
@@ -352,7 +358,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     raise(Failure("Class " ^ name ^ " already exists"))
   else
     (* create new scope for the class *)
-    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
+    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
@@ -363,7 +369,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     new_class
 
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
   let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in
