@@ -103,6 +103,9 @@ with Sast.LitString(s) ->  (s, "")
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
 
+    | Sast.Access(obj_dec, var_dec) ->
+      (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
+
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
         let (strExp, typ) = (List.nth e_l 0) in match strExp
@@ -134,6 +137,15 @@ with Sast.LitString(s) ->  (s, "")
                    | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ var.vname ^ ")", "")
                    | Sast.Char -> ("\tprintf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
+            | Sast.Access(objVar, instVar) ->
+                let typ = instVar.vtype in
+                let (expr_str, prec_code) =  get_expr (strExp, typ) in
+                (match typ with
+                  Sast.Number -> ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")", prec_code)
+                  | Sast.Boolean ->("\tprintf (\"%d\"," ^ expr_str ^ ")", prec_code)
+                  | Sast.String -> ("\tprintf(\"%s\\n\", " ^ expr_str ^ ")", prec_code)
+                  | Sast.Char ->  ("\tprintf( \"%c\", " ^ expr_str ^  ")", prec_code)
+                  | _ -> raise(Failure("not a printable type")))
 
             | Sast.FCall(f_d_inner, e_l_inner) ->
                  let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
@@ -143,7 +155,7 @@ with Sast.LitString(s) ->  (s, "")
                      | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
                      | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
                      | _ -> ("", "") )
-  	        | _ -> ("char * = \"cow\"", "")
+  	        | _ -> ("char * = \"meow\"", "")
       end
       else begin
         let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in

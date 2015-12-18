@@ -67,6 +67,11 @@ let rec find_class_var (scope: symbol_table) c_dec name =
   try List.find(fun v-> v.vname = name) c_dec.cinstvars
   with Not_found -> raise(Failure("invalid trait name" ^ name))
 
+let get_class_decl_from_type (scope: symbol_table) ctype =
+  match ctype with
+  Sast.Object(typDecl) -> find_class_decl scope typDecl.cname
+  | _ -> raise(Failure("not an object. can't access instance vars"))
+
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
   Add ->
@@ -155,17 +160,17 @@ let rec analyze_expr env = function
         if (compare_p_types objDecl.cformals actual_p_typed) = true then
             (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
       else raise (Failure("invalid parameters to function"))
-   (* | Ast.Access(objName, varName) ->
+    | Ast.Access(objName, varName) ->
         let objDec = try find_variable env.scope objName
           with Not_found ->
           raise(Failure("object variable not found" ^ objName))
-        in let classDec = try find_class_decl env.scope objDec.vtype
-          with Not_found -> raise(Failure("class not found") ^ type_as_string (objDec.vtype))
+        in let classDec = try get_class_decl_from_type env.scope objDec.vtype
+          with Not_found -> raise(Failure("class not found"))
         in let class_var =
-        try find_class_var env.scope objDec varName
+        try find_class_var env.scope classDec varName
           with Not_found ->
           raise(Failure("instance variable not found" ^ varName))
-        in (Sast.Access(objDec, class_var), class_var.vtype) *)
+        in (Sast.Access(objDec, class_var), class_var.vtype) 
 
 
     | Ast.Binop(e1, op, e2) ->
