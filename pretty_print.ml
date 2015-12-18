@@ -285,14 +285,21 @@ let write_action s_ptr action =
   List.iter (fun s -> write_stmt s) action.abody;
   print_string " \n\t} \n\t"
 
+let create_fptrs (cact: Sast.action_decl) = 
+
+
 let write_structs (cstruct: Cast.class_struct) =
+  let dec_struct = ("struct " ^ cstruct.sname ^ ";") in
+  let vtable_def = ("struct table_" ^ cstruct.sname ^ " {\n") in
+  let func_ptrs = List.fold_left(fun str f -> 
+      let f_str =  create_fptrs f in str ^ f_str) "" cstruct.svtable.vfuncs in
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
   print_string ("struct " ^ cstruct.sname ^ "{");
   List.iter (fun v -> print_string (v ^ "; \n")) ivars;
   print_string "\n}; \n"
 
 let print_code pgm =
-	let (cstructs, cvtables, funcdecs) = pgm in
+	let (cstructs, funcdecs) = pgm in
     print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n #include <stdlib.h> \n\t";
     print_string ("void *ptrs[" ^ string_of_int !new_count ^ "];\n");
     List.iter (fun c -> write_structs c) cstructs;
