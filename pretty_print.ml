@@ -136,8 +136,7 @@ with Sast.LitString(s) ->  (s, "")
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
 
-    | Sast.Access(obj_dec, var_dec) ->
-      (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
+    | Sast.Access(obj_dec, var_dec) -> (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
 
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
@@ -328,7 +327,8 @@ let write_func funcdec =
     print_string " \n} \n"
   end
 
- let rec convert_my_expr (e, t) sptr = match e with 
+
+let rec convert_my_expr (e, t) sptr = match e with 
     Sast.Access(v, _) -> if v.vname = "instvar" then v.vname <- sptr 
   | Sast.Assign(_, e) -> convert_my_expr e sptr
   | Sast.Unop(_, exp) -> convert_my_expr exp sptr
@@ -350,14 +350,14 @@ let rec convert_my_stmt (stmt: Sast.statement) sptr =
    | Sast.If(c, ifst, elst) -> convert_my_expr c sptr; convert_my_stmt ifst sptr; convert_my_stmt elst sptr
    | _ -> ()
 
-let write_action s_ptr action =
+let write_action s_ptr_name action =
   let ret_type = type_as_string action.areturn in 
   let ret_and_name = ret_type ^ " " ^ action.aname in
   let formals = get_formals action.aformals in
   let ptr_name = get_next_var_name() in 
-  let ptr = ("struct " ^ s_ptr ^ "*" ^ ptr_name) in 
+  let ptr = ("struct " ^ s_ptr_name ^ "*" ^ ptr_name) in 
   let all_formals = (formals ^ ptr) in
-  let new_body = List.iter (fun s -> convert_my_stmt s ptr_name) action.abody in
+  List.iter (fun s -> convert_my_stmt s ptr_name) action.abody;
   print_string ret_and_name;
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n\t";

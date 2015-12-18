@@ -8,7 +8,7 @@
 /*%token LIST NULL */
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE */
-%token CHARACTER METHOD TRAIT NEW
+%token CHARACTER METHOD TRAIT NEW MY
 %token <float> LIT_NUM
 %token <bool> LIT_BOOL
 %token <string> LIT_STRING
@@ -167,6 +167,7 @@ expr:
   | NOT expr {Unop(NOT, $2)}
   | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
   | ID APOST ID      {Access($1, $3)} /* member access */
+  | MY ID            {Access("my", $2)}
   | ID APOST ID ASSIGN expr {TraitAssign($1, $3, $5)} /* member assign */
   | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
