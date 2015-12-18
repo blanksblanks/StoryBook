@@ -6,10 +6,11 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
+let current_ptr = ref (9)
+let increment_cur_ptr() = current_ptr := !current_ptr + 1
+
 let current_var = ref 0
-
 let increment_current_var() = current_var := !current_var + 1
-
 let get_next_var_name() = increment_current_var(); Char.escaped(Char.chr (!current_var + 97))
 
 let get_op o = match o
@@ -80,9 +81,9 @@ with Sast.LitString(s) ->  (s, "")
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
-        ("(struct " ^ c_dec.cname ^ " *)malloc((int)sizeof(struct "
-              ^ c_dec.cname ^ " ))", "")
-
+        increment_cur_ptr();
+        ("ptrs[" ^ string_of_int !current_ptr ^ "]\n ptrs[" ^ string_of_int !current_ptr ^ "] = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ))", 
+          "")
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -221,7 +222,9 @@ let write_action s_ptr action =
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) action.abody;
-  print_string " \n} \n"
+  print_string "\nfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
+                      free(ptrs[i]); }\n      
+                      } \n"
 
 let write_structs (cstruct: Cast.class_struct) =
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
@@ -232,6 +235,7 @@ let write_structs (cstruct: Cast.class_struct) =
 let print_code pgm =
 	let (cstructs, cvtables, funcdecs) = pgm in
     print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n #include <stdlib.h> \n\t";
+    print_string ("void *ptrs[" ^ string_of_int !new_count ^ "];\n");
     List.iter (fun c -> write_structs c) cstructs;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
