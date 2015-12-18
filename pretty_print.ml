@@ -6,10 +6,11 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
+let current_ptr = ref (-1)
+let increment_cur_ptr() = current_ptr := !current_ptr + 1
+
 let current_var = ref 0
-
 let increment_current_var() = current_var := !current_var + 1
-
 let get_next_var_name() = increment_current_var(); Char.escaped(Char.chr (!current_var + 97))
 
 let get_op o = match o
@@ -70,7 +71,30 @@ let get_str_cat_code expr1_str typ1 expr2_str typ2 v_name=
 
     buf_code ^ convert_expr1 ^ convert_expr2 ^ "char *" ^ v_name ^ " = buf_" ^ v_name ^ ";"
 
-let rec get_expr (e, t) = match e
+let idx = ref (0)
+let increment_idx() = idx := !idx + 1
+
+
+let rec get_init_str frm actl name =
+  let (actl_exp_str, prec_code) = get_expr actl in
+  let init_str = prec_code ^ "\n" ^
+  "((struct " ^ name ^" *)ptrs[" ^ (string_of_int !current_ptr) ^ "])  -> " ^ frm.vname ^ " = "
+  ^ actl_exp_str ^ ";\n" in
+  init_str
+
+and initalize_inst_vars (forms: Sast.variable_decl list) actuals name =
+  let p_list = List.fold_left (
+      fun str f ->
+        let actl_i = List.nth actuals !idx in
+        let new_str = get_init_str f actl_i name
+        in
+        increment_idx();
+        str ^ new_str
+      ) "" forms
+  in p_list
+
+
+and get_expr (e, t) = match e
 with Sast.LitString(s) ->  (s, "")
    | Sast.LitBool(b) -> let b_str = get_bool_str b in (b_str, "")
    | Sast.LitNum(n) -> (string_of_float n, "")
@@ -80,9 +104,12 @@ with Sast.LitString(s) ->  (s, "")
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
-        ("(struct " ^ c_dec.cname ^ " *)malloc((int)sizeof(struct "
-              ^ c_dec.cname ^ " ))", "")
-
+        increment_cur_ptr();
+        let rev_vars = List.rev c_dec.cinstvars in
+        let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
+        let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
+        " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
+        ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -169,6 +196,9 @@ let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in
   typ ^ " " ^ v.vname
 
+let get_formals params =
+  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str ^ ",") "" params in (* need to remove the last comma if function not action*)
+  p_list
 
 let rec write_stmt s = match s with 
      Sast.Expression(e) ->
@@ -178,8 +208,8 @@ let rec write_stmt s = match s with
    | Sast.Block(stmts) -> List.iter (fun s -> write_stmt s) stmts
    | Sast.VarDecl(vdecl) -> 
       let vtyp = type_as_string vdecl.vtype in
-      let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
-      print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n\t"
+      let vname = vdecl.vname in let (vexp, prec_expr) = get_expr vdecl.vexpr in
+      print_string ( "\t" ^ prec_expr ^ vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
    | Sast.While(e, s) -> 
       let (boolEx, prec_code) = get_expr e in 
       print_string("\t" ^ prec_code ^ "\n\t");
@@ -204,11 +234,6 @@ let rec write_stmt s = match s with
       print_string(prec_code ^ "\t\n");
       print_string expr_str; print_string ";\n\t"
 
-
-let get_formals params =
-  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str ^ ",") "" params in (* need to remove the last comma if function not action*)
-  p_list
-
 let write_func funcdec =
   let ret_and_name_str =
   if funcdec.fname = "plot"
@@ -225,6 +250,10 @@ let write_func funcdec =
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
+  if funcdec.fname = "plot" then 
+  print_string "\n\tfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
+                      \tfree(ptrs[i]); }\n}\n "     
+  else
   print_string " \n} \n"
 
 let write_action s_ptr action =
@@ -249,6 +278,7 @@ let write_structs (cstruct: Cast.class_struct) =
 let print_code pgm =
 	let (cstructs, cvtables, funcdecs) = pgm in
     print_string "#include <stdio.h> \n#include <string.h> \n#include <stdbool.h>\n #include <stdlib.h> \n\t";
+    print_string ("void *ptrs[" ^ string_of_int !new_count ^ "];\n");
     List.iter (fun c -> write_structs c) cstructs;
     let userFuncs = List.filter (fun f -> f.isLib = false) funcdecs in
       List.iter (fun f -> write_func f) userFuncs;
