@@ -383,7 +383,8 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     raise(Failure("Class " ^ name ^ " already exists"))
   else
     (* create new scope for the class *)
-    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+    let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in
+    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = self :: []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
