@@ -283,10 +283,17 @@ let rec write_stmt s = match s with
          print_string(malloc_str ^ "return " ^ next_var ^ ";\n")
      | _ -> print_string (prec_code ^ "\t\n");
             print_string "return "; print_string expr_str; print_string ";\n")
-   | _ -> 
+   | Sast.If(condExpr, ifstmt, elsestmt) ->
+       let (condExprStr, condPrec) = get_expr condExpr in 
+       print_string (condPrec ^ "\nif(" ^ condExprStr ^ ") {\n");
+       write_stmt ifstmt;
+       print_string ("\n}\nelse {");
+       write_stmt elsestmt;
+       print_string("}\n")
+   (*| _ -> 
       let (expr_str, prec_code) = get_expr (LitString("cow"), Sast.String) in
       print_string(prec_code ^ "\t\n");
-      print_string expr_str; print_string ";\n\t"
+      print_string expr_str; print_string ";\n\t" *)
 
 
 let write_func funcdec =
