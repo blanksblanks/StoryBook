@@ -89,7 +89,13 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.MathBinop(expr1, op, expr2) ->
      let (expr_str_1, prec_bin1) = get_expr expr1 in
      let (expr_str_2, prec_bin2) = get_expr expr2 in
-     if op = Mod then
+     if op = Equal then 
+          let op_str = get_op op in
+		let (det1, typ1) = expr1 in
+			match typ1 with 
+			Sast.String -> ("strcmp(" ^ expr_str_1 ^ "," ^ expr_str_2 ^ ") " ^ op_str ^ " 0", prec_bin1^prec_bin2)
+			| _ -> (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
+     else if op = Mod then
           let op_str = get_op op in
           ("(double)" ^ "((int) (" ^ expr_str_1^ ") " ^op_str ^ "(int) ( " ^ expr_str_2 ^ "))", prec_bin1^prec_bin2)
      else
