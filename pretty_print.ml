@@ -220,7 +220,7 @@ let write_func funcdec =
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
   let clean_forms =
-    if len > 0 then begin print_string ("****" ^ (string_of_int len)); print_string forms; (String.sub forms 0 ((String.length forms) - 1)) end
+    if len > 0 then begin (String.sub forms 0 ((String.length forms) - 1)) end
     else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
   print_string ("(" ^ clean_forms ^ ")");
