@@ -1,13 +1,13 @@
-Character Monster( words n, number s ) {
-  words name = n.
-  number size = s.
+Character Monster( words n; number s ) {
+  words name is n.
+  number size is s.
   
   Action scare(words scream) returns nothing {
-    say scream.
+    say (scream).
   }
 }
 
 Chapter plot() returns nothing {
   Character Monster Frank is new Monster("Frankenstein"; 99).
-  scream("GLABARGHHHHH!").
+  Frank, scare("GLABARGHHHHH!").
 }
