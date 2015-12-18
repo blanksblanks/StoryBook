@@ -6,5 +6,5 @@ Character Monster() {
 
 Chapter plot() returns nothing {
   Character Monster Frank is new Monster().
-  Frank, scream("GLABARGHHHHH!").
+  Frank, scare("GLABARGHHHHH!").
 }

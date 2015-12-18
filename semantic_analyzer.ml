@@ -10,6 +10,7 @@ type symbol_table = {
   mutable functions: Sast.function_decl list;
   mutable variables : Sast.variable_decl list;
   mutable characters: Sast.class_decl list;
+  mutable actions: Sast.action_decl list; 
 }
 
 type translation_environment = {
@@ -75,6 +76,11 @@ let get_class_decl_from_type (scope: symbol_table) ctype =
   match ctype with
   Sast.Object(typDecl) -> find_class_decl scope typDecl.cname
   | _ -> raise(Failure("not an object. can't access instance vars"))
+
+let find_action_decl (actions : Sast.action_decl list) name =
+  try
+    List.find(fun a -> a.aname = name) actions
+  with Not_found -> raise (Failure("variable not found" ^ name))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -205,11 +211,31 @@ let rec analyze_expr env = function
       let ret_type = fdecl.freturn in
 
       if fname <> "say" then begin
-        if (compare_p_types formal_p_list actual_p_typed) = true then begin Sast.FCall(fdecl, actual_p_typed), ret_type end
+        if (compare_p_types formal_p_list actual_p_typed) = true then
+           (Sast.FCall(fdecl, actual_p_typed), ret_type)
         else raise (Failure("invalid parameters to function"))
       end
         else Sast.FCall(fdecl, actual_p_typed), ret_type
 
+    | Ast.ACall(objName, actName, expr_list) ->
+       (* Grab object variable *)
+       let objDec = try find_variable env.scope objName
+       with Not_found -> raise(Failure("variable not found " ^ objName))
+       (* Find corresponding class variable *)
+       in let classDec =  
+       get_class_decl_from_type env.scope objDec.vtype
+
+       (* Check that action is valid *)
+       in let actionDec = try find_action_decl classDec.cactions actName
+       with Not_found -> raise (Failure("action not found" ^ actName))
+       in
+          (*check that params are correct *)
+            let formal_p_list = actionDec.aformals in
+            let actual_p_typed = List.map( fun a -> analyze_expr env a) expr_list in
+            let ret_type = actionDec.areturn in
+              if (compare_p_types formal_p_list actual_p_typed) = true then
+                (Sast.ACall(objDec, actionDec, actual_p_typed), ret_type)
+              else raise (Failure("invalid parameters to action " ^ actName))
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
     | _ -> Sast.LitString(""), Sast.String
 
@@ -338,13 +364,18 @@ let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment)
     sast_var
 
 let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
+  if List.exists (fun x -> x.aname = act.aname) class_env.scope.actions then
+    raise(Failure("Action " ^ act.aname ^ " already declared for this character"))
+  else
   let name = act.aname in
     if name = "say" then raise(Failure("Cannot use library function name: " ^ name))
     else 
     let ret_type = convert_data_type class_env act.areturn in 
     let formals = List.map (fun param -> analyze_classvars param class_env) act.aformals in
     let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
-    {aname = name; aformals = formals; areturn = ret_type; abody = body}
+    let sast_act = {aname = name; aformals = formals; areturn = ret_type; abody = body} in
+    let _ = class_env.scope.actions <- sast_act :: class_env.scope.actions in 
+    sast_act
 
 let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) = 
   let name = clss_dcl.cname in 
@@ -352,7 +383,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     raise(Failure("Class " ^ name ^ " already exists"))
   else
     (* create new scope for the class *)
-    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
+    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
@@ -363,7 +394,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     new_class
 
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []} in
+  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
   let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in
