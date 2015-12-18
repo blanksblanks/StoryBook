@@ -111,31 +111,31 @@ with Sast.LitString(s) ->  (s, "")
         let (strExp, typ) = (List.nth e_l 0) in match strExp
         with Sast.LitString(s) ->
              let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
-             ("\tprintf" ^ " ( " ^ lit_str ^ ")", "")
-           | Sast.LitNum(n) -> ("\tprintf" ^ " ( \"%g\", " ^ (string_of_float n) ^ ")", "")
-           | Sast.LitBool(b) -> ("\tprintf( \"%s\", " ^ (get_bool_str b) ^ " ? \"true\" : \"false\");\n", "")
-           | Sast.LitChar(c) -> ("\tprintf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
+             ("printf" ^ " ( " ^ lit_str ^ ")", "")
+           | Sast.LitNum(n) -> ("printf" ^ " ( \"%g\", " ^ (string_of_float n) ^ ")", "")
+           | Sast.LitBool(b) -> ("printf( \"%s\", " ^ (get_bool_str b) ^ " ? \"true\" : \"false\");\n", "")
+           | Sast.LitChar(c) -> ("printf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
            | Sast.MathBinop(e1, op, e2) ->
                let (expr_str, prec_expr) = get_expr (strExp, typ) in
                if typ = Sast.Number
-                 then ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")" , prec_expr)
+                 then ("printf ( \"%g\\n\", " ^ expr_str ^ ")" , prec_expr)
                else
-                 ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
+                 ("printf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
            | Sast.Unop(op, e) ->
                let (expr_str, prec_expr) = get_expr(strExp, typ) in
                if typ = Sast.Number
-                 then ("\tprintf (\" oops, unops for numbers are not implemented \")", prec_expr)
+                 then ("printf (\" oops, unops for numbers are not implemented \")", prec_expr)
                else
-                 ("\tprintf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
+                 ("printf ( \"%s\\n\", " ^ expr_str ^ " ? \"true\" : \"false\")", prec_expr)
            | Sast.StrCat(e1, e2) -> let (str_expr, prec_code_str) = get_expr (strExp, typ) in
                 let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
                 (whole_str, "")
            | Sast.Id(var) -> let typ = var.vtype in
               ( match typ
-                with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ var.vname ^ ")", "")
-                   | Sast.Number -> ("\tprintf (\"%g\"," ^ var.vname ^ ")", "")
-                   | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ var.vname ^ ")", "")
-                   | Sast.Char -> ("\tprintf( \"%c\", " ^ var.vname ^  ")", "")
+                with Sast.String -> ("printf ( \"%s\\n\", " ^ var.vname ^ ")", "")
+                   | Sast.Number -> ("printf (\"%g\"," ^ var.vname ^ ")", "")
+                   | Sast.Boolean -> ("printf(\"%d\\n\", " ^ var.vname ^ ")", "")
+                   | Sast.Char -> ("printf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
             | Sast.Access(objVar, instVar) ->
                 let typ = instVar.vtype in
@@ -173,31 +173,36 @@ let get_form_param (v: Sast.variable_decl) =
 let rec write_stmt s = match s with 
      Sast.Expression(e) ->
       let (expr_str, prec_expr) = get_expr e in
-      print_string prec_expr; print_string ";\n";
-      print_string expr_str; print_string ";\n"
+      print_string ("\t" ^ prec_expr); print_string ";\n\t";
+      print_string expr_str; print_string ";\n\t"
    | Sast.Block(stmts) -> List.iter (fun s -> write_stmt s) stmts
    | Sast.VarDecl(vdecl) -> 
       let vtyp = type_as_string vdecl.vtype in
       let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
-      print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
+      print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n\t"
    | Sast.While(e, s) -> 
-      let (boolEx, _) = get_expr e in 
-      print_string ("while(" ^ boolEx ^ "){ \n"); 
+      let (boolEx, prec_code) = get_expr e in 
+      print_string("\t" ^ prec_code ^ "\n\t");
+      print_string ("while(" ^ boolEx ^ "){ \n\t"); 
       write_stmt s;
-      print_string "\n\n}\n";
+      print_string "\n\n\t}\n\t";
    | Sast.For( ex1, ex2, ex3, s) -> 
-      let (boolEx, _) = get_expr ex2 in 
-      let (incr, _) = get_expr ex3 in
+      let (boolEx, bool_prec_code) = get_expr ex2 in 
+      let (incr, incr_prec_code) = get_expr ex3 in
+      print_string("\t" ^ bool_prec_code ^ "\n\t");
+      print_string("\t" ^ incr_prec_code ^ "\n\t");
       write_stmt ex1;
-      print_string ("while(" ^ boolEx ^ "){ \n"); 
+      print_string ("\twhile(" ^ boolEx ^ "){ \n\t"); 
       write_stmt s;
-      print_string (incr ^ ";\n");
-      print_string "\n}\n";
-   | Sast.Return(e) ->  let (expr_str, prec_code_str) = get_expr e in
-      print_string prec_code_str; print_string "return "; print_string expr_str; print_string ";\n"
+      print_string (incr ^ ";\n\t");
+      print_string "\n}\n\t";
+   | Sast.Return(e) ->  let (expr_str, prec_code) = get_expr e in
+      print_string (prec_code ^ "\t\n");
+      print_string "return "; print_string expr_str; print_string ";\n"
    | _ -> 
-      let (expr_str, _) = get_expr (LitString("cow"), Sast.String) in
-      print_string expr_str; print_string ";\n"
+      let (expr_str, prec_code) = get_expr (LitString("cow"), Sast.String) in
+      print_string(prec_code ^ "\t\n");
+      print_string expr_str; print_string ";\n\t"
 
 
 let get_formals params =
@@ -214,11 +219,11 @@ let write_func funcdec =
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
   let clean_forms =
-    if len > 0 then begin print_string ("****" ^ (string_of_int len)); print_string forms; (String.sub forms 0 ((String.length forms) - 1)) end
+    if len > 0 then (String.sub forms 0 ((String.length forms) - 1))
     else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
   print_string ("(" ^ clean_forms ^ ")");
-  print_string " { \n";
+  print_string " { \n\t";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
   print_string " \n} \n"
 
@@ -231,9 +236,9 @@ let write_action s_ptr action =
   let all_formals = (formals ^ ptr) in
   print_string ret_and_name;
   print_string ("(" ^ all_formals ^ ")");
-  print_string " { \n";
+  print_string " { \n\t";
   List.iter (fun s -> write_stmt s) action.abody;
-  print_string " \n} \n"
+  print_string " \n\t} \n\t"
 
 let write_structs (cstruct: Cast.class_struct) =
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
