@@ -136,8 +136,7 @@ with Sast.LitString(s) ->  (s, "")
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
 
-    | Sast.Access(obj_dec, var_dec) ->
-      (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
+    | Sast.Access(obj_dec, var_dec) -> (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
 
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
@@ -328,13 +327,36 @@ let write_func funcdec =
     print_string " \n} \n"
   end
 
-let write_action s_ptr action =
+let rec convert_my_expr (e, t) sptr = match e with 
+    Sast.Access(v, _) -> if v.vname = "instvar" then v.vname <- sptr 
+  | Sast.Assign(_, e) -> convert_my_expr e sptr
+  | Sast.Unop(_, exp) -> convert_my_expr exp sptr
+  | Sast.MathBinop(ex1, _, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
+  | Sast.StrCat(ex1, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
+  | Sast.FCall(_, el) -> List.iter(fun e -> convert_my_expr e sptr) el
+  | Sast.ACall(_, _, exps) -> List.iter(fun e -> convert_my_expr e sptr) exps 
+  | _ -> ()
+
+let rec convert_my_stmt (stmt: Sast.statement) sptr = 
+  match stmt with 
+     Sast.Expression(e) ->  convert_my_expr e sptr
+   | Sast.Block(stmts)  -> List.iter (fun s -> convert_my_stmt s sptr) stmts
+   | Sast.VarDecl(v) -> convert_my_expr v.vexpr sptr
+   | Sast.While(e, s) -> convert_my_expr e sptr; convert_my_stmt s sptr
+   | Sast.For(ex1, ex2, ex3, s) -> convert_my_stmt ex1 sptr; convert_my_expr ex2 sptr; 
+                                   convert_my_expr ex3 sptr; convert_my_stmt s sptr
+   | Sast.Return(e) -> convert_my_expr e sptr
+   | Sast.If(c, ifst, elst) -> convert_my_expr c sptr; convert_my_stmt ifst sptr; convert_my_stmt elst sptr
+   | _ -> ()
+
+let write_action s_ptr_name action =
   let ret_type = type_as_string action.areturn in 
   let ret_and_name = ret_type ^ " " ^ action.aname in
   let formals = get_formals action.aformals in
-  let ptr_name = (String.get s_ptr 0) in (* use the first letter of the character as the ptr id *)
-  let ptr = ("struct " ^ s_ptr ^ "*" ^ Char.escaped ptr_name) in 
+  let ptr_name = get_next_var_name() in 
+  let ptr = ("struct " ^ s_ptr_name ^ "*" ^ ptr_name) in 
   let all_formals = (formals ^ ptr) in
+  List.iter (fun s -> convert_my_stmt s ptr_name) action.abody;
   print_string ret_and_name;
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n\t";

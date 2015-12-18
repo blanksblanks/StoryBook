@@ -172,16 +172,28 @@ let rec analyze_expr env = function
         end 
       else raise (Failure("invalid parameters to function"))
     | Ast.Access(objName, varName) ->
-        let objDec = try find_variable env.scope objName
-          with Not_found ->
-          raise(Failure("object variable not found" ^ objName))
-        in let classDec = try get_class_decl_from_type env.scope objDec.vtype
-          with Not_found -> raise(Failure("class not found"))
-        in let class_var =
-        try find_class_var env.scope classDec varName
-          with Not_found ->
-          raise(Failure("instance variable not found" ^ varName))
-        in (Sast.Access(objDec, class_var), class_var.vtype) 
+        (* "self" reference *)
+        if (objName = "my") then begin
+          let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
+          let classVar = try find_class_var env.scope classDec varName
+            with Not_found ->
+            raise(Failure("instance variable not found" ^ varName))
+          in let objVar = {vtype = Object(classDec); vname = "instvar"; vexpr = (Sast.Noexpr, Sast.Void)} in
+          (Sast.Access(objVar, classVar), classVar.vtype) 
+        end
+        (* Regular access *)
+        else begin
+          let objDec = try find_variable env.scope objName
+            with Not_found ->
+            raise(Failure("object variable not found" ^ objName))
+          in let classDec = try get_class_decl_from_type env.scope objDec.vtype
+            with Not_found -> raise(Failure("class not found"))
+          in let class_var =
+          try find_class_var env.scope classDec varName
+            with Not_found ->
+            raise(Failure("instance variable not found" ^ varName))
+          in (Sast.Access(objDec, class_var), class_var.vtype) 
+        end 
 
 
     | Ast.Binop(e1, op, e2) ->
@@ -383,11 +395,16 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     raise(Failure("Class " ^ name ^ " already exists"))
   else
     (* create new scope for the class *)
-    let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in
-    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = self :: []; actions = []} in
+   (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
+    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
+
+    (* Add class to it's own character scope list so that "self" references work *)
+    class_env.scope.characters <-
+        {cname = name; cinstvars = inst_vars; cactions = []; cformals = []} :: class_env.scope.characters;
+
     let actions = List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions in 
     let new_class = {cname = name; cinstvars = inst_vars; cactions = actions; cformals = newcformals} in
     (* add the new class to the list of classes in the symbol table *) 

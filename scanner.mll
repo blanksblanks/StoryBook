@@ -65,6 +65,7 @@ rule token = parse
   | "Action" { METHOD }
   | "trait" { TRAIT }
   | "new" { NEW }
+  | "my" { MY }
   | eof { EOF }
   | ['-']?(digit+'.'digit*)|['-']?(digit*'.'digit+)|['-']?(digit+) as lxm { LIT_NUM(float_of_string lxm) }
   (* String regex modified from:
