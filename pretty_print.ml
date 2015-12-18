@@ -194,8 +194,10 @@ with Sast.LitString(s) ->  (s, "")
       end
       else begin
         let param_str = List.fold_left(fun str e -> let (exp_str, _) = get_expr e in
-        str ^exp_str) "" e_l in
-        ("\t " ^ f_d.fname ^ " " ^ " (" ^  param_str ^ " )", "") end;
+        str ^ exp_str ^ ", ") "" e_l in
+        let clean_param_str = if (String.length param_str) > 0 then (String.sub param_str 0 ((String.length param_str) - 2))
+        else param_str in 
+        ("\t " ^ f_d.fname ^ " " ^ " (" ^  clean_param_str ^ " )", "") end;
 
   (* catch all *)
   | Sast.ACall(objDec, actDec, exprs) ->
@@ -211,7 +213,7 @@ let get_form_param (v: Sast.variable_decl) =
   typ ^ " " ^ v.vname
 
 let get_formals params =
-  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str ^ ",") "" params in (* need to remove the last comma if function not action*)
+  let p_list = List.fold_left (fun str v -> let v_str = get_form_param v in str ^ v_str ^ ", ") "" params in (* need to remove the last comma if function not action*)
   p_list
 
 let rec write_stmt s = match s with 
@@ -258,7 +260,7 @@ let write_func funcdec =
   let forms = get_formals funcdec.fformals in
   let len = String.length forms in
   let clean_forms =
-    if len > 0 then (String.sub forms 0 ((String.length forms) - 1))
+    if len > 0 then (String.sub forms 0 ((String.length forms) - 2))
     else forms in (* remove the extra comma from the formals list *)
   print_string ret_and_name_str;
   print_string ("(" ^ clean_forms ^ ")");
