@@ -4,6 +4,8 @@ open Sast
 type class_struct = {
 	sname: string;
 	sivars: Sast.variable_decl list;
+(* 	sparent: Sast.class_decl; *)
+	svtable: vtable
 }
 
 and vtable = {
@@ -11,4 +13,4 @@ and vtable = {
 	vfuncs: action_decl list;
 }
 
-and prgrm = class_struct list * vtable list * Sast.function_decl list
+and prgrm = class_struct list * Sast.function_decl list

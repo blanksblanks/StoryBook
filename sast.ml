@@ -29,7 +29,7 @@ and expression = expr_detail * data_type
 
 and variable_decl = {
   vtype: data_type;
-  vname : string;
+  mutable vname : string;
   mutable vexpr : expression;
 }
 (* Statements *)

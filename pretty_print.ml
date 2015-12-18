@@ -328,27 +328,56 @@ let write_func funcdec =
     print_string " \n} \n"
   end
 
+ let rec convert_my_expr (e, t) sptr = match e with 
+    Sast.Access(v, _) -> if v.vname = "instvar" then v.vname <- sptr 
+  | Sast.Assign(_, e) -> convert_my_expr e sptr
+  | Sast.Unop(_, exp) -> convert_my_expr exp sptr
+  | Sast.MathBinop(ex1, _, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
+  | Sast.StrCat(ex1, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
+  | Sast.FCall(_, el) -> List.iter(fun e -> convert_my_expr e sptr) el
+  | Sast.ACall(_, _, exps) -> List.iter(fun e -> convert_my_expr e sptr) exps 
+  | _ -> ()
+
+let rec convert_my_stmt (stmt: Sast.statement) sptr = 
+  match stmt with 
+     Sast.Expression(e) ->  convert_my_expr e sptr
+   | Sast.Block(stmts)  -> List.iter (fun s -> convert_my_stmt s sptr) stmts
+   | Sast.VarDecl(v) -> convert_my_expr v.vexpr sptr
+   | Sast.While(e, s) -> convert_my_expr e sptr; convert_my_stmt s sptr
+   | Sast.For(ex1, ex2, ex3, s) -> convert_my_stmt ex1 sptr; convert_my_expr ex2 sptr; 
+                                   convert_my_expr ex3 sptr; convert_my_stmt s sptr
+   | Sast.Return(e) -> convert_my_expr e sptr
+   | Sast.If(c, ifst, elst) -> convert_my_expr c sptr; convert_my_stmt ifst sptr; convert_my_stmt elst sptr
+   | _ -> ()
+
 let write_action s_ptr action =
   let ret_type = type_as_string action.areturn in 
   let ret_and_name = ret_type ^ " " ^ action.aname in
   let formals = get_formals action.aformals in
-  let ptr_name = (String.get s_ptr 0) in (* use the first letter of the character as the ptr id *)
-  let ptr = ("struct " ^ s_ptr ^ "*" ^ Char.escaped ptr_name) in 
+  let ptr_name = get_next_var_name() in 
+  let ptr = ("struct " ^ s_ptr ^ "*" ^ ptr_name) in 
   let all_formals = (formals ^ ptr) in
+  let new_body = List.iter (fun s -> convert_my_stmt s ptr_name) action.abody in
   print_string ret_and_name;
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) action.abody;
   print_string " \n\t} \n\t"
 
-let create_fptrs (cact: Sast.action_decl) = 
-
+let create_fptrs cname (cact: Sast.action_decl) = 
+  let fptr = ("(*" ^ cact.aname ^ ")") in
+  let freturn = type_as_string cact.areturn in
+  let fforms = get_formals cact.aformals in
+  let ptr_name = get_next_var_name() in 
+  let ptr = ("struct " ^ cname^ "*" ^ ptr_name) in 
+  let all_formals = ("(" ^ formals ^ ptr ^ ")") in
+  (freturn ^ fptr ^ all_formals)
 
 let write_structs (cstruct: Cast.class_struct) =
   let dec_struct = ("struct " ^ cstruct.sname ^ ";") in
   let vtable_def = ("struct table_" ^ cstruct.sname ^ " {\n") in
   let func_ptrs = List.fold_left(fun str f -> 
-      let f_str =  create_fptrs f in str ^ f_str) "" cstruct.svtable.vfuncs in
+      let f_str =  create_fptrs cstruct.cname f in str ^ f_str) "" cstruct.svtable.vfuncs in
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
   print_string ("struct " ^ cstruct.sname ^ "{");
   List.iter (fun v -> print_string (v ^ "; \n")) ivars;
