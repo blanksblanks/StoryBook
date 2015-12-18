@@ -1,6 +1,10 @@
 open Ast
 open Sast
 
+(* keep track of amount of objects newed for memory management--freeing*)
+let new_count = ref 0 
+let increment_new_count() = new_count := !new_count + 1
+
 type symbol_table = {
   parent : symbol_table option;
   mutable functions: Sast.function_decl list;
@@ -157,8 +161,9 @@ let rec analyze_expr env = function
             raise (Failure("class not found " ^ objType))
         in 
         let actual_p_typed = List.map (fun e -> analyze_expr env e) exprs in
-        if (compare_p_types objDecl.cformals actual_p_typed) = true then
-            (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
+        if (compare_p_types objDecl.cformals actual_p_typed) = true then begin
+            increment_new_count(); (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
+        end 
       else raise (Failure("invalid parameters to function"))
     | Ast.Access(objName, varName) ->
         let objDec = try find_variable env.scope objName

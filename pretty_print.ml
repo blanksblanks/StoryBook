@@ -6,7 +6,7 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
-let current_ptr = ref (9)
+let current_ptr = ref (-1)
 let increment_cur_ptr() = current_ptr := !current_ptr + 1
 
 let current_var = ref 0
@@ -82,8 +82,7 @@ with Sast.LitString(s) ->  (s, "")
      (id ^ " = " ^ exp, prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
         increment_cur_ptr();
-        ("ptrs[" ^ string_of_int !current_ptr ^ "]\n ptrs[" ^ string_of_int !current_ptr ^ "] = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ))", 
-          "")
+        ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", "\tptrs[" ^ string_of_int !current_ptr ^ "] = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n")
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -179,8 +178,8 @@ let rec write_stmt s = match s with
    | Sast.Block(stmts) -> List.iter (fun s -> write_stmt s) stmts
    | Sast.VarDecl(vdecl) -> 
       let vtyp = type_as_string vdecl.vtype in
-      let vname = vdecl.vname in let (vexp, _) = get_expr vdecl.vexpr in
-      print_string (vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
+      let vname = vdecl.vname in let (vexp, prec_expr) = get_expr vdecl.vexpr in
+      print_string ( "\t" ^ prec_expr ^ vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
    | Sast.While(e, s) -> 
       let (boolEx, _) = get_expr e in 
       print_string ("while(" ^ boolEx ^ "){ \n"); 
@@ -221,6 +220,10 @@ let write_func funcdec =
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
+  if funcdec.fname = "plot" then 
+  print_string "\n\tfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
+                      \tfree(ptrs[i]); }\n}\n "     
+  else
   print_string " \n} \n"
 
 let write_action s_ptr action =
@@ -234,9 +237,7 @@ let write_action s_ptr action =
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n";
   List.iter (fun s -> write_stmt s) action.abody;
-  print_string "\nfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
-                      free(ptrs[i]); }\n      
-                      } \n"
+  print_string "} \n"
 
 let write_structs (cstruct: Cast.class_struct) =
   let ivars = List.map (fun v -> get_form_param v) cstruct.sivars in
