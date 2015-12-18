@@ -226,12 +226,18 @@ with Sast.LitString(s) ->  (s, "")
          (prev_str ^ cur_str ^ ", ", prev_prec_code ^ "\n" ^ cur_prec_code)
        ) ("", "") exprs in 
      let full_param_str = param_str ^ objDec.vname in 
-    (* print_string "$$$$$$$$$$$$$";
-     print_string full_param_str;
-     print_string "%%%%%%%%%";
-     print_string prev_code;
-     print_string "!!!!!!!!"; *)
-     ("\t " ^ actDec.aname ^ " " ^ " (" ^  full_param_str ^ " )", prev_code)
+     let acall_str = "\t " ^ actDec.aname ^ " " ^ " (" ^  full_param_str ^ " )" in 
+
+      (match actDec.areturn with
+        | Sast.String ->
+            let ret_var = get_next_var_name() in
+            let call_and_store = "char *" ^ ret_var ^ " = " ^ acall_str ^ ";\n" in 
+            let save_var = get_next_var_name() in 
+            let save_buf = "char " ^ save_var ^ "[strlen(" ^ ret_var ^ ")];\n" in 
+            let copy = "strcpy(" ^ save_var ^ ", " ^ ret_var ^ ");\n" in 
+            let free = "free(" ^ ret_var ^ ");\n" in 
+            (save_var, (prev_code ^ call_and_store ^ save_buf ^ copy ^ free))
+        |_ -> (acall_str, prev_code) )
  
   (* catch all *)
   | _ -> ("char * = \"meow\"", "")
