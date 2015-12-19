@@ -6,7 +6,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of data_type
+  | List of string
 
 (* Operators *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
