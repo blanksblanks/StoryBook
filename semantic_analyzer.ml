@@ -78,10 +78,13 @@ let get_class_decl_from_type (scope: symbol_table) ctype =
   Sast.Object(typDecl) -> find_class_decl scope typDecl.cname
   | _ -> raise(Failure("not an object. can't access instance vars"))
 
-let find_action_decl (actions : Sast.action_decl list) name =
+let find_action_decl (actions : Sast.action_decl list) name className =
   try
-    List.find(fun a -> a.aname = name) actions
-  with Not_found -> raise (Failure("variable not found " ^ name))
+    List.find(fun a -> (a.aname = name)) actions
+  with Not_found -> 
+    try
+      List.find(fun a -> (a.aname = (className ^ "_" ^ name))) actions
+    with Not_found -> raise (Failure("action not found " ^ name))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -239,7 +242,7 @@ let rec analyze_expr env = function
        get_class_decl_from_type env.scope objDec.vtype
 
        (* Check that action is valid *)
-       in let actionDec = try find_action_decl classDec.cactions actName
+       in let actionDec = try find_action_decl classDec.cactions actName classDec.cname
        with Not_found -> raise (Failure("action not found " ^ actName))
        in
           (*check that params are correct *)
