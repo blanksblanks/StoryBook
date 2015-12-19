@@ -1,0 +1,4 @@
+Chapter plot() returns nothing {
+	number listof 3 evens is [2;4;6].
+	say(evens[1]).
+}
