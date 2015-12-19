@@ -2,7 +2,6 @@
  multiline
  comment.
 
-Chapter plot() returns number {
+Chapter plot() returns nothing {
   say(Once upon a time...).
-  endwith (0).
 }

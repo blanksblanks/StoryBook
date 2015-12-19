@@ -1,5 +1,4 @@
-Chapter plot() returns number {
+Chapter plot() returns nothing {
     say("This is " + "Sparta!").
-        endwith (0).
    }
 

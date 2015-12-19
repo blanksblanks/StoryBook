@@ -1,4 +1,8 @@
-Chapter plot() returns number {
+Chapter moo() returns number {
   say ("Once Upon a time").
   endwith ("cow").
+}
+
+Chapter plot() returns nothing {
+	moo().
 }

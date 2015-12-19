@@ -1,7 +1,6 @@
 Chapter whatTimeIsIt(words x) returns words {
   endwith("It's " + x + " o'clock." ).
 }
-Chapter plot() returns number {
+Chapter plot() returns nothing {
   say(whatTimeIsIt("hi" + " friend")).
-  endwith (0).
 }

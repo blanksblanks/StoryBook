@@ -2,8 +2,6 @@ Character Monster (words n) {
     
 }
 
-Chapter plot() returns number {
+Chapter plot() returns nothing {
   say("hello world").
-
-  endwith(0).
 }

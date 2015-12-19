@@ -455,7 +455,9 @@ let analyze_semantics prgm: Sast.program =
   let new_class_decls = List.map (fun f -> analyze_class f env) (List.rev(class_decls)) in
   let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev(func_decls)) in
   (* Search for plot *)
-  let _  = try
+  let plot_decl= try
         find_plot new_func_decls
       with Not_found -> raise (Failure("No plot was found.")) in
-  (new_class_decls, List.append new_func_decls library_funcs) 
+  match plot_decl.freturn with
+  Sast.Void -> (new_class_decls, List.append new_func_decls library_funcs) 
+  | _ -> raise(Failure("plot cannot return anything"))

@@ -1,5 +1,4 @@
-Chapter plot() returns number {
+Chapter plot() returns nothing {
     say( 1+1 + "hello" + (1+3) ).
-        endwith (0).
         }
 

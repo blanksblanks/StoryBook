@@ -1,3 +1,7 @@
-Chapter plot() returns number {
-  endwith (0).
+Chapter fncReturnsNumber() returns number {
+	endwith(1).
+}
+
+Chapter plot() returns nothing {
+  say(fncReturnsNumber()).
 }

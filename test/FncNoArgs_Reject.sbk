@@ -1,7 +1,6 @@
 Chapter whatTimeIsIt() returns words {
   endwith("It's crunchy time").
 } 
-Chapter plot() returns number {
+Chapter plot() returns nothing{
   whatTimeIsIt(1; 2).
-  endwith (0).
 }

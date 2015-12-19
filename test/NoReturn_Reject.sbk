@@ -1,3 +1,7 @@
-Chapter plot() returns number {
-  say("Once upon a time...").
+Chapter whatTimeIsIt() returns words {
+  say("time to return").
+}
+
+Chapter plot() returns nothing {
+  say(whatTimeIsIt()).
 }
