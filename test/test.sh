@@ -16,9 +16,10 @@ then
         .././run < "$acceptname" > "${program}.c" 2>> errors.txt
         if [ -s "$program.c" ]
         then
-          gcc -g $program.c -o $program
+          gcc -g -std=c99 $program.c -o $program
           if [ -f "$program" ]
           then
+            valgrind --leak-check=yes ./$program > "${program}_Mem.txt" 2>&1
             ./$program > "${program}_Out.txt"
             rm $program
             if  diff -q "${program}_Out.txt" "${program}_Exp.txt"
