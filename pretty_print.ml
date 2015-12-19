@@ -92,7 +92,7 @@ and initalize_inst_vars (forms: Sast.variable_decl list) actuals name =
         str ^ new_str
       ) "" forms
   in let vtable_str = "((struct " ^ name ^" *)ptrs[" ^ (string_of_int !current_ptr) ^ "])  ->" ^
-      "vtable->&table_for_" ^ name in
+      "vtable = &vtable_for_" ^ name ^ ";\n\n" in
 
   (p_list ^ vtable_str)
 
@@ -228,7 +228,7 @@ with Sast.LitString(s) ->  (s, "")
          (prev_str ^ cur_str ^ ", ", prev_prec_code ^ "\n" ^ cur_prec_code)
        ) ("", "") exprs in 
      let full_param_str = param_str ^ objDec.vname in 
-     let access_vtbl_act = actDec.aclass ^ "->vtable->" ^ actDec.aname in
+     let access_vtbl_act = objDec.vname ^ "->vtable->" ^ actDec.aname in
      let acall_str = "\t " ^ access_vtbl_act ^ " " ^ " (" ^  full_param_str ^ " )" in 
 
       (* Figure out what type the return is *)
@@ -368,14 +368,14 @@ let write_action s_ptr_name action =
   print_string ("(" ^ all_formals ^ ")");
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) action.abody;
-  print_string " \n\t} \n\t" *)
+  print_string " \n\t} \n\t"
 
 let create_fptrs cname (cact: Sast.action_decl) = 
   let fptr = ("(*" ^ cact.aname ^ ")") in
   let freturn = type_as_string cact.areturn in
   let fforms = get_formals cact.aformals in
   let ptr_name = get_next_var_name() in 
-  let ptr = ("struct " ^ cname^ "*" ^ ptr_name) in 
+  let ptr = ("struct " ^ cname^ " *" ^ ptr_name) in 
   let all_formals = ("(" ^ fforms ^ ptr ^ ");\n") in
   (freturn ^ fptr ^ all_formals)
 
@@ -386,20 +386,18 @@ let write_structs (cstruct: Cast.class_struct) =
   let vtable_def = "struct table_" ^ cstruct.sname ^ " {\n" in
   let func_ptrs = (List.fold_left(fun str f -> let f_str =  create_fptrs cstruct.sname f in str ^ f_str) "" cstruct.svtable.vfuncs) in
   let ivars = (List.map (fun v -> get_form_param v) cstruct.sivars) in
-  let vtable_dec = ("static const struct table_" ^ cstruct.sname ^ "vtable_for_" ^ cstruct.sname ^ " = { ") in
-  let vtable_fncs = List.fold_left(fun str a -> str ^ cstruct.sname ^ "_" ^ a.aname ^ ",") "" cstruct.svtable.vfuncs in
+  let vtable_dec = ("static const struct table_" ^ cstruct.sname ^ " vtable_for_" ^ cstruct.sname ^ " = { \n") in
+  let vtable_fncs = List.fold_left(fun str a -> str ^ cstruct.sname ^ "_" ^ a.aname ^ ", ") "\t" cstruct.svtable.vfuncs in
   let clean_vtable_fncs = (let len = String.length vtable_fncs in
-    if len > 0 then (String.sub vtable_fncs 0 (len-2))
+    if len > 1 then (String.sub vtable_fncs 0 (len-2))
     else vtable_fncs) in
-
   print_string (dec_struct ^ vtable_def ^ func_ptrs ^ "\n};\n");
   print_string ("struct " ^ cstruct.sname ^ "{\n");
   print_string ("\tconst struct table_" ^ cstruct.sname ^ " *vtable;\n");
   List.iter (fun v -> print_string ("\t" ^ v ^ "; \n")) ivars;
   print_string "\n}; \n";
   List.iter (fun a -> write_action cstruct.sname a) cstruct.svtable.vfuncs;
-  print_string vtable_dec;
-  print_string (vtable_dec ^ clean_vtable_fncs ^ "};\n")
+  print_string (vtable_dec ^ clean_vtable_fncs ^ "};\n") 
 
 let print_code pgm =
 	let (cstructs, funcdecs) = pgm in

@@ -11,8 +11,6 @@ then
   	then
     ./$program
     rm -rf *.dSYM
-    rm -f "$program.c"
-    rm -f "$program"
   else
   	echo "C code didn't compile"
   fi
