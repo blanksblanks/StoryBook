@@ -1,0 +1,14 @@
+Chapter GCD(number a; number b) returns number {
+  repeatwhile ( not(a=b) ){
+    if (a > b) {
+      a is (a - b).
+    } else {
+      b is (b - a).
+    }
+  }
+  endwith(a).
+}
+
+Chapter plot() returns nothing {
+  say(GCD(30; 60) + "").
+}

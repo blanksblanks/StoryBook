@@ -1,0 +1,14 @@
+Chapter Sing99BottlesOfBeer() returns nothing {
+  number bottles is (99).
+  repeatwhile(bottles > 0) {
+    say(bottles + " bottles of beer on the wall").
+    say(bottles + " bottles of beer").
+    say("Take 1 down, pass it around").
+    bottles is (bottles - 1).
+    say(bottles + " bottles of beer on the wall").
+  }
+}
+
+Chapter plot() returns nothing {
+  Sing99BottlesOfBeer().
+}
