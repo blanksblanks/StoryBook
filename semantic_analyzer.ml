@@ -360,17 +360,18 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
   else begin
     let is_name_taken = is_func_name_already_used env.scope name in
     if is_name_taken != None then raise(Failure("Function name: " ^ name ^ "is already in use."))
-
     (*and old_formals = fun_dcl.fformals *)
     else begin
       let old_ret_type = fun_dcl.freturn
       and old_body = fun_dcl.fbody in (*?*)
-      let formals = List.map(fun st-> check_var_decl env st) fun_dcl.fformals in
-      let body = List.map (fun st ->  analyze_stmt env st) old_body in
       let ret_type = convert_data_type env old_ret_type in
+      let formals = List.map(fun st-> check_var_decl env st) fun_dcl.fformals in
+      env.scope.functions <- List.append env.scope.functions [{fname=name; fformals = formals; freturn = ret_type; funcbody= []; isLib = false}];
+      let body = List.map (fun st ->  analyze_stmt env st) old_body in
       let _ = find_return body env ret_type in
       let sast_func_dec =    {fname = name; fformals = formals; freturn = ret_type; funcbody= body; isLib = false} in
-      env.scope.functions <- List.append env.scope.functions [sast_func_dec];
+      env.scope.functions <- List.filter (fun f -> f.fname <> name) env.scope.functions; (* remove dummy func for recursion *)
+      env.scope.functions <- List.append env.scope.functions [sast_func_dec]; (* add real func *)
       sast_func_dec
     end
   end

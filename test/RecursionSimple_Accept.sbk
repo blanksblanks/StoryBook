@@ -1,0 +1,10 @@
+Chapter gcd(number a; number b) returns number {
+  if (b = 0) {
+    endwith (a).
+  }
+  endwith(gcd(b; a %b)).
+}
+
+Chapter plot() returns nothing {
+  say(gcd(54; 24)).
+}
