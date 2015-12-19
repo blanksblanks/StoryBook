@@ -6,6 +6,7 @@ type data_type =
   | Boolean
   | String
   | Char
+  | List of data_type
   | Object of class_decl
 
 and expr_detail =
@@ -24,6 +25,8 @@ and expr_detail =
   | StrCat of expression * expression
   | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
+  | ListAccess of string * expression
+  (* | LitList of expression list *)
 
 and expression = expr_detail * data_type
 

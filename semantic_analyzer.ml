@@ -119,7 +119,7 @@ let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
 | _ -> 		raise (Failure("Invalid unary operator"))
 
-let convert_data_type env old_type = match old_type with
+let rec convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
   | Ast.Boolean -> Sast.Boolean
@@ -129,7 +129,7 @@ let convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
-
+  | Ast.List(n) -> convert_data_type env n
 
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
@@ -255,14 +255,15 @@ let rec analyze_expr env = function
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
     | _ -> Sast.LitString(""), Sast.String
 
-let type_as_string t = match t
-with 
+let rec type_as_string t = match t
+with
      Sast.Number -> "float"
    | Sast.Boolean -> "bool"
    | Sast.String -> "char *"
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "object" ^ n.cname
+   | Sast.List(n) -> type_as_string t ^ "list"
 
 (* convert ast.var_decl to sast.variable_decl*)
 (* if there's an expression, we want to check it *)
