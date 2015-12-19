@@ -17,7 +17,7 @@ and expr_detail =
   | Noexpr (* for (;;) *)
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
-  | TraitAssign of variable_decl * string * expression (* SleepingBeauty's x is 5 *)
+  | TraitAssign of expression * expression (* SleepingBeauty's x is 5 *)
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
   | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)
   | FCall of function_decl * expression list

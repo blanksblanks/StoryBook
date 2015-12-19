@@ -30,7 +30,7 @@ type expr =
 | Noexpr (* for (;;) *)
 | Id of string (* foo_unquoted *)
 | Assign of string * expr (* x is 5 *)
-| TraitAssign of string * string * expr (* SleepingBeauty's x is 5 *)
+| TraitAssign of expr * expr (* SleepingBeauty's x is 5 *)
 | ListAssign of string * expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Instantiate of string * expr list (*object type and constructor parameters *)
 | ListInstantiate of string * expr (* type, size  -> e.g. int, 5 *)

@@ -37,6 +37,7 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
+   | _ -> "Uh oh"
 
 let get_bool_str b = match b
 with true -> "1"
@@ -138,7 +139,10 @@ with Sast.LitString(s) ->  (s, "")
      let v_name = get_next_var_name() in
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
-
+    | Sast.TraitAssign(accessVar, expr) ->
+      let (varAccess, _) = get_expr accessVar in
+      let (new_value, _) = get_expr expr in
+      (varAccess ^ "=" ^ new_value, "")
     | Sast.Access(obj_dec, var_dec) -> (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
 
     | Sast.FCall (f_d, e_l) ->
@@ -192,7 +196,7 @@ with Sast.LitString(s) ->  (s, "")
                      | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
 
-            | _ -> ("char * = \"meow\"", "")
+    | _ -> ("char * = \"meow\"", "")
       end
       (* Regular function call --i.e., not "say" *)
       else begin

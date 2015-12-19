@@ -1,0 +1,12 @@
+Character Princess( words n; words s ) {
+  words name is n.
+  words sister is s.
+}
+
+Chapter plot() returns nothing {
+  Character Princess Elsa is new Princess("Elsa"; "Anna").
+  say(Elsa's name).
+  say(Elsa's sister).
+  Elsa's name is (9).
+  say(Elsa's name).
+}

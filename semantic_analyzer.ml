@@ -164,6 +164,13 @@ let rec analyze_expr env = function
         in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
+    | Ast.TraitAssign(objAccess, ex) -> 
+        let (var, vtype )= analyze_expr env objAccess in 
+        let (e, exp_type) = analyze_expr env ex in
+        if vtype <> exp_type then
+          raise(Failure("Incorrect type assignment to character trait"))
+        else
+          Sast.TraitAssign((var, vtype), (e, exp_type)), exp_type 
     | Ast.Instantiate(objType, exprs) ->
         let objDecl = try
           find_class_decl env.scope objType
