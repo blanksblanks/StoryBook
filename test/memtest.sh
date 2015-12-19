@@ -19,9 +19,14 @@ then
           gcc -g -std=c99 $program.c -o $program
           if [ -f "$program" ]
           then
+            valgrind --leak-check=yes ./$program > "${program}_Mem.txt" 2>&1
             ./$program > "${program}_Out.txt"
             rm $program
             if  diff -q "${program}_Out.txt" "${program}_Exp.txt"
+            	if grep "Reachable" "${program}_Mem.txt"
+            		then
+            		echo "❌ : $program -- Memory leaks!"
+            	fi
             then
               let "passcount += 1"
               echo "✅ : $program" >> test_results.txt;
