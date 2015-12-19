@@ -385,7 +385,8 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
     let ret_type = convert_data_type class_env act.areturn in 
     let formals = List.map (fun param -> analyze_classvars param class_env) act.aformals in
     let body = List.map (fun st -> analyze_stmt class_env st) act.abody in 
-    let sast_act = {aname = name; aformals = formals; areturn = ret_type; abody = body} in
+    let cdecl = List.nth class_env.scope.characters 0 
+    let sast_act = {aname = name; aclass = cdecl.cname; aformals = formals; areturn = ret_type; abody = body} in
     let _ = class_env.scope.actions <- sast_act :: class_env.scope.actions in 
     sast_act
 

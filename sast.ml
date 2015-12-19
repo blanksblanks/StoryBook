@@ -58,6 +58,7 @@ and function_decl = {
 (* Actions *)
 and action_decl = {
   aname : string; (* Name of the action *)
+  aclass : string;
   aformals: variable_decl list; (* formal params *)
   areturn : data_type; (* return type *)
   abody : statement list; (* statements, including local variable declarations *)

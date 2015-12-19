@@ -1,7 +1,7 @@
 Character Monster( words n; number s ) {
   words name is n.
   number size is s.
-  Character Monster me.
+  Character Monster sister.
 
   Action scare(words scream) returns nothing {
     say (scream).
