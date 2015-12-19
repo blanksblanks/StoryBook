@@ -6,6 +6,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
+  | List of data_type
 
 (* Operators *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
@@ -21,8 +22,11 @@ type expr =
 | Id of string (* foo_unquoted *)
 | Assign of string * expr (* x is 5 *)
 | TraitAssign of string * string * expr (* SleepingBeauty's x is 5 *)
+| ListAssign of string * expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Instantiate of string * expr list (*object type and constructor parameters *)
+| ListInstantiate of string * expr (* type, size *)
 | Access of string * string (* Member value access: SleepingBeauty's x *)
+| ListAccess of string * expr (* myList[1 + 1] *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr
 | FCall of string * expr list (* chapter1() *)

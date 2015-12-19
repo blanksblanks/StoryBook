@@ -5,7 +5,7 @@
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
-/*%token LIST NULL */
+%token LIST  /*NULL */
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 /*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW MY
@@ -178,10 +178,13 @@ expr:
   | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
   | ID APOST ID      {Access($1, $3)} /* member access */
   | MY ID            {Access("my", $2)}
+  | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID APOST ID ASSIGN expr {TraitAssign($1, $3, $5)} /* member assign */
+  | ID LBRACK expr RBRACK ASSIGN expr {ListAssign($1, $3, $6)}
   | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
   | NEW ID LPAREN actuals_opt RPAREN {Instantiate($2, $4)} /*object declaration  */
+  | NEW ID LIST LBRACK expr RBRACK {ListInstantiate($2, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
   | LPAREN expr RPAREN {$2}
 
 /* Actual Parameters */

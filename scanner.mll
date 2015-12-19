@@ -55,8 +55,8 @@ rule token = parse
   | "false" as bool_val   { LIT_BOOL(bool_of_string bool_val)}
   | "number"  { NUMBER }
   | "words"   { STRING }
-  | "letter"  { CHAR } (*
-  | "list"    { LIST }
+  | "letter"  { CHAR } 
+  | "list"    { LIST } (*
   | "null"    { NULL } *)
   | "nothing" { VOID } (*)
   | "subtype" { SUBTYPE } *)
