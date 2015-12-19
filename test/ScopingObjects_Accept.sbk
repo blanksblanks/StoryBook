@@ -1,0 +1,19 @@
+Character Monster( words n; number s ) {
+  words name is n.
+  number size is s.
+  
+  Action scare() returns nothing {
+    say (my name).
+  }
+}
+
+Chapter createMonster() returns Character Monster{
+  Character Monster Frank is new Monster("Frankenstein"; 99).
+  endwith(Frank).
+}
+
+Chapter plot() returns nothing {
+  Character Monster f is new Monster("Dummy"; 69).
+  f is createMonster().
+  f, scare().
+}
