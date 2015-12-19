@@ -392,7 +392,7 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
     sast_act
 
 let find_parent parent child (env: translation_environment)= 
-  (*if parent and child name same, then no inheritence, otherwise yes inheritence*)
+  (*if parent and child name same, then no inheritance, otherwise yes inheritance*)
   if parent <> child then
     (* If inheriting, find parent class *) 
     List.find (fun c -> c.cname = parent) env.scope.characters
