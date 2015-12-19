@@ -75,7 +75,11 @@ type_label:
  | STRING  { String }
  | CHAR    { Char }
  | CHARACTER ID    { Object($2) }
- | type_label LIST {List($1)}
+ | NUMBER LIST { List(Number)}
+ | BOOL LIST { List(Boolean)}
+ | STRING LIST { List(String)}
+ | CHAR LIST { List(Char)}
+ | CHARACTER ID LIST { List(Object($2))}
 
 /* Variable Declarations */
 vdecl_list:

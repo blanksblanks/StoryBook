@@ -1,4 +1,11 @@
 (* Possible data types *)
+type list_types =
+| Number
+| Boolean
+| String
+| Char
+| Object of string
+
 type data_type =
   | Void
   | Number
@@ -6,7 +13,9 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of data_type
+  | List of list_types
+
+
 
 (* Operators *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq| Mod|
