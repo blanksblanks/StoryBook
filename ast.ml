@@ -13,7 +13,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of list_types
+  | List of data_type
 
 
 
