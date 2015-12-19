@@ -318,8 +318,13 @@ let rec analyze_stmt env = function
       else let s = analyze_stmt env s in
       Sast.While(sastexpr, s)
 
-  | Ast.Block(stmts) -> let sast_blck = List.map( fun s -> analyze_stmt env s) stmts in
-      Sast.Block(sast_blck)
+  | Ast.Block(stmts) -> 
+       let scope' = {parent = Some(env.scope); functions = []; variables = []; characters = []; actions = []}
+       in let env' = { env with scope = scope'} in
+
+        let sast_blck =
+            List.map( fun s -> analyze_stmt env' s) stmts in
+            Sast.Block(sast_blck)
 
 let library_funcs = [
   {
