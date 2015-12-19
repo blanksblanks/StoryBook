@@ -37,6 +37,7 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
+   | Sast.List(n) -> (type_as_string n) ^ " []"
 
 let get_bool_str b = match b
 with true -> "1"
@@ -113,6 +114,7 @@ with Sast.LitString(s) ->  (s, "")
         let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
         " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
         ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
+   (* | Sast.ListInstantiate *)
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)

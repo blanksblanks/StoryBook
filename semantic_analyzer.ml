@@ -164,6 +164,19 @@ let rec analyze_expr env = function
         in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
+    | Ast.ListAssign(vname, idx, expr) ->
+        let vdecl = try
+          find_variable env.scope vname
+        with Not_found ->
+          raise(Failure("undeclared identifier " ^ vname)) in
+        let (idx, idx_typ) = analyze_expr env idx in
+        let (e, expr_typ) = analyze_expr env expr in
+        if idx_typ <> Sast.Number
+          then raise(Failure("List index must be of type number"))
+        else if vdecl.vtype <> Sast.List(expr_typ)
+          then raise(Failure("Expression does not match variable type"))
+        else
+          Sast.ListAssign(vname, (idx, idx_typ), (e, expr_typ)), expr_typ
     | Ast.Instantiate(objType, exprs) ->
         let objDecl = try
           find_class_decl env.scope objType
@@ -175,6 +188,8 @@ let rec analyze_expr env = function
             increment_new_count(); (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
         end 
       else raise (Failure("invalid parameters to function"))
+    (* TODO: Add checks *)
+    (* | Ast.ListInstantiate(listType, size) -> *)
     | Ast.Access(objName, varName) ->
         (* "self" reference *)
         if (objName = "my") then begin
@@ -200,6 +215,8 @@ let rec analyze_expr env = function
         end 
 
 
+    (* TODO: Add checks *)
+    (* | Ast.ListAccess(variable_decl, expression) -> *)
     | Ast.Binop(e1, op, e2) ->
   	  let e1 = analyze_expr env e1 (* Check left and right children *)
   	  and e2 = analyze_expr env e2 in

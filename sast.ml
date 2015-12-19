@@ -18,14 +18,16 @@ and expr_detail =
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
   | TraitAssign of variable_decl * string * expression (* SleepingBeauty's x is 5 *)
+  | ListAssign of string * expression * expression (* myList[2 + 3] = 5+ 7 *)
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
+  | ListInstantiate of variable_decl * expression (* words list colors is new words list [size] *)
   | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)
   | FCall of function_decl * expression list
   | ACall of variable_decl * action_decl * expression list
   | StrCat of expression * expression
   | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
-  | ListAccess of string * expression
+  | ListAccess of variable_decl * expression
   (* | LitList of expression list *)
 
 and expression = expr_detail * data_type
