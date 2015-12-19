@@ -40,8 +40,8 @@ void Monster_Constructor(struct Monster* this, char *n, float s) {
 // Inheritance
 struct Zombie;
 struct table_Zombie {
-  // OVERLOADED FUNCTIONS ARE NOT DECLARED HERE!!!!!!!!!!
-  // OR YOU WILL GET SEGFAULTS
+  void (*Zombie_whoami)(struct Monster *this);
+  void (*grow)(struct Monster *this, float s);
   void (*cry)(struct Zombie *this);
 };
 

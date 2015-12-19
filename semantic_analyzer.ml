@@ -56,7 +56,7 @@ let rec find_variable (scope : symbol_table) name =
   with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found" ^ name))
+    | _ -> raise (Failure("variable not found " ^ name))
 
 (* Find Function *)
 let rec find_class_decl (scope: symbol_table) name =
@@ -80,7 +80,7 @@ let get_class_decl_from_type (scope: symbol_table) ctype =
 let find_action_decl (actions : Sast.action_decl list) name =
   try
     List.find(fun a -> a.aname = name) actions
-  with Not_found -> raise (Failure("variable not found" ^ name))
+  with Not_found -> raise (Failure("variable not found " ^ name))
 
 (* Checking types for binop; takes the op anad the two types to do checking *)
 let analyze_binop (scope: symbol_table) op t1 t2 = match op with
@@ -178,7 +178,7 @@ let rec analyze_expr env = function
           let classVar = try find_class_var env.scope classDec varName
             with Not_found ->
             raise(Failure("instance variable not found" ^ varName))
-          in let objVar = {vtype = Object(classDec); vname = "instvar"; vexpr = (Sast.Noexpr, Sast.Void)} in
+          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true} in
           (Sast.Access(objVar, classVar), classVar.vtype) 
         end
         (* Regular access *)
@@ -239,7 +239,7 @@ let rec analyze_expr env = function
 
        (* Check that action is valid *)
        in let actionDec = try find_action_decl classDec.cactions actName
-       with Not_found -> raise (Failure("action not found" ^ actName))
+       with Not_found -> raise (Failure("action not found " ^ actName))
        in
           (*check that params are correct *)
             let formal_p_list = actionDec.aformals in
@@ -267,7 +267,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let typ = convert_data_type env var.vtype in
     let (e, expr_typ) = analyze_expr env var.vexpr in match e
     with Sast.Noexpr -> 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
+            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
             in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
             sast_var_decl
     | _ ->  if typ <> expr_typ then begin
@@ -275,7 +275,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
               "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
             end
           else begin 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ) }
+            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
             in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
             sast_var_decl
           end
@@ -323,7 +323,8 @@ let library_funcs = [
     fname = "say";
     fformals = [{vtype = (Sast.String);
                  vname = "str";
-                 vexpr = (Sast.Noexpr, Sast.String) (*will have to make void*)
+                 vexpr = (Sast.Noexpr, Sast.String); (*will have to make void*)
+                 istrait = false
                 }];
     freturn = Sast.String;
     funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
@@ -390,24 +391,42 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
     let _ = class_env.scope.actions <- sast_act :: class_env.scope.actions in 
     sast_act
 
+let find_parent parent child (env: translation_environment)= 
+  (*if parent and child name same, then no inheritence, otherwise yes inheritence*)
+  if parent <> child then
+    (* If inheriting, find parent class *) 
+    List.find (fun c -> c.cname = parent) env.scope.characters
+  else {cname = child; cparent = child; cinstvars = []; cactions = []; cformals = []} 
+
 let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) = 
   let name = clss_dcl.cname in 
+  let parent = clss_dcl.cparent in
   if List.exists (fun x -> x.cname = name) env.scope.characters then
-    raise(Failure("Class " ^ name ^ " already exists"))
+    raise(Failure("Character " ^ name ^ " already exists"))
+  else if (parent <> name) && ((List.exists (fun x -> x.cname = clss_dcl.cparent) env.scope.characters) = false)
+      then raise(Failure("Character " ^ clss_dcl.cparent ^ " does not exist"))
   else
-    (* create new scope for the class *)
+   (* create new scope for the class *)
    (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
     let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
-
+    let full_parent =  find_parent parent name env in
     (* Add class to it's own character scope list so that "self" references work *)
     class_env.scope.characters <-
-        {cname = name; cinstvars = inst_vars; cactions = []; cformals = []} :: class_env.scope.characters;
-
-    let actions = List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions in 
-    let new_class = {cname = name; cinstvars = inst_vars; cactions = actions; cformals = newcformals} in
+        {cname = name; cparent = name; cinstvars = inst_vars; cactions = []; cformals = []} :: class_env.scope.characters;
+    let parent_acts = 
+      if full_parent.cname <> name then 
+        List.map(fun a -> 
+          {aname = (name ^ "_" ^ a.aname); aclass = name; aformals = a.aformals; areturn = a.areturn; abody = a.abody}
+        ) full_parent.cactions 
+      else [] in
+    let parent_ivars = if full_parent.cname <> name then full_parent.cinstvars else [] in
+    let all_actions = (List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions) @ parent_acts in
+    let all_ivars = inst_vars @ parent_ivars in
+    let all_formals = full_parent.cformals @ newcformals in
+    let new_class = {cname = name; cparent = full_parent.cname; cinstvars = all_ivars; cactions = all_actions; cformals = all_formals} in
     (* add the new class to the list of classes in the symbol table *) 
     let _ = env.scope.characters <- new_class :: (env.scope.characters) in 
     new_class
@@ -416,7 +435,7 @@ let analyze_semantics prgm: Sast.program =
   let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
-  let new_class_decls = List.map (fun f -> analyze_class f env) class_decls in
+  let new_class_decls = List.map (fun f -> analyze_class f env) (List.rev(class_decls)) in
   let new_func_decls = List.map (fun f -> analyze_func f env) (List.rev(func_decls)) in
   (* Search for plot *)
   let _  = try

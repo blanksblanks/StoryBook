@@ -93,7 +93,6 @@ and initalize_inst_vars (forms: Sast.variable_decl list) actuals name =
       ) "" forms
   in let vtable_str = "((struct " ^ name ^" *)ptrs[" ^ (string_of_int !current_ptr) ^ "])  ->" ^
       "vtable = &vtable_for_" ^ name ^ ";\n\n" in
-
   (p_list ^ vtable_str)
 
 
@@ -109,6 +108,7 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.Instantiate(c_dec, exprs) ->
         increment_cur_ptr();
         let rev_vars = List.rev c_dec.cinstvars in
+        let _ = idx := 0 in
         let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
         let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
         " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
@@ -336,7 +336,7 @@ let write_func funcdec =
 
 
 let rec convert_my_expr (e, t) sptr = match e with 
-    Sast.Access(v, _) -> if v.vname = "instvar" then v.vname <- sptr 
+    Sast.Access(v, _) -> if v.istrait = true then v.vname <- sptr 
   | Sast.Assign(_, e) -> convert_my_expr e sptr
   | Sast.Unop(_, exp) -> convert_my_expr exp sptr
   | Sast.MathBinop(ex1, _, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
@@ -378,8 +378,6 @@ let create_fptrs cname (cact: Sast.action_decl) =
   let ptr = ("struct " ^ cname^ " *" ^ ptr_name) in 
   let all_formals = ("(" ^ fforms ^ ptr ^ ");\n") in
   (freturn ^ fptr ^ all_formals)
-
-
 
 let write_structs (cstruct: Cast.class_struct) =
   let dec_struct = "struct " ^ cstruct.sname ^ ";\n" in

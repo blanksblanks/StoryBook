@@ -106,12 +106,22 @@ vdecl:
 
 /* Character (Class) Declarations */
 cdecl:
-  CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
-  {{  cname = $2;
-      cformals = $4;
-      cinstvars = $7;
-      cactions = $8;
-  }}
+    CHARACTER ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
+    {{  cname = $2;
+        cparent = $2;
+        cformals = $4;
+        cinstvars = $7;
+        cactions = $8;
+    }}
+
+  | CHARACTER ID ASSIGN ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
+    {{  
+        cname = $2;
+        cparent = $4;
+        cformals = $6;
+        cinstvars = $9;
+        cactions = $10;
+    }}
 
 /* Action (Method) Declarations */
 action_list:

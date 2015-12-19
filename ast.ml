@@ -55,7 +55,7 @@ type func_decl = {
 
 (* Actions *)
 type act_decl = {
-  aname : string; (* Name of the action *)
+  mutable aname : string; (* Name of the action *)
   aformals: var_decl list; (* formal params *)
   areturn : data_type; (* return type *)
   abody : stmt list; (* statements, including local variable declarations *)
@@ -64,6 +64,7 @@ type act_decl = {
 (* Class Declarations *)
 type cl_decl = {
   cname : string; (* name of the class *)
+  cparent : string;
   cformals: var_decl list; (* formal params *)
   cinstvars : var_decl list; (*instance variables *)
   cactions: act_decl list; (*lists of actions (methods) *)

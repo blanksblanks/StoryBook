@@ -4,7 +4,7 @@ open Sast
 type class_struct = {
 	sname: string;
 	sivars: Sast.variable_decl list;
-(* 	sparent: Sast.class_decl; *)
+	(* sparent: Sast.class_decl; *)
 	svtable: vtable
 }
 

@@ -32,6 +32,7 @@ and variable_decl =
   vtype: data_type;
   mutable vname : string;
   mutable vexpr : expression;
+  istrait: bool; 
 }
 
 
@@ -67,6 +68,7 @@ and action_decl = {
 (* Class Declarations *)
 and class_decl = {
   cname : string; (* name of the class *)
+  cparent: string;
   cformals: variable_decl list; (* formal params *)
   cinstvars : variable_decl list; (*instance variables *)
   cactions: action_decl list; (*lists of actions (methods) *)
