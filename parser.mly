@@ -75,7 +75,7 @@ type_label:
  | STRING  { String }
  | CHAR    { Char }
  | CHARACTER ID    { Object($2) }
- | LIST ID {List($2)}
+ | ID LIST {List($1)}
 
 /* Variable Declarations */
 vdecl_list:
