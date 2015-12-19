@@ -70,7 +70,8 @@ let rec find_class_decl (scope: symbol_table) name =
 
 let rec find_class_var (scope: symbol_table) c_dec name =
   try List.find(fun v-> v.vname = name) c_dec.cinstvars
-  with Not_found -> raise(Failure("invalid trait name" ^ name))
+  with Not_found ->
+      raise(Failure("invalid trait name: " ^ name))
 
 let get_class_decl_from_type (scope: symbol_table) ctype =
   match ctype with
@@ -406,16 +407,8 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
   else if (parent <> name) && ((List.exists (fun x -> x.cname = clss_dcl.cparent) env.scope.characters) = false)
       then raise(Failure("Character " ^ clss_dcl.cparent ^ " does not exist"))
   else
-   (* create new scope for the class *)
-   (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
-    let class_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
-    let class_env = {scope = class_scope; return_type = Sast.Void} in
-    let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
-    let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
     let full_parent =  find_parent parent name env in
-    (* Add class to it's own character scope list so that "self" references work *)
-    class_env.scope.characters <-
-        {cname = name; cparent = name; cinstvars = inst_vars; cactions = []; cformals = []} :: class_env.scope.characters;
+    (* First get parent instance variables and actions and store *)
     let parent_acts = 
       if full_parent.cname <> name then 
         List.map(fun a -> 
@@ -423,9 +416,25 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
         ) full_parent.cactions 
       else [] in
     let parent_ivars = if full_parent.cname <> name then full_parent.cinstvars else [] in
-    let all_actions = (List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions) @ parent_acts in
+
+       (* create new scope for the class *)
+   (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
+    let class_scope =
+       {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+    let class_env = {scope = class_scope; return_type = Sast.Void} in
+    
+    (* Now check current inst vars and formals *)
+    let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
+    let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
+
+    (* Combine parent and child instanve variables and formal parameters *)
     let all_ivars = inst_vars @ parent_ivars in
     let all_formals = full_parent.cformals @ newcformals in
+
+    (* Add class to it's own character scope list so that "self" references work *)
+    class_env.scope.characters <-
+        {cname = name; cparent = name; cinstvars = all_ivars; cactions = parent_acts; cformals = all_formals} :: class_env.scope.characters;
+    let all_actions = (List.map (fun a -> analyze_acts a class_env) clss_dcl.cactions) @ parent_acts in
     let new_class = {cname = name; cparent = full_parent.cname; cinstvars = all_ivars; cactions = all_actions; cformals = all_formals} in
     (* add the new class to the list of classes in the symbol table *) 
     let _ = env.scope.characters <- new_class :: (env.scope.characters) in 

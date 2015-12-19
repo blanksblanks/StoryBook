@@ -3,6 +3,7 @@ Character Monster( words n; number s ) {
   number size is s.
   
   Action scare(words scream) returns nothing {
+    say (scream + "I'm a Monster").
     say (my name).
   }
 }
@@ -12,6 +13,7 @@ Character Zombie is Monster(number a) {
 
   Action sayhi() returns nothing {
     say("BOO! I'm a Zombie.").
+    say (my name).
   }
 }
 Chapter plot() returns nothing {
@@ -19,4 +21,5 @@ Chapter plot() returns nothing {
   Frank, scare("Aghhhhhhhh").
   Character Zombie Zoe is new Zombie("Zoe"; 6; 16).
   Zoe, sayhi().
+~~  Zoe, scare().
 }
