@@ -70,7 +70,7 @@ let rec find_class_decl (scope: symbol_table) name =
 
 let rec find_class_var (scope: symbol_table) c_dec name =
   try List.find(fun v-> v.vname = name) c_dec.cinstvars
-  with Not_found -> raise(Failure("invalid trait name" ^ name))
+  with Not_found -> raise(Failure("invalid trait name " ^ name))
 
 let get_class_decl_from_type (scope: symbol_table) ctype =
   match ctype with

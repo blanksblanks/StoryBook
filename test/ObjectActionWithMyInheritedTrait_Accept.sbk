@@ -1,0 +1,23 @@
+Character Monster( words n; number s ) {
+  words name is n.
+  number size is s.
+  
+  Action scare(words scream) returns nothing {
+    say (my name).
+  }
+}
+
+Character Zombie is Monster(number a) {
+  number age is a.
+
+  Action sayhi() returns nothing {
+    say("BOO! I'm a Zombie. My name is " + my name).
+  }
+
+}
+Chapter plot() returns nothing {
+  Character Monster Frank is new Monster("Frankenstein"; 99).
+  Frank, scare("Aghhhhhhhh").
+  Character Zombie Zoe is new Zombie("Zoe"; 6; 16).
+  Zoe, sayhi().
+}
