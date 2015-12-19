@@ -17,12 +17,8 @@ and expr_detail =
   | Noexpr (* for (;;) *)
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
-<<<<<<< HEAD
   | TraitAssign of expression * expression (* SleepingBeauty's x is 5 *)
-=======
-  | TraitAssign of variable_decl * string * expression (* SleepingBeauty's x is 5 *)
   | ListAssign of string * expression * expression (* myList[2 + 3] = 5+ 7 *)
->>>>>>> b10417cbed7c23d15b6855e9266054047f7155b7
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
   | ListInstantiate of variable_decl * expression (* words list colors is new words list [size] *)
   | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)

@@ -37,14 +37,10 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
-<<<<<<< HEAD
-   | _ -> "Uh oh"
-=======
    | Sast.List(n) -> (type_as_string n) ^ " []"
->>>>>>> b10417cbed7c23d15b6855e9266054047f7155b7
 
-let get_bool_str b = match b
-with true -> "1"
+let get_bool_str b = match b with 
+    true -> "1"
    | _ -> "0"
 
 let get_str_len expr_str typ = match typ
