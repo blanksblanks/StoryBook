@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Compile c file and run
+program=`basename $1 .sbk`
+.././run < $1 > "${program}.c"
+
+if [ -s "$program.c" ]
+then
+  gcc -g -std=c99 $program.c -o $program
+  if [ -f "$program" ]
+  	then
+    ./$program
+    rm -rf *.dSYM
+  else
+  	echo "C code didn't compile"
+  fi
+
+else
+	echo "Storybook didn't compile"
+echo "  /\_/\\ !! _
+=( °∩° )= //
+  )   (  //
+ (__ __)//"
+fi
+

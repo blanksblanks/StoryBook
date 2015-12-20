@@ -3,7 +3,7 @@ Character Monster( words n; number s ) {
   number size is s.
   
   Action scare(words scream) returns nothing {
-    say (scream + " I'm " + my name).
+    say ("Hi, I'm " + my name + ". " + scream).
   }
 }
 
