@@ -293,21 +293,29 @@ with
 (* if there's an expression, we want to check it *)
 (* then add to scope's variable list *)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
-  let typ = convert_data_type env var.vtype in
-    let (e, expr_typ) = analyze_expr env var.vexpr in match e
-    with Sast.Noexpr -> 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
-            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
-            sast_var_decl
-    | _ ->  if typ <> expr_typ then begin
-            raise(Failure(
-              "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+  let reserve_var_names = Str.regexp "['_']['0'-'9']*" in
+  let is_reserved = Str.string_match reserve_var_names var.vname 0 in
+  if is_reserved <> true then begin
+    let typ = convert_data_type env var.vtype in
+      let (e, expr_typ) = analyze_expr env var.vexpr in match e
+      with Sast.Noexpr -> 
+              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
+              in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+              sast_var_decl
+      | _ ->  if typ <> expr_typ then begin
+              raise(Failure(
+                "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+              end
+            else begin 
+              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
+              in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+              sast_var_decl
             end
-          else begin 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
-            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
-            sast_var_decl
-          end
+  end
+  else begin
+    raise(Failure(
+      "variable name " ^ var.vname ^ "invalid. cannot use \"_\"" ^ "or \"_\" followed only by numerical digits"
+    )) end
 
 let rec analyze_stmt env = function
     Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)

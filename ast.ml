@@ -1,4 +1,4 @@
-(* Possible data types *)
+(* List types -- so that list definition can't recurse infinitely *)
 type list_types =
 | Number
 | Boolean
@@ -6,6 +6,8 @@ type list_types =
 | Char
 | Object of string
 
+
+(* Possible data types *)
 type data_type =
   | Void
   | Number
@@ -13,7 +15,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of data_type
+  | List of data_type (* NOTE: long term, we need to take this out *)
 
 
 
@@ -83,4 +85,6 @@ type cl_decl = {
   cactions: act_decl list; (*lists of actions (methods) *)
 }
 
+(* Program is class declarations and function declarations *)
+(* Method declarations are contained in class declarations *)
 type program = cl_decl list * func_decl list (* classes, funcs. no global vars *)

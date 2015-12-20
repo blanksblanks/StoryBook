@@ -6,7 +6,7 @@ OBJS = parser.cmo scanner.cmo semantic_analyzer.cmo ast.cmo sast.cmo cast.cmo co
 
 
 run : $(OBJS)
-	ocamlc -o run $(OBJS)
+	ocamlc -o run str.cma $(OBJS)
 
 scanner.ml : scanner.mll
 	ocamllex scanner.mll

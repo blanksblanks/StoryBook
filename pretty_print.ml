@@ -6,13 +6,18 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
+(* current_ptr keeps track of index of each object in the array of
+   malloc'ed c structs *)
 let current_ptr = ref (-1)
 let increment_cur_ptr() = current_ptr := !current_ptr + 1
 
+(* current_var is an int that keeps track of the current variable name
+   used in the code -- we convert this to string name *)
 let current_var = ref 0
 let increment_current_var() = current_var := !current_var + 1
-let get_next_var_name() = increment_current_var(); Char.escaped(Char.chr (!current_var + 97))
+let get_next_var_name() = increment_current_var(); "_" ^ (string_of_int !current_var)
 
+(* Convert operations to strings *)
 let get_op o = match o
 with Add -> " + "
    | Sub -> " - "

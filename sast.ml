@@ -1,5 +1,7 @@
 open Ast
 
+(* Data types -- link to type declarations where applicable,
+   whereast Ast just has strings for the type names *)
 type data_type =
     Void
   | Number
@@ -9,6 +11,8 @@ type data_type =
   | List of data_type
   | Object of class_decl
 
+(* Recurses only on semantically checked expressions,
+   whereas Ast didn't check type of expressions *)
 and expr_detail =
     LitNum of float
   | LitBool of bool
@@ -30,13 +34,18 @@ and expr_detail =
   | ListAccess of variable_decl * expression
   (* | LitList of expression list *)
 
+(* Tuple of expression and the type it evaluates to *)
 and expression = expr_detail * data_type
 
+(* Variable declaration *)
+(* All variable declarations have a type and a name 
+   If variable is initialized upon instantiation, the variable declaration
+   also has an expression attached to it *)
 and variable_decl =
 {
   vtype: data_type;
   mutable vname : string;
-  mutable vexpr : expression;
+  mutable vexpr : expression; (* e.g.: 5+3 in : "number x is (5 + 3)." *)
   istrait: bool; 
 }
 
@@ -47,8 +56,11 @@ and statement =
 | Expression of expression
 | VarDecl of variable_decl
 | Return of expression
+  (* If statements: boolean expr, if statement, else statement *)
 | If of expression * statement * statement
+  (* For loops: variable decl, boolean stopping condition, increment expr, loop body *)
 | For of statement * expression * expression * statement
+  (* Boolean condition: boolean expr, loop body *)
 | While of expression * statement
 
 
@@ -78,4 +90,6 @@ and class_decl = {
   cinstvars : variable_decl list; (*instance variables *)
   cactions: action_decl list; (*lists of actions (methods) *)
 }
+
+(* Program --class declarations and function declarations *)
 and program = class_decl list * function_decl list
