@@ -15,15 +15,14 @@ Character Princess( words n; number a) {
   	}
   }
 
-  Action yearsLater(number n) returns number {
+  Action yearsLater(number u) returns number {
   	number newage is (0).
-  	repeatfor(number i is (0).; i < n; i is (i+1)){
-  		newage is (newage + i).
+  	repeatfor(number i is (0).; i < u; i is (i+1)){
+  		newage is (i).
   	}
-  endwith(newage).
+  endwith(newage + my age).
 	}
 }
-
 
 Character LittleMermaid is Princess( words ab ) {
 	words ability is ab.
@@ -33,11 +32,32 @@ Character LittleMermaid is Princess( words ab ) {
   }
 }
 
+Character SleepingBeauty is Princess() {
+	Action sleep( number c ) returns number {
+		endwith (my age + c).
+	}
+}
+
+
 Chapter plot() returns nothing {
-  Character LittleMermaid Ariel is new LittleMermaid( "Ariel"; 16; "swim" ).
-  Ariel, introduceSelf().
+  
+  
   Ariel, showOff().
   Ariel, haveWine().
-  Ariel's age is (yearsLater(10)).
-  say(Ariel's age).
+  Ariel's age is (Ariel, yearsLater(11)).
+  ~~say(Ariel's age).
+
+  
+  
+  Aurora's age is (Aurora, sleep(10)).
+ ~~ say(Aurora's age).
+
+  say("Ariel: Hi everyone!" + Ariel, introduceSelf()).
+  say("Once upon a time, Disney princesses Ariel and Aurora planned to have play date.").
+  Character LittleMermaid Ariel is new LittleMermaid( "Ariel"; 16; "swim" ).
+  Character SleepingBeauty Aurora is new SleepingBeauty( "Aurora"; 16).
+  Ariel, introduceSelf().
+  Aurora, introduceSelf().
+  say("They saw ").
+
 }
