@@ -12,6 +12,7 @@ parser.output
 *.diff
 *.dSYM
 *.c
+*_Mem.txt
 .DS_Store
 
 run

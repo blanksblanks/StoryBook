@@ -6,13 +6,18 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
+(* current_ptr keeps track of index of each object in the array of
+   malloc'ed c structs *)
 let current_ptr = ref (-1)
 let increment_cur_ptr() = current_ptr := !current_ptr + 1
 
+(* current_var is an int that keeps track of the current variable name
+   used in the code -- we convert this to string name *)
 let current_var = ref 0
 let increment_current_var() = current_var := !current_var + 1
-let get_next_var_name() = increment_current_var(); Char.escaped(Char.chr (!current_var + 97))
+let get_next_var_name() = increment_current_var(); "_" ^ (string_of_int !current_var)
 
+(* Convert operations to strings *)
 let get_op o = match o
 with Add -> " + "
    | Sub -> " - "
@@ -37,7 +42,8 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
-   | Sast.List(n) -> (type_as_string n) ^ " []"
+   | _ -> ""
+(*    | Sast.List(n) -> (type_as_string n) ^ " []" *)
 
 let get_bool_str b = match b with 
     true -> "1"
@@ -197,7 +203,8 @@ with Sast.LitString(s) ->  (s, "")
                      | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
 
-    | _ -> ("char * = \"meow\"", "")
+    | Sast.Noexpr -> ("", "")
+
       end
       (* Regular function call --i.e., not "say" *)
       else begin
@@ -251,7 +258,7 @@ with Sast.LitString(s) ->  (s, "")
         |_ -> (acall_str, prev_code) )
  
   (* catch all *)
-  | _ -> ("char * = \"meow\"", "")
+  | Sast.Noexpr -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in

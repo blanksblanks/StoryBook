@@ -129,7 +129,7 @@ let rec convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
-  | Ast.List(n) -> convert_data_type env n
+  | _ -> Sast.Void
 
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
@@ -171,7 +171,7 @@ let rec analyze_expr env = function
           raise(Failure("Incorrect type assignment to character trait"))
         else
           Sast.TraitAssign((var, vtype), (e, exp_type)), exp_type 
-    | Ast.ListAssign(vname, idx, expr) ->
+(*     | Ast.ListAssign(vname, idx, expr) ->
         let vdecl = try
           find_variable env.scope vname
         with Not_found ->
@@ -183,7 +183,7 @@ let rec analyze_expr env = function
         else if vdecl.vtype <> Sast.List(expr_typ)
           then raise(Failure("Expression does not match variable type"))
         else
-          Sast.ListAssign(vname, (idx, idx_typ), (e, expr_typ)), expr_typ
+          Sast.ListAssign(vname, (idx, idx_typ), (e, expr_typ)), expr_typ *)
     | Ast.Instantiate(objType, exprs) ->
         let objDecl = try
           find_class_decl env.scope objType
@@ -293,21 +293,36 @@ with
 (* if there's an expression, we want to check it *)
 (* then add to scope's variable list *)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
-  let typ = convert_data_type env var.vtype in
-    let (e, expr_typ) = analyze_expr env var.vexpr in match e
-    with Sast.Noexpr -> 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
-            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
-            sast_var_decl
-    | _ ->  if typ <> expr_typ then begin
-            raise(Failure(
-              "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+  let reserve_var_names = Str.regexp "['_']['0'-'9']*" in
+  let is_reserved = Str.string_match reserve_var_names var.vname 0 in
+  if is_reserved <> true then begin
+    let typ = convert_data_type env var.vtype in
+      let (e, expr_typ) = analyze_expr env var.vexpr in match e
+
+      (* If Uninitialized and var type is a character, throw error *)
+      (* Else, the variable is valid *)
+      with Sast.Noexpr -> 
+              (match typ with
+              Sast.Object(o) -> raise(Failure("must assign to character variable on declaration"))
+              | _ -> 
+                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
+                  in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+                  sast_var_decl)
+      (* If variable is initialized, check that the two types match *)
+      | _ ->  if typ <> expr_typ then begin
+              raise(Failure(
+                "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+              end
+            else begin 
+              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
+              in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+              sast_var_decl
             end
-          else begin 
-            let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
-            in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
-            sast_var_decl
-          end
+  end
+  else begin
+    raise(Failure(
+      "variable name " ^ var.vname ^ "invalid. cannot use \"_\"" ^ "or \"_\" followed only by numerical digits"
+    )) end
 
 let rec analyze_stmt env = function
     Ast.Expr(e) -> Sast.Expression(analyze_expr env e) (* expression *)
