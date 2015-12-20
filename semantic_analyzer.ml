@@ -298,10 +298,17 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   if is_reserved <> true then begin
     let typ = convert_data_type env var.vtype in
       let (e, expr_typ) = analyze_expr env var.vexpr in match e
+
+      (* If Uninitialized and var type is a character, throw error *)
+      (* Else, the variable is valid *)
       with Sast.Noexpr -> 
-              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
-              in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
-              sast_var_decl
+              (match typ with
+              Sast.Object(o) -> raise(Failure("must assign to character variable on declaration"))
+              | _ -> 
+                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
+                  in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+                  sast_var_decl)
+      (* If variable is initialized, check that the two types match *)
       | _ ->  if typ <> expr_typ then begin
               raise(Failure(
                 "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
