@@ -202,7 +202,7 @@ with Sast.LitString(s) ->  (s, "")
                      | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
 
-    | _ -> ("char * = \"meow\"", "")
+    | _ -> ("", "")
       end
       (* Regular function call --i.e., not "say" *)
       else begin
