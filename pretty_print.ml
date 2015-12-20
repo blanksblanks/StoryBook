@@ -42,7 +42,8 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
-   | Sast.List(n) -> (type_as_string n) ^ " []"
+   | _ -> ""
+(*    | Sast.List(n) -> (type_as_string n) ^ " []" *)
 
 let get_bool_str b = match b with 
     true -> "1"
@@ -202,7 +203,7 @@ with Sast.LitString(s) ->  (s, "")
                      | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
 
-    | _ -> ("char * = \"meow\"", "")
+    | Sast.Noexpr -> ("", "")
       end
       (* Regular function call --i.e., not "say" *)
       else begin
@@ -256,7 +257,7 @@ with Sast.LitString(s) ->  (s, "")
         |_ -> (acall_str, prev_code) )
  
   (* catch all *)
-  | _ -> ("char * = \"meow\"", "")
+  | Sast.Noexpr -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in

@@ -2,13 +2,20 @@ open Ast
 
 (* Data types -- link to type declarations where applicable,
    whereast Ast just has strings for the type names *)
+type list_type =
+| Number
+| Boolean
+(* | String
+ *)| Char
+| Object of cl_decl
+
 type data_type =
     Void
   | Number
   | Boolean
   | String
   | Char
-  | List of data_type
+  | List of list_type
   | Object of class_decl
 
 (* Recurses only on semantically checked expressions,
@@ -22,9 +29,9 @@ and expr_detail =
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
   | TraitAssign of expression * expression (* SleepingBeauty's x is 5 *)
-  | ListAssign of string * expression * expression (* myList[2 + 3] = 5+ 7 *)
+  | ListAssign of variable_decl * expression * expression (* myList[2 + 3] = 5+ 7 *)
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
-  | ListInstantiate of variable_decl * expression (* words list colors is new words list [size] *)
+  | ListInstantiate of data_type * expression (* words list colors is new words list [size] *)
   | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)
   | FCall of function_decl * expression list
   | ACall of variable_decl * action_decl * expression list

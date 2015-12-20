@@ -77,7 +77,7 @@ type_label:
  | CHARACTER ID    { Object($2) }
  | NUMBER LIST { List(Number)}
  | BOOL LIST { List(Boolean)}
- | STRING LIST { List(String)}
+ /*| STRING LIST { List(String)}*/
  | CHAR LIST { List(Char)}
  | CHARACTER ID LIST { List(Object($2))}
 
@@ -103,6 +103,7 @@ vdecl:
       { { vtype = $1;
           vname = $2;
           vexpr = $4 } }
+
   /* Uninitialized instance variable */
   | type_label TRAIT ID ASSIGN expr PERIOD
       { { vtype = $1;
@@ -118,7 +119,7 @@ cdecl:
         cinstvars = $7;
         cactions = $8;
     }}
-
+  /* inheritance */
   | CHARACTER ID ASSIGN ID LPAREN formals_opt RPAREN LBRACE vdecl_list action_list RBRACE
     {{  
         cname = $2;

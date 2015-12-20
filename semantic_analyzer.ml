@@ -129,7 +129,7 @@ let rec convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
-  | Ast.List(n) -> convert_data_type env n
+  | _ -> Sast.Void
 
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
@@ -171,7 +171,7 @@ let rec analyze_expr env = function
           raise(Failure("Incorrect type assignment to character trait"))
         else
           Sast.TraitAssign((var, vtype), (e, exp_type)), exp_type 
-    | Ast.ListAssign(vname, idx, expr) ->
+(*     | Ast.ListAssign(vname, idx, expr) ->
         let vdecl = try
           find_variable env.scope vname
         with Not_found ->
@@ -183,7 +183,7 @@ let rec analyze_expr env = function
         else if vdecl.vtype <> Sast.List(expr_typ)
           then raise(Failure("Expression does not match variable type"))
         else
-          Sast.ListAssign(vname, (idx, idx_typ), (e, expr_typ)), expr_typ
+          Sast.ListAssign(vname, (idx, idx_typ), (e, expr_typ)), expr_typ *)
     | Ast.Instantiate(objType, exprs) ->
         let objDecl = try
           find_class_decl env.scope objType

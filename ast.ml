@@ -1,9 +1,9 @@
 (* List types -- so that list definition can't recurse infinitely *)
-type list_types =
+type list_type =
 | Number
 | Boolean
-| String
-| Char
+(* | String
+ *)| Char
 | Object of string
 
 
@@ -15,7 +15,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of data_type (* NOTE: long term, we need to take this out *)
+  | List of list_type (* NOTE: long term, we need to take this out *)
 
 
 
