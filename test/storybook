@@ -6,7 +6,7 @@ program=`basename $1 .sbk`
 
 if [ -s "$program.c" ]
 then
-  gcc -g $program.c -o $program
+  gcc -g -std=c99 $program.c -o $program
   if [ -f "$program" ]
   	then
     ./$program
