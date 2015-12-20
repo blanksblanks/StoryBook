@@ -1,0 +1,43 @@
+Character Princess( words n; number a) {
+  words name is n.
+  number age is a.
+
+  Action introduceSelf() returns nothing {
+    say("Hi, I'm " + my name + "!").
+  }
+
+  Action haveWine() returns nothing {
+  	if (my age > 20) { 
+  		say("This wine is delicious!").
+  	}
+  	else {
+  		say("Aw shucks, I want wine too...").
+  	}
+  }
+
+  Action yearsLater(number n) returns number {
+  	number newage is (0).
+  	repeatfor(number i is (0).; i < n; i is (i+1)){
+  		newage is (newage + i).
+  	}
+  endwith(newage).
+	}
+}
+
+
+Character LittleMermaid is Princess( words ab ) {
+	words ability is ab.
+
+  Action showOff( ) returns nothing {
+  	say("I can " + my ability + "!").
+  }
+}
+
+Chapter plot() returns nothing {
+  Character LittleMermaid Ariel is new LittleMermaid( "Ariel"; 16; "swim" ).
+  Ariel, introduceSelf().
+  Ariel, showOff().
+  Ariel, haveWine().
+  Ariel's age is (yearsLater(10)).
+  say(Ariel's age).
+}
