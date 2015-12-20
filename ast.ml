@@ -2,8 +2,8 @@
 type list_type =
 | Number
 | Boolean
-(* | String
- *)| Char
+(* | String *)
+| Char
 | Object of string
 
 
@@ -15,7 +15,7 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of list_type (* NOTE: long term, we need to take this out *)
+  | List of list_type(* NOTE: long term, we need to take this out *)
 
 
 
@@ -35,7 +35,7 @@ type expr =
 | TraitAssign of expr * expr (* SleepingBeauty's x is 5 *)
 | ListAssign of string * expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Instantiate of string * expr list (*object type and constructor parameters *)
-| ListInstantiate of string * expr (* type, size  -> e.g. int, 5 *)
+| ListInstantiate of data_type * expr (* type, size  -> e.g. int, 5 *)
 | Access of string * string (* Member value access: SleepingBeauty's x *)
 | ListAccess of string * expr (* myList[1 + 1] *)
 | Binop of expr * op * expr (* a + b *)

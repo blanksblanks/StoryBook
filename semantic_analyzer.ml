@@ -119,6 +119,26 @@ let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
 | _ -> 		raise (Failure("Invalid unary operator"))
 
+let rec type_as_string t = match t
+with
+     Sast.Number -> "float"
+   | Sast.Boolean -> "bool"
+   | Sast.String -> "char *"
+   | Sast.Char -> "char"
+   | Sast.Void -> "void"
+   | Sast.Object(n) -> "object" ^ n.cname
+   | Sast.List(n) -> type_as_string t ^ "list"
+
+let convert_list_type (t: Ast.list_type) env = match t with
+  | Ast.Number -> (Sast.Number: Sast.list_type)
+  | Ast.Boolean -> (Sast.Boolean: Sast.list_type)
+  | Ast.Char -> (Sast.Char: Sast.list_type)
+  | Ast.Object(n) ->
+      let obj_dec = try find_class_decl env.scope n
+      with Not_found -> raise(Failure("classdecl not found")) in
+      (Sast.Object(obj_dec): Sast.list_type)
+  | _ -> raise(Failure("Cannot have a list of this type"))
+
 let rec convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
@@ -129,6 +149,8 @@ let rec convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
+  | Ast.List(l) -> let ltype = convert_list_type l env in
+    Sast.List(ltype)
   | _ -> Sast.Void
 
 (* compare parameter types *)
@@ -195,6 +217,12 @@ let rec analyze_expr env = function
             increment_new_count(); (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
         end 
       else raise (Failure("invalid parameters to function"))
+    | Ast.ListInstantiate(list_type, s) -> 
+      let ltyp = convert_data_type list_type in 
+      let (size, typ) = analyze_expr s in 
+      if typ = Sast.Number then 
+        (Sast.ListInstantiate(ltype, (size, typ)))
+      else raise(Failure("Must specify size of list as number"))
     (* TODO: Add checks *)
     (* | Ast.ListInstantiate(listType, size) -> *)
     | Ast.Access(objName, varName) ->
@@ -279,16 +307,6 @@ let rec analyze_expr env = function
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
     | _ -> Sast.LitString(""), Sast.String
 
-let rec type_as_string t = match t
-with
-     Sast.Number -> "float"
-   | Sast.Boolean -> "bool"
-   | Sast.String -> "char *"
-   | Sast.Char -> "char"
-   | Sast.Void -> "void"
-   | Sast.Object(n) -> "object" ^ n.cname
-   | Sast.List(n) -> type_as_string t ^ "list"
-
 (* convert ast.var_decl to sast.variable_decl*)
 (* if there's an expression, we want to check it *)
 (* then add to scope's variable list *)
@@ -297,7 +315,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let is_reserved = Str.string_match reserve_var_names var.vname 0 in
   if is_reserved <> true then begin
     let typ = convert_data_type env var.vtype in
-      let (e, expr_typ) = analyze_expr env var.vexpr in match e
+    let (e, expr_typ) = analyze_expr env var.vexpr in match e
 
       (* If Uninitialized and var type is a character, throw error *)
       (* Else, the variable is valid *)

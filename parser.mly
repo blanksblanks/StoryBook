@@ -193,7 +193,10 @@ expr:
    /* List stuff */
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID LBRACK expr RBRACK ASSIGN expr {ListAssign($1, $3, $6)} /* List assign a[5] = 3 */
-  | NEW ID LIST LBRACK expr RBRACK {ListInstantiate($2, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW NUMBER LIST LBRACK expr RBRACK {ListInstantiate(Number, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW BOOL LIST LBRACK expr RBRACK {ListInstantiate(Boolean, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW CHAR LIST LBRACK expr RBRACK {ListInstantiate(Char, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW CHARACTER ID LIST LBRACK expr RBRACK {ListInstantiate(Object($3), $6)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
 
 /* Actual Parameters */
 actuals_opt:

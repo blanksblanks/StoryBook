@@ -34,6 +34,13 @@ with Add -> " + "
    | AND -> " && "
    | NOT -> " !"
 
+let list_type_as_string t = match t with
+  Sast.Number -> "float"
+| Sast.Boolean -> "bool"
+| Sast.Char -> "char"
+| Sast.Object(n) -> "struct " ^ n.cname ^ " *"
+| _ -> raise(Failure("Cannot have a list of this type"))
+
 let type_as_string t = match t
 with 
      Sast.Number -> "float"
@@ -43,7 +50,7 @@ with
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
    | _ -> ""
-(*    | Sast.List(n) -> (type_as_string n) ^ " []" *)
+(*    | Sast.List(x) -> list_type_as_string x  *)
 
 let get_bool_str b = match b with 
     true -> "1"
@@ -202,9 +209,8 @@ with Sast.LitString(s) ->  (s, "")
                      | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
                      | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
-
-    | Sast.Noexpr -> ("", "")
-
+            | Sast.Noexpr -> ("", "")
+            | _ -> ("", "")
       end
       (* Regular function call --i.e., not "say" *)
       else begin
@@ -229,7 +235,7 @@ with Sast.LitString(s) ->  (s, "")
             (save_var, (prev_code ^ call_and_store ^ save_buf ^ copy ^ free))
 
         | _ -> (fcall_str, prev_code)
-     end;
+     end
 
   (* Action call: takes in object variable declaration, action declaration,
      and actual parameters *)
@@ -258,7 +264,8 @@ with Sast.LitString(s) ->  (s, "")
         |_ -> (acall_str, prev_code) )
  
   (* catch all *)
-  | Sast.Noexpr -> ("", "")
+    | Sast.Noexpr -> ("", "")
+    | _ -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in
