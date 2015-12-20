@@ -106,6 +106,10 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.Assign(id, e) ->
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
+   | Sast.ListAssign(id, idx, e) ->
+     let (exp, prec_assign) = get_expr e in
+     let (idx, prec_idx) = get_expr idx in
+     (id ^ "[" ^ (string_of_float idx) ^ "]", prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
         increment_cur_ptr();
         let rev_vars = List.rev c_dec.cinstvars in
@@ -114,7 +118,8 @@ with Sast.LitString(s) ->  (s, "")
         let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
         " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
         ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
-   (* | Sast.ListInstantiate *)
+   | Sast.ListInstantiate(ltype, size) -> (*new number list[10]*)
+        print_string
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -142,7 +147,7 @@ with Sast.LitString(s) ->  (s, "")
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
 
     | Sast.Access(obj_dec, var_dec) -> (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
-
+    (* | Sast.ListAccess *)
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
         let (strExp, typ) = (List.nth e_l 0) in match strExp

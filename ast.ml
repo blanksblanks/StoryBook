@@ -33,7 +33,8 @@ type expr =
 | TraitAssign of string * string * expr (* SleepingBeauty's x is 5 *)
 | ListAssign of string * expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Instantiate of string * expr list (*object type and constructor parameters *)
-| ListInstantiate of string * expr (* type, size  -> e.g. int, 5 *)
+(* | ListInstantiate of string * expr (* type, size  -> e.g. int, 5 *) *)
+| ListInstantiate of string * string * expr (*type, name, size*)
 | Access of string * string (* Member value access: SleepingBeauty's x *)
 | ListAccess of string * expr (* myList[1 + 1] *)
 | Binop of expr * op * expr (* a + b *)
@@ -47,6 +48,14 @@ type var_decl = {
   vname : string;
   vexpr : expr;
 }
+
+(* List Declarations *)
+(* type lst_decl = {
+  ltype : data_type;
+  lname : string;
+  lsize : expr;
+  lexpr : expr;
+} *)
 
 (* Statements *)
 type stmt =

@@ -92,22 +92,24 @@ vdecl:
       { { vtype=$1;
           vname=$2;
           vexpr = Noexpr } }
-  /* Uninitialized instance variable */
-  | type_label TRAIT ID PERIOD
-      { { vtype = $1;
-          vname = $3;
-          vexpr = Noexpr } }
 
   /* Initialized regular variable */
   | type_label ID ASSIGN expr PERIOD
       { { vtype = $1;
           vname = $2;
           vexpr = $4 } }
-  /* Uninitialized instance variable */
-  | type_label TRAIT ID ASSIGN expr PERIOD
-      { { vtype = $1;
-          vname = $3;
-          vexpr = $5 } }
+
+/* List Declarations */
+/*ldecl_list:
+   nothing  { [] }
+  | ldecl_list ldecl { $2 :: $1}
+
+ldecl:
+type_label LIST ID ASSIGN NEW type_label LIST LBRACK expr RBRACK PERIOD
+  { { ltype=$1;
+      lname=$3;
+      lsize=$9;
+      lexpr = Noexpr } }*/
 
 /* Character (Class) Declarations */
 cdecl:
@@ -155,7 +157,7 @@ stmt:
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-  | FOR LPAREN stmt SEMI expr SEMI expr RPAREN stmt 
+  | FOR LPAREN stmt SEMI expr SEMI expr RPAREN stmt
      { For($3, $5, $7, $9) }
   | WHILE LPAREN expr RPAREN stmt{ While($3, $5) }
 
@@ -192,7 +194,8 @@ expr:
    /* List stuff */
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID LBRACK expr RBRACK ASSIGN expr {ListAssign($1, $3, $6)} /* List assign a[5] = 3 */
-  | NEW ID LIST LBRACK expr RBRACK {ListInstantiate($2, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  /*| NEW ID LIST LBRACK expr RBRACK {ListInstantiate($2, $5)}  new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | ID LIST ID ASSIGN NEW ID LIST LBRACK expr RBRACK PERIOD {ListInstantiate($1,$3,$9)}
 
 /* Actual Parameters */
 actuals_opt:

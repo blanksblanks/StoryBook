@@ -189,7 +189,9 @@ let rec analyze_expr env = function
         end 
       else raise (Failure("invalid parameters to function"))
     (* TODO: Add checks *)
-    (* | Ast.ListInstantiate(listType, size) -> *)
+    (* words list colors is -> new words list [5] (words, 5) (Princess, 5)*)
+    | Ast.ListInstantiate(lstType, name, size) ->
+      (Sast.Instantiate(lstType, name, size), Sast.List(lstType))
     | Ast.Access(objName, varName) ->
         (* "self" reference *)
         if (objName = "my") then begin
