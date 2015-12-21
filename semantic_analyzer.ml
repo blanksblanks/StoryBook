@@ -227,52 +227,65 @@ let rec analyze_expr env = function
         end 
       else raise (Failure("invalid parameters to function"))
     | Ast.ListInstantiate(list_type, s) -> 
-      let ltype = convert_data_type env list_type in 
-      let (size, typ) = analyze_expr env s in
-      if typ = Sast.Number then 
-        (Sast.ListInstantiate(ltype, (size, typ)), ltype)
-      else raise(Failure("Must specify size of list as number"))
+      (
+        let ltype = convert_data_type env list_type in 
+        let (size, typ) = analyze_expr env s in
+        if typ = Sast.Number then 
+          (Sast.ListInstantiate(ltype, (size, typ)), ltype)
+        else raise(Failure("Must specify size of list as number"))
+      ) 
     | Ast.ListAccess(id, indx) -> (* right now we don't prevent access of unassigned list elements, should be ok. *)
-      let var = try
+      (
+        let var = try
           find_variable env.scope id
         with Not_found ->
           raise (Failure("Undeclared identifier " ^ id)) in 
-      let (e, etype) = analyze_expr env indx in
-      let accessType = find_listAcc_type var.vtype in
-      if etype <> Sast.Number then
-        raise(Failure("Must access list element with number expression"))
-      else 
-        (Sast.ListAccess(var, (e, etype)), accessType)
+        let (e, etype) = analyze_expr env indx in
+        let accessType = find_listAcc_type var.vtype in
+        if etype <> Sast.Number then
+          raise(Failure("Must access list element with number expression"))
+        else 
+          (Sast.ListAccess(var, (e, etype)), accessType)
+      )
     | Ast.ListAssign(access, assn) -> 
-      let (elem, etype) = analyze_expr env access in
-      let (val, vtype) = analyze_expr env assn in
-      if etype <> vtype then 
-        raise(Failure("Assignment value type does not match type of list element"))
-      else 
-      (Sast.ListAssign(element, val), vtype) 
+      (
+        let (idx, etype) = (analyze_expr env access) in
+        let (new_val, vtype) = analyze_expr env assn in
+
+        (* I think for list assign we need to check that first expr is a number
+           b/c it's the array index. And then second needs to be the same  type
+           as list...which I think means I messed up by not adding list type
+         to the Listassign *)
+        if etype <> vtype then 
+          raise(Failure("Assignment value type does not match type of list element"))
+        else 
+        (Sast.ListAssign((idx, etype), (new_val, vtype)), vtype)
+      )
     | Ast.Access(objName, varName) -> (* character access *)
       (* "self" reference *)
-      if (objName = "my") then begin
-        let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
-        let classVar = try find_class_var env.scope classDec varName
-          with Not_found ->
-          raise(Failure("instance variable not found" ^ varName))
-        in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true } in
-        (Sast.Access(objVar, classVar), classVar.vtype) 
-      end
-      (* Regular access *)
-      else begin
-        let objDec = try find_variable env.scope objName
-          with Not_found ->
-          raise(Failure("object variable not found" ^ objName))
-        in let classDec = try get_class_decl_from_type env.scope objDec.vtype
-          with Not_found -> raise(Failure("class not found"))
-        in let class_var =
-        try find_class_var env.scope classDec varName
-          with Not_found ->
-          raise(Failure("instance variable not found" ^ varName))
-        in (Sast.Access(objDec, class_var), class_var.vtype) 
-      end 
+      (
+        if (objName = "my") then begin
+          let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
+          let classVar = try find_class_var env.scope classDec varName
+            with Not_found ->
+            raise(Failure("instance variable not found" ^ varName))
+          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true } in
+          (Sast.Access(objVar, classVar), classVar.vtype) 
+        end
+        (* Regular access *)
+        else begin
+          let objDec = try find_variable env.scope objName
+            with Not_found ->
+            raise(Failure("object variable not found" ^ objName))
+          in let classDec = try get_class_decl_from_type env.scope objDec.vtype
+            with Not_found -> raise(Failure("class not found"))
+          in let class_var =
+          try find_class_var env.scope classDec varName
+            with Not_found ->
+            raise(Failure("instance variable not found" ^ varName))
+          in (Sast.Access(objDec, class_var), class_var.vtype) 
+        end 
+      )
 
 
     (* TODO: Add checks *)
