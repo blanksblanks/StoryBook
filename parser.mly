@@ -5,8 +5,9 @@
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
-%token LIST  /*NULL */
+/*%token LIST  NULL */
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
+%token NUMBERLIST BOOLLIST CHARLIST
 /*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW MY
 %token <float> LIT_NUM
@@ -75,11 +76,11 @@ type_label:
  | STRING  { String }
  | CHAR    { Char }
  | CHARACTER ID    { Object($2) }
- | NUMBER LIST { List(Number)}
- | BOOL LIST { List(Boolean)}
+ | NUMBERLIST { NumberList }
+ | BOOLLIST { BooleanList }
  /*| STRING LIST { List(String)}*/
- | CHAR LIST { List(Char)}
- | CHARACTER ID LIST { List(Object($2))}
+ | CHARLIST { CharList }
+/* | CHARACTER ID LIST { List(Object($2))}*/
 
 /* Variable Declarations */
 vdecl_list:
@@ -192,11 +193,11 @@ expr:
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
    /* List stuff */
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
-  | ID LBRACK expr RBRACK ASSIGN expr {ListAssign($1, $3, $6)} /* List assign a[5] = 3 */
-  | NEW NUMBER LIST LBRACK expr RBRACK {ListInstantiate(Number, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW BOOL LIST LBRACK expr RBRACK {ListInstantiate(Boolean, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW CHAR LIST LBRACK expr RBRACK {ListInstantiate(Char, $5)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW CHARACTER ID LIST LBRACK expr RBRACK {ListInstantiate(Object($3), $6)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | ID LBRACK expr RBRACK ASSIGN expr {ListAssign(ListAccess($1, $3), $6)} /* List assign a[5] = 3 */
+  | NEW NUMBERLIST LBRACK expr RBRACK {ListInstantiate(NumberList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW BOOLLIST LBRACK expr RBRACK {ListInstantiate(BooleanList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW CHARLIST LBRACK expr RBRACK {ListInstantiate(CharList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  /*| NEW CHARACTER ID LIST LBRACK expr RBRACK {ListInstantiate(Object($3), $6)} */ /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
 
 /* Actual Parameters */
 actuals_opt:

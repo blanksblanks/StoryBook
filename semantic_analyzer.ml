@@ -127,17 +127,25 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "object" ^ n.cname
-   | Sast.List(n) -> type_as_string t ^ "list"
+   | Sast.NumberList -> "float list"
+   | Sast.BooleanList -> "bool list"
+   | Sast.CharList -> "char list"
 
-let convert_list_type (t: Ast.list_type) env = match t with
+(* let convert_list_type (t: Ast.list_type) env = match t with
   | Ast.Number -> (Sast.Number: Sast.list_type)
   | Ast.Boolean -> (Sast.Boolean: Sast.list_type)
   | Ast.Char -> (Sast.Char: Sast.list_type)
   | Ast.Object(n) ->
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
-      (Sast.Object(obj_dec): Sast.list_type)
-  | _ -> raise(Failure("Cannot have a list of this type"))
+      Sast.Object(obj_dec)
+  | _ -> raise(Failure("Cannot have a list of this type")) *)
+
+let find_listAcc_type t = match t with 
+    Sast.NumberList -> Sast.Number
+  | Sast.BooleanList -> Sast.Boolean
+  | Sast.CharList -> Sast.Char  
+  | _ -> raise(Failure("Not list type"))
 
 let rec convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
@@ -149,10 +157,11 @@ let rec convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
-  | Ast.List(l) -> let ltype = convert_list_type l env in
-    Sast.List(ltype)
-  | _ -> Sast.Void
-
+  | Ast.NumberList -> Sast.NumberList
+  | Ast.BooleanList -> Sast.BooleanList
+  | Ast.CharList -> Sast.CharList
+(*   | _ -> Sast.Void
+ *)
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
     [], [] -> true
@@ -187,7 +196,7 @@ let rec analyze_expr env = function
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
     | Ast.TraitAssign(objAccess, ex) -> 
-        let (var, vtype )= analyze_expr env objAccess in 
+        let (var, vtype ) = analyze_expr env objAccess in 
         let (e, exp_type) = analyze_expr env ex in
         if vtype <> exp_type then
           raise(Failure("Incorrect type assignment to character trait"))
@@ -218,36 +227,52 @@ let rec analyze_expr env = function
         end 
       else raise (Failure("invalid parameters to function"))
     | Ast.ListInstantiate(list_type, s) -> 
-      let ltyp = convert_data_type list_type in 
-      let (size, typ) = analyze_expr s in 
+      let ltype = convert_data_type env list_type in 
+      let (size, typ) = analyze_expr env s in
       if typ = Sast.Number then 
-        (Sast.ListInstantiate(ltype, (size, typ)))
+        (Sast.ListInstantiate(ltype, (size, typ)), ltype)
       else raise(Failure("Must specify size of list as number"))
-    (* TODO: Add checks *)
-    (* | Ast.ListInstantiate(listType, size) -> *)
-    | Ast.Access(objName, varName) ->
-        (* "self" reference *)
-        if (objName = "my") then begin
-          let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
-          let classVar = try find_class_var env.scope classDec varName
-            with Not_found ->
-            raise(Failure("instance variable not found" ^ varName))
-          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true} in
-          (Sast.Access(objVar, classVar), classVar.vtype) 
-        end
-        (* Regular access *)
-        else begin
-          let objDec = try find_variable env.scope objName
-            with Not_found ->
-            raise(Failure("object variable not found" ^ objName))
-          in let classDec = try get_class_decl_from_type env.scope objDec.vtype
-            with Not_found -> raise(Failure("class not found"))
-          in let class_var =
-          try find_class_var env.scope classDec varName
-            with Not_found ->
-            raise(Failure("instance variable not found" ^ varName))
-          in (Sast.Access(objDec, class_var), class_var.vtype) 
-        end 
+    | Ast.ListAccess(id, indx) -> (* right now we don't prevent access of unassigned list elements, should be ok. *)
+      let var = try
+          find_variable env.scope id
+        with Not_found ->
+          raise (Failure("Undeclared identifier " ^ id)) in 
+      let (e, etype) = analyze_expr env indx in
+      let accessType = find_listAcc_type var.vtype in
+      if etype <> Sast.Number then
+        raise(Failure("Must access list element with number expression"))
+      else 
+        (Sast.ListAccess(var, (e, etype)), accessType)
+    | Ast.ListAssign(access, assn) -> 
+      let (elem, etype) = analyze_expr env access in
+      let (val, vtype) = analyze_expr env assn in
+      if etype <> vtype then 
+        raise(Failure("Assignment value type does not match type of list element"))
+      else 
+      (Sast.ListAssign(element, val), vtype) 
+    | Ast.Access(objName, varName) -> (* character access *)
+      (* "self" reference *)
+      if (objName = "my") then begin
+        let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
+        let classVar = try find_class_var env.scope classDec varName
+          with Not_found ->
+          raise(Failure("instance variable not found" ^ varName))
+        in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true } in
+        (Sast.Access(objVar, classVar), classVar.vtype) 
+      end
+      (* Regular access *)
+      else begin
+        let objDec = try find_variable env.scope objName
+          with Not_found ->
+          raise(Failure("object variable not found" ^ objName))
+        in let classDec = try get_class_decl_from_type env.scope objDec.vtype
+          with Not_found -> raise(Failure("class not found"))
+        in let class_var =
+        try find_class_var env.scope classDec varName
+          with Not_found ->
+          raise(Failure("instance variable not found" ^ varName))
+        in (Sast.Access(objDec, class_var), class_var.vtype) 
+      end 
 
 
     (* TODO: Add checks *)
@@ -323,13 +348,13 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
               (match typ with
               Sast.Object(o) -> raise(Failure("must assign to character variable on declaration"))
               | _ -> 
-                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
+                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
                   in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
                   sast_var_decl)
       (* If variable is initialized, check that the two types match *)
       | _ ->  if typ <> expr_typ then begin
               raise(Failure(
-                "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+                "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
               end
             else begin 
               let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }

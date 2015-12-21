@@ -50,13 +50,16 @@ rule token = parse
   | "returns" { RETURNS }
 
   (* Primitives--booleans, chars, strings, numbers *)
-  | "tof"     { BOOL }
+  | "tof"                 { BOOL }
   | "true" as bool_val    { LIT_BOOL(bool_of_string bool_val)}
   | "false" as bool_val   { LIT_BOOL(bool_of_string bool_val)}
-  | "number"  { NUMBER }
-  | "words"   { STRING }
-  | "letter"  { CHAR } 
-  | "list"    { LIST } (*
+  | "number"              { NUMBER }
+  | "words"               { STRING }
+  | "letter"              { CHAR } 
+  | "numberlist"          { NUMBERLIST } 
+  | "toflist"             { BOOLLIST }
+  | "charlist"            { CHARLIST }
+  (*
   | "null"    { NULL } *)
   | "nothing" { VOID } (*)
   | "subtype" { SUBTYPE } *)

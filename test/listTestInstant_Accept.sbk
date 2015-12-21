@@ -1,0 +1,5 @@
+Chapter plot() returns nothing {
+	numberlist ages is new numberlist[5].
+	ages[5].
+	say(ages[5]).
+}

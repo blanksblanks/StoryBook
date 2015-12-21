@@ -1,0 +1,52 @@
+Character Monster( words n; number s ) {
+  words name is n.
+  number size is s.
+  
+Action scare(words scream) returns nothing {
+    say (my name + ": " + scream + " I'm a Monster").
+    say (my name + ": My name is " + my name).
+  }
+}
+
+Character Zombie is Monster(number a) {
+  number age is a.
+
+  Action sayhi() returns nothing {
+    say(my name + ": BOO! I'm a Zombie.").
+  }
+}
+
+Character Person(words nam; number strn){
+  words name is nam.
+  number speed is strn.
+  Action sayhi() returns nothing {
+   say(my name + ": Hi! I'm " + my name). 
+  }
+  Action run() returns number {
+  endwith(my speed + 100).
+  } 
+}
+
+Chapter plot() returns nothing {
+  Character Monster Frank is new Monster("Frankenstein"; 99).
+  Frank, scare("Aghhhhhhhh").
+  Character Zombie Zoe is new Zombie("Zoe"; 6; 16).
+  Zoe, sayhi().
+  Zoe, scare("RAAAAAWWWWRRRR").
+  Character Person Stephen is new Person("Stephen"; 100).
+  Stephen, sayhi().
+  number pspeed is Stephen, run().
+  say("Stephen's speed is " + pspeed).
+  if(pspeed < 50){
+  say(Stephen's name + " will be eaten by " + Frank's name + " and " + Zoe's name + ".").
+  }
+  else if (pspeed < 80){
+  say(Stephen's name + " will be eaten by " + Frank's name + ".").
+  }
+ else if(pspeed < 100){
+  say(Stephen's name + " will be eaten by " + Zoe's name  + ".").
+  }
+ else {
+  say(Stephen's name + " will outrun " + Frank's name + " and " + Zoe's name + "!").
+  }
+}
