@@ -249,17 +249,13 @@ let rec analyze_expr env = function
       )
     | Ast.ListAssign(access, assn) -> 
       (
-        let (idx, etype) = (analyze_expr env access) in
+        let (access, etype) = (analyze_expr env access) in
         let (new_val, vtype) = analyze_expr env assn in
 
-        (* I think for list assign we need to check that first expr is a number
-           b/c it's the array index. And then second needs to be the same  type
-           as list...which I think means I messed up by not adding list type
-         to the Listassign *)
         if etype <> vtype then 
           raise(Failure("Assignment value type does not match type of list element"))
         else 
-        (Sast.ListAssign((idx, etype), (new_val, vtype)), vtype)
+        (Sast.ListAssign((access, etype), (new_val, vtype)), vtype)
       )
     | Ast.Access(objName, varName) -> (* character access *)
       (* "self" reference *)
