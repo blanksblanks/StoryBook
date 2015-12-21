@@ -242,6 +242,8 @@ let rec analyze_expr env = function
           raise (Failure("Undeclared identifier " ^ id)) in 
         let (e, etype) = analyze_expr env indx in
         let accessType = find_listAcc_type var.vtype in
+        (* do we need to check size of list here? idk how, maybe it's hard to keep track of that info...*)
+        (* maybe we need an ocaml record for this? ugh, idk... *)
         if etype <> Sast.Number then
           raise(Failure("Must access list element with number expression"))
         else 
