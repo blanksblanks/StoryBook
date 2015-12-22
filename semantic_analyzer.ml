@@ -54,8 +54,7 @@ let rec find_variable (scope : symbol_table) name =
   with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> match find_character 
-    raise (Failure("variable not found " ^ name))
+    | _ -> raise (Failure("variable not found " ^ name))
 
 (* Find Function *)
 let rec find_class_decl (scope: symbol_table) name =
