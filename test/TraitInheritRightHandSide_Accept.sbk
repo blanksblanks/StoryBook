@@ -6,49 +6,20 @@ Character Princess( words n; number a; tof f) {
   Action introduceSelf() returns nothing {
     say( my name + ": Hi, my name is " + my name + "!").
   }
-
-  Action audition(words part; words experience; words movie) returns nothing { 
-   if(my famous = true) {
-        say(my name + ": I am auditioning for the part of " + part + " in " + movie + ".").
-        say("In case you didn't recognize me, I was in Disney's " + experience + ".").
-    }
-    else {
-        say(my name + ": I'm auditioning for the part of " + part + " in " + movie + ".").
-        say("I don't have any experience, but I think I have great potential! Plus, all of these old princesses only know how to play roles that depend on men. I can be a strong, independent, and fearless princess!!").
-    }
-  }
 }
 
 Character DisneyPrincess is Princess( words m ) {
 	words movie is m.
 
-  Action salary(number b) returns number {
-    my famous is my famous.
-    number incSal is 2 * b.
-  	say(my name + ": Just so you know, Walt payed me " + b + " dollars so I expect at least " + incSal).
-    endwith(b).
+  Action growup() returns nothing { 
+     my age is (my age + 1).
   }
 }
 
-Chapter findActress(tof f; number s) returns nothing {
-    if(f = true and s < 10000){
-      say("You're hired!").
-    }
-    else if(f = false) {
-      say("Producers: You're hired! And we'll pay you " + s * 2 + " dollars!").
-    }
-
-}
 
 Chapter plot() returns nothing {
   
   Character DisneyPrincess Aurora is new DisneyPrincess( "Aurora"; 16; true; "Sleeping Beauty" ).
-  Character Princess Anna is new Princess( "Anna"; 16; false).
-  Aurora, introduceSelf().
-  Aurora, audition("Elsa"; Aurora's movie; "Frozen").
-  number money is Aurora, salary(10000000).
-  findActress(Aurora's famous; money).
-  Anna, introduceSelf().
-  Anna, audition("Anna"; "No exprience"; "Frozen").
-  findActress(Anna's famous; 1000).
+  Aurora, growup().
+  say(Aurora's age).
 }
