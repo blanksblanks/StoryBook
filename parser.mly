@@ -17,8 +17,6 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%nonassoc LIST_TRAIT_ACCESS
-%nonassoc LIST_TRAIT_ASSIGN
 %right ASSIGN
 %left OR
 %left AND
@@ -200,9 +198,6 @@ expr:
   | NEW CHARLIST LBRACK expr RBRACK      { ListInstantiate(CharList, $4) } 
   /* Handling Object Lists */
   | NEW CHARACTERLIST LBRACK expr RBRACK                                { ListInstantiate(CharacterList, $4) } 
-  | ID RBRACK expr LBRACK APOST ID             %prec LIST_TRAIT_ACCESS  { ListTraitAccess(ListAccess($1, $3), $6) } /* Character access with charachterlist */
-  | ID RBRACK expr LBRACK APOST ID ASSIGN expr %prec LIST_TRAIT_ASSIGN  { TraitAssign(ListTraitAccess(ListAccess($1, $3), $6), $8) } /*C haracter trait assign with characterlist */
-  | ID RBRACK expr LBRACK COMMA ID LPAREN actuals_opt RBRACK            { (ACall(ListAccess($1, $3)), $6, $8) } /* Character action call with characterlist */
 
 /* Actual Parameters */
 actuals_opt:

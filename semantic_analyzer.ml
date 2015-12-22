@@ -358,7 +358,8 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
                   in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
                   sast_var_decl)
       (* If variable is initialized, check that the two types match *)
-      | _ ->  if typ <> expr_typ then begin
+      | _ ->   
+            if typ <> expr_typ && (type_as_string expr_typ) <> "objectlistAcc" then begin
               raise(Failure(
                 "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
               end

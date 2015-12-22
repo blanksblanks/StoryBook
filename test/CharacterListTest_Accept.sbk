@@ -7,5 +7,6 @@ Character Hero(words n; number st; words sp){
 Chapter plot() returns nothing {
 	characterlist heroes is new characterlist[5].	
 	heroes[0] is new Hero("Wonder Woman"; 2000; "fly").
-	heroes[0]'s name.
+	Character Hero a is heroes[0].
+	say(a's name).
 }
