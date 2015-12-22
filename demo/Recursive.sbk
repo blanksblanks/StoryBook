@@ -8,3 +8,4 @@ Chapter AnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything(number a) retu
 Chapter plot() returns nothing {
   say(	AnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything(0) + " ").
 }
+

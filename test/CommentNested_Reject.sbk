@@ -1,0 +1,10 @@
+~ Hello
+  ~~ This is a nested comment.
+  ~ This is another nested comment that will result in rejection.
+    Because you cannot have a block comment inside another block comment.
+  ~
+~
+
+Chapter plot() returns nothing {
+  say("Hello World").
+}
