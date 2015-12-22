@@ -6,6 +6,7 @@ let new_count = ref 0
 let increment_new_count() = new_count := !new_count + 1
 
 type symbol_table = {
+  name : string;
   parent : symbol_table option;
   mutable functions: Sast.function_decl list;
   mutable variables : Sast.variable_decl list;
@@ -72,6 +73,16 @@ let rec find_class_var (scope: symbol_table) c_dec name =
   try List.find(fun v-> v.vname = name) c_dec.cinstvars
   with Not_found ->
       raise(Failure("invalid trait name: " ^ name))
+
+let find_character (scope: symbol_table) = 
+   let len = List.length scope.characters in
+   match len with 
+     0 -> 
+      ( match scope.parent with
+         Some(parent) -> List.nth parent.characters 0
+       | _ -> raise(Failure("No inherited characters"))
+      )
+   | _ -> List.nth scope.characters 0
 
 let get_class_decl_from_type (scope: symbol_table) ctype =
   match ctype with
@@ -263,7 +274,7 @@ let rec analyze_expr env = function
       (* "self" reference *)
       (
         if (objName = "my") then begin
-          let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
+          let classDec = find_character env.scope in (*only class dec in scope is itself, may be in outer scope because of block *)
           let classVar = try find_class_var env.scope classDec varName
             with Not_found ->
             raise(Failure("instance variable not found" ^ varName))
@@ -412,7 +423,7 @@ let rec analyze_stmt env = function
       Sast.While(sastexpr, s)
 
   | Ast.Block(stmts) -> 
-       let scope' = {parent = Some(env.scope); functions = []; variables = []; characters = []; actions = []}
+       let scope' = {name = "new block"; parent = Some(env.scope); functions = []; variables = []; characters = []; actions = []}
        in let env' = { env with scope = scope'} in
 
         let sast_blck =
@@ -469,8 +480,6 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
     end
   end
 
-
-
 let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment) =
   if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
       raise(Failure("Trait already declared in this Character"))
@@ -519,17 +528,17 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
       else [] in
     let parent_ivars = if full_parent.cname <> name then full_parent.cinstvars else [] in
 
-       (* create new scope for the class *)
+   (* create new scope for the class *)
    (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
     let class_scope =
-       {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+       {name = name; parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     
     (* Now check current inst vars and formals *)
     let newcformals = List.map(fun f-> check_var_decl class_env f) clss_dcl.cformals in
     let inst_vars = List.map (fun st -> analyze_classvars st class_env) clss_dcl.cinstvars in
 
-    (* Combine parent and child instanve variables and formal parameters *)
+    (* Combine parent and child instance variables and formal parameters *)
     let all_ivars = inst_vars @ parent_ivars in
     let all_formals = full_parent.cformals @ newcformals in
 
@@ -543,7 +552,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
     new_class
 
 let analyze_semantics prgm: Sast.program =
-  let prgm_scope = {parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+  let prgm_scope = {name= "prgrm"; parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
   let env = {scope = prgm_scope; return_type = Sast.Number} in
   let (class_decls, func_decls) = prgm  in
   let new_class_decls = List.map (fun f -> analyze_class f env) (List.rev(class_decls)) in
