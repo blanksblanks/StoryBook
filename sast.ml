@@ -10,6 +10,7 @@ type data_type =
   | NumberList
   | BooleanList
   | CharList
+  | CharacterList (* list of pointers to point to Characters *)
 
 and expr_detail =
     LitNum of float

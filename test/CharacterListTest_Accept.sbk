@@ -1,0 +1,11 @@
+Character Hero(words n; number st; words sp){
+	words name is n.
+	number strength is st.
+	words superpower is sp.
+}
+
+Chapter plot() returns nothing {
+	characterlist heroes is new characterlist[5].	
+	heroes[0] is new Hero("Wonder Woman"; 2000; "fly").
+	heroes[0]'s name.
+}

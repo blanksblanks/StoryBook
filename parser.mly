@@ -6,7 +6,7 @@
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
-%token NUMBERLIST BOOLLIST CHARLIST
+%token NUMBERLIST BOOLLIST CHARLIST CHARACTERLIST
 %token CHARACTER METHOD TRAIT NEW MY
 %token <float> LIT_NUM
 %token <bool> LIT_BOOL
@@ -17,6 +17,8 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
+%nonassoc LIST_TRAIT_ACCESS
+%nonassoc LIST_TRAIT_ASSIGN
 %right ASSIGN
 %left OR
 %left AND
@@ -78,7 +80,7 @@ type_label:
  | BOOLLIST { BooleanList }
  /*| STRING LIST { List(String)}*/
  | CHARLIST { CharList }
-/* | CHARACTER ID LIST { List(Object($2))}*/
+ | CHARACTERLIST { CharacterList}
 
 /* Variable Declarations */
 vdecl_list:
@@ -161,42 +163,46 @@ stmt:
 
 /* Expressions */
 expr:
-    LIT_NUM          {LitNum($1)}
-  | LIT_BOOL         {LitBool($1)}
-  | LIT_STRING       {LitString($1)}
-  | LIT_CHAR         {LitChar($1)}
-  | ID               {Id($1)}
-  | expr PLUS   expr {Binop($1, Add, $3)}
-  | expr MINUS  expr {Binop($1, Sub, $3)}
-  | expr TIMES  expr {Binop($1, Mult, $3)}
-  | expr DIVIDE expr {Binop($1, Div, $3)}
-  | expr MOD    expr {Binop($1, Mod, $3)}
-  | expr EQ     expr {Binop($1, Equal, $3)}
-  | expr NEQ    expr {Binop($1, Neq, $3)}
-  | expr LT     expr {Binop($1, Less, $3)}
-  | expr LEQ    expr {Binop($1, Leq, $3)}
-  | expr GT     expr {Binop($1, Greater, $3)}
-  | expr GEQ    expr {Binop($1, Geq, $3)}
-  | expr OR     expr {Binop($1, OR, $3)}
-  | expr AND    expr {Binop($1, AND, $3)}
-  | NOT expr {Unop(NOT, $2)}
-  | LPAREN expr RPAREN {$2}
-  | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
-  | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
+    LIT_NUM          { LitNum($1) }
+  | LIT_BOOL         { LitBool($1) }
+  | LIT_STRING       { LitString($1) }
+  | LIT_CHAR         { LitChar($1) }
+  | ID               { Id($1) }
+  | expr PLUS   expr { Binop($1, Add, $3) }
+  | expr MINUS  expr { Binop($1, Sub, $3) }
+  | expr TIMES  expr { Binop($1, Mult, $3) }
+  | expr DIVIDE expr { Binop($1, Div, $3) }
+  | expr MOD    expr { Binop($1, Mod, $3) }
+  | expr EQ     expr { Binop($1, Equal, $3) }
+  | expr NEQ    expr { Binop($1, Neq, $3) }
+  | expr LT     expr { Binop($1, Less, $3) }
+  | expr LEQ    expr { Binop($1, Leq, $3) }
+  | expr GT     expr { Binop($1, Greater, $3) } 
+  | expr GEQ    expr { Binop($1, Geq, $3) }
+  | expr OR     expr { Binop($1, OR, $3) }
+  | expr AND    expr { Binop($1, AND, $3) }
+  | NOT expr         { Unop(NOT, $2) }
+  | LPAREN expr RPAREN { $2 }
+  | ID ASSIGN expr               { Assign($1, $3) } /* variable assign */
+  | ID LPAREN actuals_opt RPAREN { FCall($1, $3) } /* function call */
    /* Handling Objects */
   | NEW ID LPAREN actuals_opt RPAREN {Instantiate($2, $4)} /*object declaration  */
-  | ID APOST ID      {Access($1, $3)} /* member access */
-  | MY ID            {Access("my", $2)} /* self member access */
-  | MY ID ASSIGN expr {TraitAssign(Access("my", $2), $4)}
-  | ID APOST ID ASSIGN expr {TraitAssign(Access($1, $3), $5)} /* member assign */
-  | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
+  | ID APOST ID                             { Access($1, $3) } /* member access */
+  | MY ID                                   { Access("my", $2) } /* self member access */
+  | MY ID ASSIGN expr                       { TraitAssign(Access("my", $2), $4) }
+  | ID APOST ID ASSIGN expr                 { TraitAssign(Access($1, $3), $5) } /* member assign */
+  | ID COMMA ID LPAREN actuals_opt RPAREN   { ACall($1, $3, $5) } /* action call */
    /* Handling Lists */
-  | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
-  | ID LBRACK expr RBRACK ASSIGN expr {ListAssign(ListAccess($1, $3), $6)} /* List assign a[5] = 3 */
-  | NEW NUMBERLIST LBRACK expr RBRACK {ListInstantiate(NumberList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW BOOLLIST LBRACK expr RBRACK {ListInstantiate(BooleanList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW CHARLIST LBRACK expr RBRACK {ListInstantiate(CharList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  /*| NEW CHARACTER ID LIST LBRACK expr RBRACK {ListInstantiate(Object($3), $6)} */ /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | ID LBRACK expr RBRACK                { ListAccess($1, $3) } /* myList [1 + 1] */
+  | ID LBRACK expr RBRACK ASSIGN expr    { ListAssign(ListAccess($1, $3), $6) } /* List assign a[5] = 3 */
+  | NEW NUMBERLIST LBRACK expr RBRACK    { ListInstantiate(NumberList, $4) } /* new numberlist[5 + 3]  -> ListInstantiate (numberList, 8) */
+  | NEW BOOLLIST LBRACK expr RBRACK      { ListInstantiate(BooleanList, $4) } 
+  | NEW CHARLIST LBRACK expr RBRACK      { ListInstantiate(CharList, $4) } 
+  /* Handling Object Lists */
+  | NEW CHARACTERLIST LBRACK expr RBRACK                                { ListInstantiate(CharacterList, $4) } 
+  | ID RBRACK expr LBRACK APOST ID             %prec LIST_TRAIT_ACCESS  { ListTraitAccess(ListAccess($1, $3), $6) } /* Character access with charachterlist */
+  | ID RBRACK expr LBRACK APOST ID ASSIGN expr %prec LIST_TRAIT_ASSIGN  { TraitAssign(ListTraitAccess(ListAccess($1, $3), $6), $8) } /*C haracter trait assign with characterlist */
+  | ID RBRACK expr LBRACK COMMA ID LPAREN actuals_opt RBRACK            { (ACall(ListAccess($1, $3)), $6, $8) } /* Character action call with characterlist */
 
 /* Actual Parameters */
 actuals_opt:

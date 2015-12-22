@@ -45,11 +45,15 @@ with
    | Sast.NumberList -> "float *"
    | Sast.BooleanList -> "bool *"
    | Sast.CharList -> "char *"
+   | Sast.CharacterList -> "void **"
+
+let listClass = {cname = "listAcc"; cparent = "None"; cformals = []; cinstvars = []; cactions = []}
 
 let find_listAcc_type t = match t with 
     Sast.NumberList -> Sast.Number
   | Sast.BooleanList -> Sast.Boolean
   | Sast.CharList -> Sast.Char  
+  | Sast.CharacterList -> Sast.Object(listClass)
   | _ -> raise(Failure("Not list type"))
 
 let get_bool_str b = match b with 
@@ -129,7 +133,7 @@ with Sast.LitString(s) ->  (s, "")
      ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
    | Sast.ListInstantiate(typ, s) -> 
      let dtyp = type_as_string typ in
-     let dataType = String.sub dtyp 0 (String.length dtyp - 1) in(* get rid of ptr *)
+     let dataType = String.sub dtyp 0 (String.length dtyp - 1) in (* get rid of ptr to get size*) 
      let (size, prec_code) = get_expr s in
      let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
      ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", prec_code)

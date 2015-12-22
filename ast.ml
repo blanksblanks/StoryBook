@@ -1,11 +1,3 @@
-(* List types -- so that list definition can't recurse infinitely *)
-(* type list_type =
-| Number
-| Boolean
-| String
-| Char
-| Object of string *)
-
 
 (* Possible data types *)
 type data_type =
@@ -18,6 +10,7 @@ type data_type =
   | NumberList 
   | BooleanList
   | CharList
+  | CharacterList (* list of pointers to point to Characters *)
 
 
 
@@ -39,6 +32,7 @@ type expr =
 | ListInstantiate of data_type * expr (* type, size  -> e.g. int, 5 *)
 | ListAccess of string * expr
 | ListAssign of expr * expr (* myList[2 + 3] = 5+ 7 *)
+| ListTraitAccess of expr * string
 | Access of string * string (* Member value access: SleepingBeauty's x *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr
