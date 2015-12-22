@@ -1,0 +1,14 @@
+Chapter plot() returns nothing {
+	charlist alphabet is new charlist[26].
+	alphabet[0] is 'a'.
+	alphabet[1] is 'b'.
+	alphabet[2] is 'c'.
+	alphabet[3] is 'd'.
+	alphabet[4] is 'e'.
+	alphabet[5] is 'f'.
+	alphabet[6] is 'g'.
+	alphabet[7] is 'h'.
+	repeatfor(number i is (0).; i < 8; i is i +1){
+		say(alphabet[i]).
+	}
+}

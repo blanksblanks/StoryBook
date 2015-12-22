@@ -1,10 +1,10 @@
 (* List types -- so that list definition can't recurse infinitely *)
-type list_type =
+(* type list_type =
 | Number
 | Boolean
-(* | String
- *)| Char
-| Object of string
+| String
+| Char
+| Object of string *)
 
 
 (* Possible data types *)
@@ -15,7 +15,9 @@ type data_type =
   | String
   | Char
   | Object of string (* string is typename of object, not id *)
-  | List of list_type (* NOTE: long term, we need to take this out *)
+  | NumberList 
+  | BooleanList
+  | CharList
 
 
 
@@ -33,11 +35,11 @@ type expr =
 | Id of string (* foo_unquoted *)
 | Assign of string * expr (* x is 5 *)
 | TraitAssign of expr * expr (* SleepingBeauty's x is 5 *)
-| ListAssign of string * expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Instantiate of string * expr list (*object type and constructor parameters *)
-| ListInstantiate of string * expr (* type, size  -> e.g. int, 5 *)
+| ListInstantiate of data_type * expr (* type, size  -> e.g. int, 5 *)
+| ListAccess of string * expr
+| ListAssign of expr * expr (* myList[2 + 3] = 5+ 7 *)
 | Access of string * string (* Member value access: SleepingBeauty's x *)
-| ListAccess of string * expr (* myList[1 + 1] *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr
 | FCall of string * expr list (* chapter1() *)

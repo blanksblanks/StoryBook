@@ -34,6 +34,17 @@ with Add -> " + "
    | AND -> " && "
    | NOT -> " !"
 
+(* let list_type_as_string (t: Sast.list_type) = match t with
+  Sast.Number -> "float"
+| Sast.Boolean -> "bool"
+| Sast.Char -> "char" *)
+
+(* let dtype_to_ltype t = match t with
+   Sast.Number -> (Sast.Number: Sast.list_type)
+ | Sast.Boolean -> (Sast.Boolean: Sast.list_type)
+ | Sast.Char -> (Sast.Char: Sast.list_type)
+ | _ -> raise(Failure("Cannot have a list of this type")) *)
+
 let type_as_string t = match t
 with 
      Sast.Number -> "float"
@@ -42,8 +53,15 @@ with
    | Sast.Char -> "char"
    | Sast.Void -> "void"
    | Sast.Object(n) -> "struct " ^ n.cname ^ " *"
-   | _ -> ""
-(*    | Sast.List(n) -> (type_as_string n) ^ " []" *)
+   | Sast.NumberList -> "float *"
+   | Sast.BooleanList -> "bool *"
+   | Sast.CharList -> "char *"
+
+let find_listAcc_type t = match t with 
+    Sast.NumberList -> Sast.Number
+  | Sast.BooleanList -> Sast.Boolean
+  | Sast.CharList -> Sast.Char  
+  | _ -> raise(Failure("Not list type"))
 
 let get_bool_str b = match b with 
     true -> "1"
@@ -113,14 +131,27 @@ with Sast.LitString(s) ->  (s, "")
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
-        increment_cur_ptr();
-        let rev_vars = List.rev c_dec.cinstvars in
-        let _ = idx := 0 in
-        let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
-        let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
-        " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
-        ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
-   (* | Sast.ListInstantiate *)
+     increment_cur_ptr();
+     let rev_vars = List.rev c_dec.cinstvars in
+     let _ = idx := 0 in
+     let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
+     let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
+     " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
+     ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
+   | Sast.ListInstantiate(typ, s) -> 
+     let dtyp = type_as_string typ in
+     let dataType = String.sub dtyp 0 (String.length dtyp - 1) in(* get rid of ptr *)
+     let (size, prec_code) = get_expr s in
+     let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
+     ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", prec_code)
+   | Sast.ListAccess(vdecl, i) -> 
+       let (indx, prec_access) = get_expr i in 
+       let listId = vdecl.vname in
+       (listId ^ "[(int)" ^ indx ^ "]", prec_access)
+    | Sast.ListAssign(access, v) -> 
+      let (elem, prec_access) = get_expr access in
+      let (assn, prec_assign) = get_expr v in
+      (elem ^ " = " ^ assn, prec_access ^ prec_assign) 
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
@@ -135,7 +166,7 @@ with Sast.LitString(s) ->  (s, "")
 			| _ -> (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
      else if op = Mod then
           let op_str = get_op op in
-          ("(double)" ^ "((int) (" ^ expr_str_1^ ") " ^op_str ^ "(int) ( " ^ expr_str_2 ^ "))", prec_bin1^prec_bin2)
+          ("(double)" ^ "((int) (" ^ expr_str_1^ ") " ^ op_str ^ "(int) ( " ^ expr_str_2 ^ "))", prec_bin1^prec_bin2)
      else
          let op_str = get_op op in
          (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
@@ -156,8 +187,8 @@ with Sast.LitString(s) ->  (s, "")
       if f_d.fname = "say" then begin
         let (strExp, typ) = (List.nth e_l 0) in match strExp
         with Sast.LitString(s) ->
-             let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
-             ("printf" ^ " ( " ^ lit_str ^ ")", "")
+           let lit_str = (String.sub s 0 (String.length s - 1)) ^ ("\\n\"") in
+           ("printf" ^ " ( " ^ lit_str ^ ")", "")
            | Sast.LitNum(n) -> ("printf" ^ " ( \"%g\", " ^ (string_of_float n) ^ ")", "")
            | Sast.LitBool(b) -> ("printf( \"%s\", " ^ (get_bool_str b) ^ " ? \"true\" : \"false\");\n", "")
            | Sast.LitChar(c) -> ("printf( \"%c\", \'" ^ Char.escaped c ^  "\')", "")
@@ -177,34 +208,44 @@ with Sast.LitString(s) ->  (s, "")
                 let whole_str = prec_code_str ^ "\n\tprintf (\"%s\\n\"," ^str_expr ^ ")" in
                 (whole_str, "")
            | Sast.Id(var) -> let typ = var.vtype in
-              ( match typ
-                with Sast.String -> ("printf ( \"%s\\n\", " ^ var.vname ^ ")", "")
+              ( match typ with
+                     Sast.String -> ("printf ( \"%s\\n\", " ^ var.vname ^ ")", "")
                    | Sast.Number -> ("printf (\"%g\"," ^ var.vname ^ ")", "")
                    | Sast.Boolean -> ("printf(\"%d\\n\", " ^ var.vname ^ ")", "")
                    | Sast.Char -> ("printf( \"%c\", " ^ var.vname ^  ")", "")
                    | _ -> ("", "") )
-            | Sast.Access(objVar, instVar) ->
-                let typ = instVar.vtype in
-                let (expr_str, prec_code) =  get_expr (strExp, typ) in
-                (match typ with
-                  Sast.Number -> ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")", prec_code)
-                  | Sast.Boolean ->("\tprintf (\"%d\"," ^ expr_str ^ ")", prec_code)
-                  | Sast.String -> ("\tprintf(\"%s\\n\", " ^ expr_str ^ ")", prec_code)
-                  | Sast.Char ->  ("\tprintf( \"%c\", " ^ expr_str ^  ")", prec_code)
-                  | _ -> raise(Failure("not a printable type")))
+           | Sast.ListAccess(vdecl, i) -> 
+               let (indx, _) = get_expr i in 
+               let listId = vdecl.vname in
+               let listAccess = (listId ^ "[(int)" ^ indx ^ "]") in
+               let accessType = find_listAcc_type vdecl.vtype in 
+               (match accessType with 
+                     Sast.Number -> ("printf(\"%f\", " ^ listAccess ^ ")", "")
+                   | Sast.Boolean -> ("printf(\"%d\"," ^ listAccess ^ ")", "")
+                   | Sast.Char -> ("printf(\"%c\", " ^ listAccess ^ ")", "")
+                   | _ -> ("", "")
+               )
+           | Sast.Access(objVar, instVar) ->
+               let typ = instVar.vtype in
+               let (expr_str, prec_code) =  get_expr (strExp, typ) in
+               (match typ with
+                     Sast.Number -> ("\tprintf ( \"%g\\n\", " ^ expr_str ^ ")", prec_code)
+                   | Sast.Boolean ->("\tprintf (\"%d\"," ^ expr_str ^ ")", prec_code)
+                   | Sast.String -> ("\tprintf(\"%s\\n\", " ^ expr_str ^ ")", prec_code)
+                   | Sast.Char ->  ("\tprintf( \"%c\", " ^ expr_str ^  ")", prec_code)
+                   | _ -> raise(Failure("not a printable type")))
 
-            | Sast.FCall(f_d_inner, e_l_inner) ->
-                 let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
-                 ( match typ
-                  with Sast.String -> ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
-                     | Sast.Number -> ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", prec_inner_func)
-                     | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
-                     | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
-                     | _ -> ("", "") )
+           | Sast.FCall(f_d_inner, e_l_inner) ->
+               let (inner_func_str, prec_inner_func) = get_expr (strExp, typ) in
+               ( match typ with
+                     Sast.String -> ("\tprintf ( \"%s\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
+                   | Sast.Number -> ("\tprintf (\"%g\"," ^ inner_func_str ^ ")", prec_inner_func)
+                   | Sast.Boolean -> ("\tprintf(\"%d\\n\", " ^ inner_func_str ^ ")", prec_inner_func)
+                   | Sast.Char -> ("\tprintf( \"%c\", " ^ inner_func_str ^  ")", prec_inner_func)
+                   | _ -> ("", "") )
   	      (*  | Sast.ACall(objDec, actDec, exprs) -> *)
-    | Sast.Noexpr -> ("", "")
-    | _ -> ("", "")
-
+            | Sast.Noexpr -> ("", "")
+            | _ -> ("", "")
       end
       (* Regular function call --i.e., not "say" *)
       else begin
@@ -229,7 +270,7 @@ with Sast.LitString(s) ->  (s, "")
             (save_var, (prev_code ^ call_and_store ^ save_buf ^ copy ^ free))
 
         | _ -> (fcall_str, prev_code)
-     end;
+     end
 
   (* Action call: takes in object variable declaration, action declaration,
      and actual parameters *)
@@ -258,7 +299,7 @@ with Sast.LitString(s) ->  (s, "")
         |_ -> (acall_str, prev_code) )
  
   (* catch all *)
-  | Sast.Noexpr -> ("", "")
+    | Sast.Noexpr -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in

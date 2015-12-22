@@ -2,12 +2,12 @@ open Ast
 
 (* Data types -- link to type declarations where applicable,
    whereast Ast just has strings for the type names *)
-type list_type =
+(* type list_type =
 | Number
 | Boolean
-(* | String
- *)| Char
-| Object of cl_decl
+| String
+| Char
+(* | Object of class_decl *) *)
 
 type data_type =
     Void
@@ -15,8 +15,10 @@ type data_type =
   | Boolean
   | String
   | Char
-  | List of list_type
   | Object of class_decl
+  | NumberList
+  | BooleanList
+  | CharList
 
 (* Recurses only on semantically checked expressions,
    whereas Ast didn't check type of expressions *)
@@ -29,16 +31,16 @@ and expr_detail =
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
   | TraitAssign of expression * expression (* SleepingBeauty's x is 5 *)
-  | ListAssign of variable_decl * expression * expression (* myList[2 + 3] = 5+ 7 *)
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
-  | ListInstantiate of data_type * expression (* words list colors is new words list [size] *)
-  | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's x *)
+  | ListInstantiate of data_type * expression (* list type and size *)
+  | ListAccess of variable_decl * expression (* ages[5] *)
+  | ListAssign of expression * expression (* ages[5] is 10 *)
+  | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's. Or, my to access traits within a character*)
   | FCall of function_decl * expression list
   | ACall of variable_decl * action_decl * expression list
   | StrCat of expression * expression
   | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
-  | ListAccess of variable_decl * expression
   (* | LitList of expression list *)
 
 (* Tuple of expression and the type it evaluates to *)

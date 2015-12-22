@@ -119,6 +119,34 @@ let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
 | _ -> 		raise (Failure("Invalid unary operator"))
 
+let rec type_as_string t = match t
+with
+     Sast.Number -> "float"
+   | Sast.Boolean -> "bool"
+   | Sast.String -> "char *"
+   | Sast.Char -> "char"
+   | Sast.Void -> "void"
+   | Sast.Object(n) -> "object" ^ n.cname
+   | Sast.NumberList -> "float list"
+   | Sast.BooleanList -> "bool list"
+   | Sast.CharList -> "char list"
+
+(* let convert_list_type (t: Ast.list_type) env = match t with
+  | Ast.Number -> (Sast.Number: Sast.list_type)
+  | Ast.Boolean -> (Sast.Boolean: Sast.list_type)
+  | Ast.Char -> (Sast.Char: Sast.list_type)
+  | Ast.Object(n) ->
+      let obj_dec = try find_class_decl env.scope n
+      with Not_found -> raise(Failure("classdecl not found")) in
+      Sast.Object(obj_dec)
+  | _ -> raise(Failure("Cannot have a list of this type")) *)
+
+let find_listAcc_type t = match t with 
+    Sast.NumberList -> Sast.Number
+  | Sast.BooleanList -> Sast.Boolean
+  | Sast.CharList -> Sast.Char  
+  | _ -> raise(Failure("Not list type"))
+
 let rec convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
@@ -129,8 +157,11 @@ let rec convert_data_type env old_type = match old_type with
       let obj_dec = try find_class_decl env.scope n
       with Not_found -> raise(Failure("classdecl not found")) in
       Sast.Object(obj_dec)
-  | _ -> Sast.Void
-
+  | Ast.NumberList -> Sast.NumberList
+  | Ast.BooleanList -> Sast.BooleanList
+  | Ast.CharList -> Sast.CharList
+(*   | _ -> Sast.Void
+ *)
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
     [], [] -> true
@@ -165,7 +196,7 @@ let rec analyze_expr env = function
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
     | Ast.TraitAssign(objAccess, ex) -> 
-        let (var, vtype )= analyze_expr env objAccess in 
+        let (var, vtype ) = analyze_expr env objAccess in 
         let (e, exp_type) = analyze_expr env ex in
         if vtype <> exp_type then
           raise(Failure("Incorrect type assignment to character trait"))
@@ -195,16 +226,48 @@ let rec analyze_expr env = function
             increment_new_count(); (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
         end 
       else raise (Failure("invalid parameters to function"))
-    (* TODO: Add checks *)
-    (* | Ast.ListInstantiate(listType, size) -> *)
-    | Ast.Access(objName, varName) ->
-        (* "self" reference *)
+    | Ast.ListInstantiate(list_type, s) -> 
+      (
+        let ltype = convert_data_type env list_type in 
+        let (size, typ) = analyze_expr env s in
+        if typ = Sast.Number then 
+          (Sast.ListInstantiate(ltype, (size, typ)), ltype)
+        else raise(Failure("Must specify size of list as number"))
+      ) 
+    | Ast.ListAccess(id, indx) -> (* right now we don't prevent access of unassigned list elements, should be ok. *)
+      (
+        let var = try
+          find_variable env.scope id
+        with Not_found ->
+          raise (Failure("Undeclared identifier " ^ id)) in 
+        let (e, etype) = analyze_expr env indx in
+        let accessType = find_listAcc_type var.vtype in
+        (* do we need to check size of list here? idk how, maybe it's hard to keep track of that info...*)
+        (* maybe we need an ocaml record for this? ugh, idk... *)
+        if etype <> Sast.Number then
+          raise(Failure("Must access list element with number expression"))
+        else 
+          (Sast.ListAccess(var, (e, etype)), accessType)
+      )
+    | Ast.ListAssign(access, assn) -> 
+      (
+        let (access, etype) = (analyze_expr env access) in
+        let (new_val, vtype) = analyze_expr env assn in
+
+        if etype <> vtype then 
+          raise(Failure("Assignment value type does not match type of list element"))
+        else 
+        (Sast.ListAssign((access, etype), (new_val, vtype)), vtype)
+      )
+    | Ast.Access(objName, varName) -> (* character access *)
+      (* "self" reference *)
+      (
         if (objName = "my") then begin
           let classDec = List.nth env.scope.characters 0 in (*only class dec in scope is itself *)
           let classVar = try find_class_var env.scope classDec varName
             with Not_found ->
             raise(Failure("instance variable not found" ^ varName))
-          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true} in
+          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true } in
           (Sast.Access(objVar, classVar), classVar.vtype) 
         end
         (* Regular access *)
@@ -220,6 +283,7 @@ let rec analyze_expr env = function
             raise(Failure("instance variable not found" ^ varName))
           in (Sast.Access(objDec, class_var), class_var.vtype) 
         end 
+      )
 
 
     (* TODO: Add checks *)
@@ -277,17 +341,6 @@ let rec analyze_expr env = function
                 (Sast.ACall(objDec, actionDec, actual_p_typed), ret_type)
               else raise (Failure("invalid parameters to action " ^ actName))
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
-    | _ -> Sast.LitString(""), Sast.String
-
-let rec type_as_string t = match t
-with
-     Sast.Number -> "float"
-   | Sast.Boolean -> "bool"
-   | Sast.String -> "char *"
-   | Sast.Char -> "char"
-   | Sast.Void -> "void"
-   | Sast.Object(n) -> "object" ^ n.cname
-   | Sast.List(n) -> type_as_string t ^ "list"
 
 (* convert ast.var_decl to sast.variable_decl*)
 (* if there's an expression, we want to check it *)
@@ -297,7 +350,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let is_reserved = Str.string_match reserve_var_names var.vname 0 in
   if is_reserved <> true then begin
     let typ = convert_data_type env var.vtype in
-      let (e, expr_typ) = analyze_expr env var.vexpr in match e
+    let (e, expr_typ) = analyze_expr env var.vexpr in match e
 
       (* If Uninitialized and var type is a character, throw error *)
       (* Else, the variable is valid *)
@@ -305,13 +358,13 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
               (match typ with
               Sast.Object(o) -> raise(Failure("must assign to character variable on declaration"))
               | _ -> 
-                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false}
+                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
                   in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
                   sast_var_decl)
       (* If variable is initialized, check that the two types match *)
       | _ ->  if typ <> expr_typ then begin
               raise(Failure(
-                "Variable assignment does not match variable type " ^(type_as_string typ) ^ (type_as_string expr_typ)))
+                "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
               end
             else begin 
               let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
