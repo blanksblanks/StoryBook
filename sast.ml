@@ -44,7 +44,8 @@ and variable_decl =
   vtype: data_type;
   mutable vname : string;
   mutable vexpr : expression; (* e.g.: 5+3 in : "number x is (5 + 3)." *)
-  istrait: bool; 
+  istrait: bool;
+  listsize: float; (* to prevent list variables to access beyond the lenght of the list*)
 }
 
 

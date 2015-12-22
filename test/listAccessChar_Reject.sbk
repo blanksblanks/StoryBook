@@ -1,0 +1,5 @@
+Chapter plot() returns nothing {
+	letterlist alphabet is new letterlist[3].
+	alphabet[1] is 'a'.
+	alphabet[4] is 'b'.
+}

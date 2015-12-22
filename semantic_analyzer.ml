@@ -223,7 +223,7 @@ let rec analyze_expr env = function
           (Sast.ListInstantiate(ltype, (size, typ)), ltype)
         else raise(Failure("Must specify size of list as number"))
       ) 
-    | Ast.ListAccess(id, indx) -> (* right now we don't prevent access of unassigned list elements, should be ok. *)
+    | Ast.ListAccess(id, indx) -> 
       (
         let var = try
           find_variable env.scope id
@@ -231,12 +231,16 @@ let rec analyze_expr env = function
           raise (Failure("Undeclared identifier " ^ id)) in 
         let (e, etype) = analyze_expr env indx in
         let accessType = find_listAcc_type var.vtype in
-        (* do we need to check size of list here? idk how, maybe it's hard to keep track of that info...*)
-        (* maybe we need an ocaml record for this? ugh, idk... *)
-        if etype <> Sast.Number then
-          raise(Failure("Must access list element with number expression"))
-        else 
-          (Sast.ListAccess(var, (e, etype)), accessType)
+        (
+          match (e, etype) with
+          (Sast.LitNum(n), Sast.Number) ->
+            (* print_string (string_of_float n); *)
+            if (n > (var.listsize -. 1.0)) then (* prevent access beyond end of list *)
+              raise(Failure("Cannot access beyond the size of the list"))
+            else 
+              (Sast.ListAccess(var, (e, etype)), accessType)
+          | _ -> (Sast.ListAccess(var, (e, etype)), accessType)
+        )
       )
     | Ast.ListAssign(access, assn) -> 
       (
@@ -269,7 +273,7 @@ let rec analyze_expr env = function
           let classVar = try find_class_var env.scope classDec varName
             with Not_found ->
             raise(Failure("instance variable not found" ^ varName))
-          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true } in
+          in let objVar = {vtype = Object(classDec); vname = ""; vexpr = (Sast.Noexpr, Sast.Void); istrait = true; listsize = 0.0 } in
           (Sast.Access(objVar, classVar), classVar.vtype) 
         end
         (* Regular access *)
@@ -354,19 +358,32 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
               (match typ with
               Sast.Object(o) -> raise(Failure("must assign to character variable on declaration"))
               | _ -> 
-                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
+                  let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false; listsize = 0.0 }
                   in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
                   sast_var_decl)
       (* If variable is initialized, check that the two types match *)
-      | _ ->   
+      | _ ->  
             if typ <> expr_typ && (type_as_string expr_typ) <> "objectlistAcc" then begin
               raise(Failure(
                 "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
-              end
-            else begin 
-              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false }
+            end 
+            else begin(* (Str.string_match (Str.regexp "[list | List]") (type_as_string expr_typ) 0) then begin *) (* if variable is a list, find list size *)
+             (
+              match (e, expr_typ) with
+              (Sast.ListInstantiate( _, (size, _ )), _ ) -> 
+                (
+                  match size with 
+                  | LitNum(s) -> 
+                      let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false; listsize = s }
+                      in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
+                      sast_var_decl
+                  | _ -> raise(Failure("List size must be specified as number"))
+                )
+            | _ -> 
+              let sast_var_decl = { vtype = typ; vname = var.vname; vexpr = (e, expr_typ); istrait = false; listsize = 0.0 }
               in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
               sast_var_decl
+            )
             end
   end
   else begin
@@ -420,7 +437,8 @@ let rec analyze_stmt env = function
           fformals = [{vtype = (Sast.String);
                        vname = "str";
                        vexpr = (Sast.Noexpr, Sast.String); (*will have to make void*)
-                       istrait = false
+                       istrait = false;
+                       listsize = 0.0
                       }];
           freturn = Sast.String;
           funcbody = [Sast.Expression(Sast.LitString(""), Sast.String)];
@@ -482,14 +500,6 @@ let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment)
         let sast_var = check_var_decl class_env var in
         let _ = class_env.scope.variables <- sast_var :: class_env.scope.variables in (* save new class variable in symbol table *)
         sast_var
-
-(*     match class_env.scope.parent with
-      Some(parent) -> 
-        if List.exists (fun x -> x.vname = var.vname) parent.variables then
-          raise(Failure("Cannot override inherited trait: " ^ var.vname))
-     | _ -> 
-        if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
-          raise(Failure("Trait " ^ var.vname ^ " already declared in this Character")) *)
       
 let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
   if List.exists (fun x -> x.aname = act.aname) class_env.scope.actions then
@@ -530,7 +540,6 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
         ) full_parent.cactions 
       else [] in
     let parent_ivars = if full_parent.cname <> name then full_parent.cinstvars else [] in
-
    (* create new scope for the class *)
    (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
     let class_scope =

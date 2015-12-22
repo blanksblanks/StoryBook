@@ -1,5 +1,5 @@
 Chapter plot() returns nothing {
-	charlist alphabet is new charlist[26].
+	letterlist alphabet is new letterlist[26].
 	alphabet[0] is 'a'.
 	alphabet[1] is 'b'.
 	alphabet[2] is 'c'.

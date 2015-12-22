@@ -58,7 +58,7 @@ rule token = parse
   | "letter"              { CHAR } 
   | "numberlist"          { NUMBERLIST } 
   | "toflist"             { BOOLLIST }
-  | "charlist"            { CHARLIST }
+  | "letterlist"            { CHARLIST }
   | "characterlist"       { CHARACTERLIST }
   | "nothing"             { VOID } 
   | "Chapter"             { FUNCTION }
