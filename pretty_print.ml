@@ -139,27 +139,20 @@ with Sast.LitString(s) ->  (s, "")
      " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
      ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
    | Sast.ListInstantiate(typ, s) -> 
-
-     (
      let dtyp = type_as_string typ in
      let dataType = String.sub dtyp 0 (String.length dtyp - 1) in(* get rid of ptr *)
      let (size, prec_code) = get_expr s in
      let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
      ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", prec_code)
-     )
    | Sast.ListAccess(vdecl, i) -> 
-     (
        let (indx, prec_access) = get_expr i in 
        let intIndx = String.sub indx 0 (String.length indx - 1) in
        let listId = vdecl.vname in
        (listId ^ "[" ^ intIndx ^ "]", prec_access)
-     )
     | Sast.ListAssign(access, v) -> 
-     (
       let (elem, prec_access) = get_expr access in
       let (assn, prec_assign) = get_expr v in
-      (elem ^ " = " ^ assn, prec_access ^ prec_assign)
-     ) 
+      (elem ^ " = " ^ assn, prec_access ^ prec_assign) 
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
