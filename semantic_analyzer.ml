@@ -54,7 +54,8 @@ let rec find_variable (scope : symbol_table) name =
   with Not_found ->
     match scope.parent with
       Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found " ^ name))
+    | _ -> match find_character 
+    raise (Failure("variable not found " ^ name))
 
 (* Find Function *)
 let rec find_class_decl (scope: symbol_table) name =
@@ -444,21 +445,21 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
     end
   end
 
-let has_parent (scope : symbol_table) = 
-  match scope.parent with
-    Some(parent) -> (true, parent)
-  | _ -> (false, scope)
+let has_super (scope : symbol_table) = 
+  (List.length scope.characters) > 0
 
 let check_parent (var : Ast.var_decl) (class_env : translation_environment) = 
-    let (exists, parent) = has_parent class_env.scope in 
-    if exists then 
-       if List.exists (fun x -> x.vname = var.vname) parent.variables then
+   (*  let (exists, parent) = *) (* has_super class_env.scope in  *)
+    if has_super class_env.scope then 
+    (* Just check direct parent, which will have all inherited traits *)
+       if List.exists (fun x -> x.vname = var.vname) (List.nth class_env.scope.characters 0).cinstvars then
           raise(Failure("Cannot override inherited trait: " ^ var.vname))
         else if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
           raise(Failure("Trait " ^ var.vname ^ " already declared in this Character"))
 
 (* Check trait not declared twice. Don't allow overriding of inherited traits. *)
 let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment) =
+(*   if List.exists(fun f -> f = var.vname) check_parent *)
         let _ = check_parent var class_env in 
         let sast_var = check_var_decl class_env var in
         let _ = class_env.scope.variables <- sast_var :: class_env.scope.variables in (* save new class variable in symbol table *)
@@ -515,7 +516,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
    (* create new scope for the class *)
    (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
     let class_scope =
-       {name = name; parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+       {name = name; parent = None; functions = library_funcs; variables = []; characters = [full_parent]; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     
     (* Now check current inst vars and formals *)
