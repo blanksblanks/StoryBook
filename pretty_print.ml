@@ -167,10 +167,13 @@ with Sast.LitString(s) ->  (s, "")
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
     | Sast.TraitAssign(accessVar, expr) ->
-      let (varAccess, _) = get_expr accessVar in
-      let (new_value, _) = get_expr expr in
-      (varAccess ^ "=" ^ new_value, "")
-    | Sast.Access(obj_dec, var_dec) -> (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
+      let (varAccess, prec_var) = get_expr accessVar in
+      let (_, typ) = expr in
+      let expr_typ = type_as_string typ in 
+      let (new_value, prec_new) = get_expr expr in
+      (varAccess ^ "=" ^ new_value, prec_var ^ prec_new)
+    | Sast.Access(obj_dec, var_dec) ->
+       (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
 
     | Sast.FCall (f_d, e_l) ->
       if f_d.fname = "say" then begin
@@ -363,14 +366,14 @@ let write_func funcdec =
   print_string " \n} \n"
 
 let rec convert_my_expr (e, t) sptr = match e with 
-    Sast.Access(v, _) -> if v.istrait = true then v.vname <- sptr 
+    Sast.Access(v, _) -> if v.istrait then v.vname <- sptr 
   | Sast.Assign(_, e) -> convert_my_expr e sptr
   | Sast.Unop(_, exp) -> convert_my_expr exp sptr
   | Sast.MathBinop(ex1, _, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
   | Sast.StrCat(ex1, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
   | Sast.FCall(_, el) -> List.iter(fun e -> convert_my_expr e sptr) el
   | Sast.ACall(_, _, exps) -> List.iter(fun e -> convert_my_expr e sptr) exps 
-  | Sast.TraitAssign(v, _ ) -> convert_my_expr v sptr
+  | Sast.TraitAssign(v, e) -> convert_my_expr v sptr; convert_my_expr e sptr;
   | _ -> ()
 
 let rec convert_my_stmt (stmt: Sast.statement) sptr = 
