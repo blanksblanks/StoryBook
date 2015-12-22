@@ -341,7 +341,6 @@ let rec analyze_expr env = function
                 (Sast.ACall(objDec, actionDec, actual_p_typed), ret_type)
               else raise (Failure("invalid parameters to action " ^ actName))
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
-    | _ -> Sast.LitString(""), Sast.String
 
 (* convert ast.var_decl to sast.variable_decl*)
 (* if there's an expression, we want to check it *)

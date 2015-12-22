@@ -1,0 +1,11 @@
+Chapter plot() returns nothing {
+	toflist truth is new toflist[10].
+	repeatfor(number i is (0).; i < 10; i is i + 1){
+		if(i % 2 = 0){
+		  truth[i] is true.
+		}
+		else {
+		  truth[i] is false.
+		}
+	}
+}

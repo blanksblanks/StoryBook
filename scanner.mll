@@ -61,8 +61,7 @@ rule token = parse
   | "charlist"            { CHARLIST }
   (*
   | "null"    { NULL } *)
-  | "nothing" { VOID } (*)
-  | "subtype" { SUBTYPE } *)
+  | "nothing" { VOID } 
   | "Chapter" { FUNCTION }
   | "Character" { CHARACTER }
   | "Action" { METHOD }

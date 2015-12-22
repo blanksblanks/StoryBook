@@ -146,9 +146,8 @@ with Sast.LitString(s) ->  (s, "")
      ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", prec_code)
    | Sast.ListAccess(vdecl, i) -> 
        let (indx, prec_access) = get_expr i in 
-       let intIndx = String.sub indx 0 (String.length indx - 1) in
        let listId = vdecl.vname in
-       (listId ^ "[" ^ intIndx ^ "]", prec_access)
+       (listId ^ "[(int)" ^ indx ^ "]", prec_access)
     | Sast.ListAssign(access, v) -> 
       let (elem, prec_access) = get_expr access in
       let (assn, prec_assign) = get_expr v in
@@ -217,14 +216,13 @@ with Sast.LitString(s) ->  (s, "")
                    | _ -> ("", "") )
            | Sast.ListAccess(vdecl, i) -> 
                let (indx, _) = get_expr i in 
-               let intIndx = String.sub indx 0 (String.length indx - 1) in
                let listId = vdecl.vname in
-               let listAccess = (listId ^ "[" ^ intIndx ^ "]") in
+               let listAccess = (listId ^ "[(int)" ^ indx ^ "]") in
                let accessType = find_listAcc_type vdecl.vtype in 
                (match accessType with 
                      Sast.Number -> ("printf(\"%f\", " ^ listAccess ^ ")", "")
-                   | Sast.Boolean -> ("printf(\"%d\",)" ^ listAccess ^ ")", "")
-                   | Sast.Char -> ("printf(\"%c\", )" ^ listAccess ^ ")", "")
+                   | Sast.Boolean -> ("printf(\"%d\"," ^ listAccess ^ ")", "")
+                   | Sast.Char -> ("printf(\"%c\", " ^ listAccess ^ ")", "")
                    | _ -> ("", "")
                )
            | Sast.Access(objVar, instVar) ->
@@ -302,7 +300,6 @@ with Sast.LitString(s) ->  (s, "")
  
   (* catch all *)
     | Sast.Noexpr -> ("", "")
-    | _ -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
   let typ = type_as_string v.vtype in
