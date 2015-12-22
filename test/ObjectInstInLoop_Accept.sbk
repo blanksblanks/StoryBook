@@ -1,0 +1,11 @@
+Character Animal(words n; words s) 
+{
+	words name is n.
+	words species is s.
+}
+
+Chapter plot() returns nothing {
+	repeatfor(number i is (0).; i < 3; i is i + 1){
+		Character Animal dog is new Animal("skip"; "canine").
+	}
+}
