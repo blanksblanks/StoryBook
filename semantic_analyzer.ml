@@ -46,14 +46,27 @@ let find_plot (l : Sast.function_decl list) =
          List.find(fun f -> f.fname = "plot") l
       with Not_found -> raise (Failure("No plot found"))
 
+let has_super (scope : symbol_table) = 
+  (List.length scope.characters) > 0
+
+let find_trait env name = 
+  let is_inherit = has_super env.scope in match
+  is_inherit with
+  true -> List.find(fun x-> x.vname = name) (List.nth env.scope.characters 0).cinstvars
+  | false -> raise(Failure("var not found: " ^ name))
+
+
+
+
 (* Find Variable *)
-let rec find_variable (scope : symbol_table) name =
+let rec find_variable (scope : symbol_table) orig_env name =
   try
     List.find(fun v -> v.vname = name) scope.variables
   with Not_found ->
     match scope.parent with
-      Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found " ^ name))
+      Some(parent) -> find_variable parent orig_env name
+    | _ -> find_trait orig_env name
+           (* raise (Failure("variable not found " ^ name)) *)
 
 (* Find Function *)
 let rec find_class_decl (scope: symbol_table) name =
@@ -184,13 +197,13 @@ let rec analyze_expr env = function
     | Ast.LitChar(v) -> Sast.LitChar(v), Sast.Char
     | Ast.Id(vname) ->
       let vdecl = try
-	     find_variable env.scope vname (* locate a variable by name *)
+	     find_variable env.scope env vname (* locate a variable by name *)
       with Not_found ->
         raise (Failure("undeclared identifier " ^ vname))
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
     | Ast.Assign(vname, expr) ->
         let vdecl = try
-          find_variable env.scope vname
+          find_variable env.scope env vname
         with Not_found ->
           raise (Failure("undeclared identifier " ^ vname))
         in let (e, expr_typ) = analyze_expr env expr
@@ -226,7 +239,7 @@ let rec analyze_expr env = function
     | Ast.ListAccess(id, indx) -> 
       (
         let var = try
-          find_variable env.scope id
+          find_variable env.scope env id
         with Not_found ->
           raise (Failure("Undeclared identifier " ^ id)) in 
         let (e, etype) = analyze_expr env indx in
@@ -278,7 +291,7 @@ let rec analyze_expr env = function
         end
         (* Regular access *)
         else begin
-          let objDec = try find_variable env.scope objName
+          let objDec = try find_variable env.scope env objName
             with Not_found ->
             raise(Failure("object variable not found" ^ objName))
           in let classDec = try get_class_decl_from_type env.scope objDec.vtype
@@ -324,7 +337,7 @@ let rec analyze_expr env = function
 
     | Ast.ACall(objName, actName, expr_list) ->
        (* Grab object variable *)
-       let objDec = try find_variable env.scope objName
+       let objDec = try find_variable env.scope env objName
        with Not_found -> raise(Failure("variable not found " ^ objName))
        (* Find corresponding class variable *)
        in let classDec =  
@@ -481,21 +494,21 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
     end
   end
 
-let has_parent (scope : symbol_table) = 
-  match scope.parent with
-    Some(parent) -> (true, parent)
-  | _ -> (false, scope)
+let has_super (scope : symbol_table) = 
+  (List.length scope.characters) > 0
 
 let check_parent (var : Ast.var_decl) (class_env : translation_environment) = 
-    let (exists, parent) = has_parent class_env.scope in 
-    if exists then 
-       if List.exists (fun x -> x.vname = var.vname) parent.variables then
+   (*  let (exists, parent) = *) (* has_super class_env.scope in  *)
+    if has_super class_env.scope then 
+    (* Just check direct parent, which will have all inherited traits *)
+       if List.exists (fun x -> x.vname = var.vname) (List.nth class_env.scope.characters 0).cinstvars then
           raise(Failure("Cannot override inherited trait: " ^ var.vname))
         else if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
           raise(Failure("Trait " ^ var.vname ^ " already declared in this Character"))
 
 (* Check trait not declared twice. Don't allow overriding of inherited traits. *)
 let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment) =
+(*   if List.exists(fun f -> f = var.vname) check_parent *)
         let _ = check_parent var class_env in 
         let sast_var = check_var_decl class_env var in
         let _ = class_env.scope.variables <- sast_var :: class_env.scope.variables in (* save new class variable in symbol table *)
@@ -543,7 +556,7 @@ let analyze_class (clss_dcl : Ast.cl_decl) (env: translation_environment) =
    (* create new scope for the class *)
    (* let self = {cname = name; cinstvars = []; cactions = []; cformals = []} in *)
     let class_scope =
-       {name = name; parent = None; functions = library_funcs; variables = []; characters = []; actions = []} in
+       {name = name; parent = None; functions = library_funcs; variables = []; characters = [full_parent]; actions = []} in
     let class_env = {scope = class_scope; return_type = Sast.Void} in
     
     (* Now check current inst vars and formals *)
