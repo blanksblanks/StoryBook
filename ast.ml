@@ -6,7 +6,7 @@ type data_type =
   | Boolean
   | String
   | Char
-  | Object of string (* string is typename of object, not id *)
+  | Object of string 
   | NumberList 
   | BooleanList
   | CharList
@@ -24,15 +24,15 @@ type expr =
 | LitBool of bool
 | LitString of string (* quoted string literal *)
 | LitChar of char (* 'c' *)
-| Noexpr (* for (;;) *)
+| Noexpr 
 | Id of string (* foo_unquoted *)
 | Assign of string * expr (* x is 5 *)
 | TraitAssign of expr * expr (* SleepingBeauty's x is 5 *)
-| Instantiate of string * expr list (*object type and constructor parameters *)
+| Instantiate of string * expr list (* object type and constructor parameters *)
 | ListInstantiate of data_type * expr (* type, size  -> e.g. int, 5 *)
 | ListAccess of string * expr
 | ListAssign of expr * expr (* myList[2 + 3] = 5+ 7 *)
-| Access of string * string (* Member value access: SleepingBeauty's x *)
+| Access of string * string (* Member value access: SleepingBeauty's x or my x within class itself *)
 | Binop of expr * op * expr (* a + b *)
 | Unop of op * expr
 | FCall of string * expr list (* chapter1() *)
@@ -65,19 +65,19 @@ type func_decl = {
 
 (* Actions *)
 type act_decl = {
-  mutable aname : string; (* Name of the action *)
+  mutable aname : string;  (* Name of the action *)
   aformals: var_decl list; (* formal params *)
-  areturn : data_type; (* return type *)
-  abody : stmt list; (* statements, including local variable declarations *)
+  areturn : data_type;     (* return type *)
+  abody : stmt list;       (* statements, including local variable declarations *)
 }
 
 (* Class Declarations *)
 type cl_decl = {
   cname : string; (* name of the class *)
   cparent : string;
-  cformals: var_decl list; (* formal params *)
+  cformals: var_decl list;   (* formal params *)
   cinstvars : var_decl list; (*instance variables *)
-  cactions: act_decl list; (*lists of actions (methods) *)
+  cactions: act_decl list;   (*lists of actions (methods) *)
 }
 
 (* Program is class declarations and function declarations *)

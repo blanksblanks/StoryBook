@@ -15,5 +15,5 @@ and vtable = {
 }
 
 (* C Program consists of structs and function declarations *)
-(* Vtables are held by class_struct type *)
+(* Virtual tables are held by class_struct record *)
 and prgrm = class_struct list * Sast.function_decl list

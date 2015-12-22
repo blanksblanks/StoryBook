@@ -1,7 +1,6 @@
 open Ast
 open Sast
 
-(* keep track of amount of objects newed for memory management--freeing*)
 let new_count = ref 0 
 let increment_new_count() = new_count := !new_count + 1
 
@@ -15,15 +14,14 @@ type symbol_table = {
 }
 
 type translation_environment = {
-  scope : symbol_table; (* symbol table for vars *)
-  return_type : Sast.data_type; (* Function’s return type *)
+  scope : symbol_table; 
+  return_type : Sast.data_type; 
 }
 
 type func_wrapper = 
   Some of Sast.function_decl
   | None
 
-(* Find Function *)
 let rec find_function (scope: symbol_table) name =
 	try
 	   List.find(fun f -> f.fname = name) scope.functions
@@ -31,7 +29,6 @@ let rec find_function (scope: symbol_table) name =
 	match scope.parent with
 		Some(parent) -> find_function parent name
 	| _ -> raise (Failure("function '" ^ name ^ "' not found"))
-
 
 let rec is_func_name_already_used (scope: symbol_table) name : func_wrapper =
   try
@@ -49,16 +46,14 @@ let find_plot (l : Sast.function_decl list) =
 let has_super (scope : symbol_table) = 
   (List.length scope.characters) > 0
 
+(* Check to see that character trait exists *)
 let find_trait env name = 
   let is_inherit = has_super env.scope in match
   is_inherit with
   true -> List.find(fun x-> x.vname = name) (List.nth env.scope.characters 0).cinstvars
   | false -> raise(Failure("var not found: " ^ name))
 
-
-
-
-(* Find Variable *)
+(* Check to see if variable exists *)
 let rec find_variable (scope : symbol_table) orig_env name =
   try
     List.find(fun v -> v.vname = name) scope.variables
@@ -66,9 +61,8 @@ let rec find_variable (scope : symbol_table) orig_env name =
     match scope.parent with
       Some(parent) -> find_variable parent orig_env name
     | _ -> find_trait orig_env name
-           (* raise (Failure("variable not found " ^ name)) *)
 
-(* Find Function *)
+(* Find all characters in scope *)
 let rec find_class_decl (scope: symbol_table) name =
   try
      List.find(fun c -> c.cname = name) scope.characters
@@ -77,7 +71,7 @@ let rec find_class_decl (scope: symbol_table) name =
     Some(parent) -> find_class_decl parent name
   | _ -> raise (Failure("Character '" ^ name ^ "' not found"))
 
-
+(* Check that all variables in a character are in scope *)
 let rec find_class_var (scope: symbol_table) c_dec name =
   try List.find(fun v-> v.vname = name) c_dec.cinstvars
   with Not_found ->
@@ -93,11 +87,13 @@ let find_character (scope: symbol_table) =
       )
    | _ -> List.nth scope.characters 0
 
+(* Ensure only 's and my access on characters *)
 let get_class_decl_from_type (scope: symbol_table) ctype =
   match ctype with
   Sast.Object(typDecl) -> find_class_decl scope typDecl.cname
-  | _ -> raise(Failure("not an object. can't access instance vars"))
+  | _ -> raise(Failure("Not an object. can't access instance vars"))
 
+(* Check for action in scope*)
 let find_action_decl (actions : Sast.action_decl list) name className =
   try
     List.find(fun a -> (a.aname = name)) actions
@@ -142,6 +138,7 @@ NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for opera
 
 let listClass = {cname = "listAcc"; cparent = "None"; cformals = []; cinstvars = []; cactions = []}
 
+(* Mainly used for errors to display types as strings *)
 let rec type_as_string t = match t
 with
      Sast.Number -> "float"
@@ -155,6 +152,7 @@ with
    | Sast.CharList -> "char list"
    | Sast.CharacterList -> "character list" 
 
+(* Convert list type to type of element on list access *)
 let find_listAcc_type t = match t with 
     Sast.NumberList -> Sast.Number
   | Sast.BooleanList -> Sast.Boolean
@@ -162,6 +160,7 @@ let find_listAcc_type t = match t with
   | Sast.CharacterList -> Sast.Object(listClass) (* check type in analyze expr *) 
   | _ -> raise(Failure("Not list type"))
 
+(* AST data type to SAST data type *)
 let rec convert_data_type env old_type = match old_type with
   | Ast.Void -> Sast.Void
   | Ast.Number -> Sast.Number
@@ -177,7 +176,7 @@ let rec convert_data_type env old_type = match old_type with
   | Ast.CharList -> Sast.CharList
   | Ast.CharacterList -> Sast.CharacterList
 
-(* compare parameter types *)
+(* Compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
     [], [] -> true
     |[], y::ytail  ->raise(Failure("wrong number of params"))
@@ -190,7 +189,6 @@ let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs w
 
 (* Expression Environment *)
 let rec analyze_expr env = function
-      (* Simple evaluation of primitives *)
       Ast.LitNum(v) -> Sast.LitNum(v), Sast.Number
     | Ast.LitBool(v) -> Sast.LitBool(v), Sast.Boolean
     | Ast.LitString(v) -> Sast.LitString(v), Sast.String
@@ -201,6 +199,7 @@ let rec analyze_expr env = function
       with Not_found ->
         raise (Failure("undeclared identifier " ^ vname))
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
+
     | Ast.Assign(vname, expr) ->
         let vdecl = try
           find_variable env.scope env vname
@@ -210,6 +209,7 @@ let rec analyze_expr env = function
         in if vdecl.vtype <> expr_typ then raise(Failure("Expression does not match variable type"))
         else
           Sast.Assign(vname, (e, expr_typ)), expr_typ
+
     | Ast.TraitAssign(objAccess, ex) -> 
         let (var, vtype ) = analyze_expr env objAccess in 
         let (e, exp_type) = analyze_expr env ex in
@@ -217,6 +217,7 @@ let rec analyze_expr env = function
           raise(Failure("Incorrect type assignment to character trait"))
         else
           Sast.TraitAssign((var, vtype), (e, exp_type)), exp_type 
+
     | Ast.Instantiate(objType, exprs) ->
         let objDecl = try
           find_class_decl env.scope objType
@@ -228,6 +229,7 @@ let rec analyze_expr env = function
             increment_new_count(); (Sast.Instantiate(objDecl, actual_p_typed), Sast.Object(objDecl))
         end 
       else raise (Failure("invalid parameters to function"))
+
     | Ast.ListInstantiate(list_type, s) -> 
       (
         let ltype = convert_data_type env list_type in 
@@ -236,6 +238,7 @@ let rec analyze_expr env = function
           (Sast.ListInstantiate(ltype, (size, typ)), ltype)
         else raise(Failure("Must specify size of list as number"))
       ) 
+
     | Ast.ListAccess(id, indx) -> 
       (
         let var = try
@@ -255,6 +258,7 @@ let rec analyze_expr env = function
           | _ -> (Sast.ListAccess(var, (e, etype)), accessType)
         )
       )
+
     | Ast.ListAssign(access, assn) -> 
       (
         let (access, etype) = (analyze_expr env access) in
@@ -278,6 +282,7 @@ let rec analyze_expr env = function
             )
         )
       )
+
     | Ast.Access(objName, varName) -> (* character access *)
       (* "self" reference *)
       (
@@ -303,6 +308,7 @@ let rec analyze_expr env = function
           in (Sast.Access(objDec, class_var), class_var.vtype) 
         end 
       )
+
     | Ast.Binop(e1, op, e2) ->
   	  let e1 = analyze_expr env e1 (* Check left and right children *)
   	  and e2 = analyze_expr env e2 in
@@ -312,6 +318,7 @@ let rec analyze_expr env = function
   	  with Not_found -> raise (Failure("Invalid binary operator"))
       in if validbinop = Sast.String then Sast.StrCat(e1, e2), validbinop
         else Sast.MathBinop(e1, op, e2), validbinop (* Success: result is int *)
+
     | Ast.Unop(op, e1) ->
   	  let e1 = analyze_expr env e1 in
   	  let _, t1 = e1 in
@@ -327,7 +334,6 @@ let rec analyze_expr env = function
       with Not_found -> raise (Failure("function '" ^ fname ^ "' not found"))
       in let formal_p_list = fdecl.fformals in
       let ret_type = fdecl.freturn in
-
       if fname <> "say" then begin
         if (compare_p_types formal_p_list actual_p_typed) = true then
            (Sast.FCall(fdecl, actual_p_typed), ret_type)
@@ -354,11 +360,11 @@ let rec analyze_expr env = function
               if (compare_p_types formal_p_list actual_p_typed) = true then
                 (Sast.ACall(objDec, actionDec, actual_p_typed), ret_type)
               else raise (Failure("invalid parameters to action " ^ actName))
+
     | Ast.Noexpr -> Sast.Noexpr, Sast.Void
 
 (* convert ast.var_decl to sast.variable_decl*)
-(* if there's an expression, we want to check it *)
-(* then add to scope's variable list *)
+(* check types and add variable to scope's variable list *)
 let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
   let reserve_var_names = Str.regexp "['_']['0'-'9']*" in
   let is_reserved = Str.string_match reserve_var_names var.vname 0 in
@@ -380,7 +386,7 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
               raise(Failure(
                 "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
             end 
-            else begin(* (Str.string_match (Str.regexp "[list | List]") (type_as_string expr_typ) 0) then begin *) (* if variable is a list, find list size *)
+            else begin
              (
               match (e, expr_typ) with
               (Sast.ListInstantiate( _, (size, _ )), _ ) -> 
@@ -413,12 +419,11 @@ let rec analyze_stmt env = function
             let sast_var = check_var_decl env var_decl in
             let _ = env.scope.variables <- sast_var :: env.scope.variables in (* save new var_decl in symbol table *)
             Sast.VarDecl(sast_var);
-  (* If statement: verify the predicate is integer *)
   | Ast.If(e, s1, s2) ->
       let sastexpr = analyze_expr env e in (* Check the predicate *)
       let (_, typ) = sastexpr in
       if typ = Sast.Boolean then
-      	Sast.If(sastexpr, analyze_stmt env s1, analyze_stmt env s2) (* Check then, else *)
+      	Sast.If(sastexpr, analyze_stmt env s1, analyze_stmt env s2) 
       else raise(Failure("invalid if condition"))
   | Ast.Return(e) -> let sastexpr = analyze_expr env e in Sast.Return(sastexpr)
   | Ast.For(e1, e2, e3, s) ->
@@ -449,7 +454,7 @@ let rec analyze_stmt env = function
           fname = "say";
           fformals = [{vtype = (Sast.String);
                        vname = "str";
-                       vexpr = (Sast.Noexpr, Sast.String); (*will have to make void*)
+                       vexpr = (Sast.Noexpr, Sast.String); 
                        istrait = false;
                        listsize = 0.0
                       }];
@@ -458,14 +463,15 @@ let rec analyze_stmt env = function
           isLib = true;
         }
       ]
-
+(* Check return type matches return *)
 let check_ret (expTyp: Sast.data_type) (env: translation_environment) (f: Sast.statement) = match f with
   Sast.Return(e) -> let (_, typ) = e in
     if expTyp = typ  then true
     else if expTyp = Sast.Void then raise (Failure("Void function cannot return a value"))
-    else raise (Failure ("Incorrect return type"))(* true if correct type, false in wrong return type *)
+    else raise (Failure ("Incorrect return type")) 
   | _ -> false
 
+(* If return is not void, ensure value is returned *)
 let find_return (body_l : Sast.statement list) (env: translation_environment) (expTyp: Sast.data_type) =
   try
      List.find(check_ret expTyp env) body_l
@@ -478,7 +484,6 @@ let analyze_func (fun_dcl : Ast.func_decl) env : Sast.function_decl = (*Why is e
   else begin
     let is_name_taken = is_func_name_already_used env.scope name in
     if is_name_taken != None then raise(Failure("Function name: " ^ name ^ "is already in use."))
-    (*and old_formals = fun_dcl.fformals *)
     else begin
       let old_ret_type = fun_dcl.freturn
       and old_body = fun_dcl.fbody in (*?*)
@@ -498,9 +503,8 @@ let has_super (scope : symbol_table) =
   (List.length scope.characters) > 0
 
 let check_parent (var : Ast.var_decl) (class_env : translation_environment) = 
-   (*  let (exists, parent) = *) (* has_super class_env.scope in  *)
     if has_super class_env.scope then 
-    (* Just check direct parent, which will have all inherited traits *)
+    (* Check direct parent, which will have all inherited traits *)
        if List.exists (fun x -> x.vname = var.vname) (List.nth class_env.scope.characters 0).cinstvars then
           raise(Failure("Cannot override inherited trait: " ^ var.vname))
         else if List.exists (fun x -> x.vname = var.vname) class_env.scope.variables then
@@ -508,7 +512,6 @@ let check_parent (var : Ast.var_decl) (class_env : translation_environment) =
 
 (* Check trait not declared twice. Don't allow overriding of inherited traits. *)
 let analyze_classvars (var : Ast.var_decl) (class_env : translation_environment) =
-(*   if List.exists(fun f -> f = var.vname) check_parent *)
         let _ = check_parent var class_env in 
         let sast_var = check_var_decl class_env var in
         let _ = class_env.scope.variables <- sast_var :: class_env.scope.variables in (* save new class variable in symbol table *)
@@ -530,7 +533,7 @@ let analyze_acts (act : Ast.act_decl) (class_env : translation_environment) =
     sast_act
 
 let find_parent parent child (env: translation_environment)= 
-  (*if parent and child name same, then no inheritance, otherwise yes inheritance*)
+  (* if parent and child name same, then no inheritance, otherwise yes inheritance *)
   if parent <> child then
     (* If inheriting, find parent class *) 
     List.find (fun c -> c.cname = parent) env.scope.characters

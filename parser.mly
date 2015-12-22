@@ -194,9 +194,8 @@ expr:
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID LBRACK expr RBRACK ASSIGN expr {ListAssign(ListAccess($1, $3), $6)} /* List assign a[5] = 3 */
   | NEW NUMBERLIST LBRACK expr RBRACK {ListInstantiate(NumberList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW BOOLLIST LBRACK expr RBRACK { ListInstantiate(BooleanList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW BOOLLIST LBRACK expr RBRACK { ListInstantiate(BooleanList, $4)} 
   | NEW CHARLIST LBRACK expr RBRACK { ListInstantiate(CharList, $4) } 
-  /* Handling Object Lists */
   | NEW CHARACTERLIST LBRACK expr RBRACK { ListInstantiate(CharacterList, $4) } 
 
 /* Actual Parameters */

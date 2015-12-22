@@ -6,8 +6,7 @@ open Semantic_analyzer
 open Lexing
 open Codegen
 
-(* current_ptr keeps track of index of each object in the array of
-   malloc'ed c structs *)
+(* current_ptr keeps track of index of each object in the array of c structs *)
 let current_ptr = ref (-1)
 let increment_cur_ptr() = current_ptr := !current_ptr + 1
 
@@ -49,6 +48,7 @@ with
 
 let listClass = {cname = "listAcc"; cparent = "None"; cformals = []; cinstvars = []; cactions = []}
 
+(* find type of element returned on list access *)
 let find_listAcc_type t = match t with 
     Sast.NumberList -> Sast.Number
   | Sast.BooleanList -> Sast.Boolean
@@ -120,9 +120,11 @@ with Sast.LitString(s) ->  (s, "")
    | Sast.LitNum(n) -> (string_of_float n, "")
    | Sast.LitChar(c) -> ("\'" ^ Char.escaped c ^ "\'", "")
    | Sast.Id(var) -> (var.vname, "")
+
    | Sast.Assign(id, e) ->
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
+
    | Sast.Instantiate(c_dec, exprs) ->
      increment_cur_ptr();
      let rev_vars = List.rev c_dec.cinstvars in
@@ -131,23 +133,28 @@ with Sast.LitString(s) ->  (s, "")
      let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
      " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
      ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
+
    | Sast.ListInstantiate(typ, s) -> 
      let dtyp = type_as_string typ in
      let dataType = String.sub dtyp 0 (String.length dtyp - 1) in (* get rid of ptr to get size*) 
      let (size, prec_code) = get_expr s in
      let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
      ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", prec_code)
+
    | Sast.ListAccess(vdecl, i) -> 
        let (indx, prec_access) = get_expr i in 
        let listId = vdecl.vname in
        (listId ^ "[(int)" ^ indx ^ "]", prec_access)
+
     | Sast.ListAssign(access, v) -> 
       let (elem, prec_access) = get_expr access in
       let (assn, prec_assign) = get_expr v in
-      (elem ^ " = " ^ assn, prec_access ^ prec_assign) 
+      (elem ^ " = " ^ assn, prec_access ^ prec_assign)
+
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
+
    | Sast.MathBinop(expr1, op, expr2) ->
      let (expr_str_1, prec_bin1) = get_expr expr1 in
      let (expr_str_2, prec_bin2) = get_expr expr2 in
@@ -163,6 +170,7 @@ with Sast.LitString(s) ->  (s, "")
      else
          let op_str = get_op op in
          (expr_str_1^op_str ^ expr_str_2, prec_bin1^prec_bin2)
+
    | Sast.StrCat(expr1, expr2) ->
      let (expr1_str, prec_strcat1) = get_expr expr1 in
      let (expr2_str, prec_strcat2) = get_expr expr2 in
@@ -170,10 +178,12 @@ with Sast.LitString(s) ->  (s, "")
      let v_name = get_next_var_name() in
      let str_cat_code = get_str_cat_code expr1_str typ1 expr2_str typ2 v_name in
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
+
     | Sast.TraitAssign(accessVar, expr) ->
       let (varAccess, prec_var) = get_expr accessVar in
       let (new_value, prec_new) = get_expr expr in
       (varAccess ^ "=" ^ new_value, prec_var ^ prec_new)
+
     | Sast.Access(obj_dec, var_dec) ->
        (obj_dec.vname ^ " -> " ^ var_dec.vname ,"")
 
@@ -307,17 +317,21 @@ let rec write_stmt s = match s with
       let (expr_str, prec_expr) = get_expr e in
       print_string ("\t" ^ prec_expr); print_string ";\n\t";
       print_string expr_str; print_string ";\n\t"
+
    | Sast.Block(stmts) -> List.iter (fun s -> write_stmt s) stmts
+
    | Sast.VarDecl(vdecl) -> 
       let vtyp = type_as_string vdecl.vtype in
       let vname = vdecl.vname in let (vexp, prec_expr) = get_expr vdecl.vexpr in
       print_string ( "\t" ^ prec_expr ^ vtyp ^ " " ^ vname ^ " = " ^ vexp); print_string ";\n"
+
    | Sast.While(e, s) -> 
       let (boolEx, prec_code) = get_expr e in 
       print_string("\t" ^ prec_code ^ "\n\t");
       print_string ("while(" ^ boolEx ^ "){ \n\t"); 
       write_stmt s;
       print_string "\n\n\t}\n\t";
+
    | Sast.For( ex1, ex2, ex3, s) -> 
       let (boolEx, bool_prec_code) = get_expr ex2 in 
       let (incr, incr_prec_code) = get_expr ex3 in
@@ -328,6 +342,7 @@ let rec write_stmt s = match s with
       write_stmt s;
       print_string (incr ^ ";\n\t");
       print_string "\n}\n\t";
+
    | Sast.Return(e) ->  let (expr_str, prec_code) = get_expr e in
      let (det, typ) = e in (match typ with
      | Sast.String ->
@@ -341,6 +356,7 @@ let rec write_stmt s = match s with
          print_string(malloc_str ^ "return " ^ next_var ^ ";\n")
      | _ -> print_string (prec_code ^ "\t\n");
             print_string "return "; print_string expr_str; print_string ";\n")
+
    | Sast.If(condExpr, ifstmt, elsestmt) ->
        let (condExprStr, condPrec) = get_expr condExpr in 
        print_string (condPrec ^ "\nif(" ^ condExprStr ^ ") {\n");
@@ -366,7 +382,8 @@ let write_func funcdec =
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
   print_string " \n} \n"
-
+  
+(* Convert my expression--ie: my name--to use pointer of struct *)
 let rec convert_my_expr (e, t) sptr = match e with 
     Sast.Access(v, _) -> if v.istrait then v.vname <- sptr 
   | Sast.Assign(_, e) -> convert_my_expr e sptr

@@ -17,15 +17,15 @@ and expr_detail =
   | LitBool of bool
   | LitString of string (* quoted string literal *)
   | LitChar of char (* 'c' *)
-  | Noexpr (* for (;;) *)
+  | Noexpr 
   | Id of variable_decl
   | Assign of string * expression (* x is 5 *)
   | TraitAssign of expression * expression (* SleepingBeauty's x is 5 *)
   | Instantiate of class_decl * expression list (* object type and constructor parameters *)
-  | ListInstantiate of data_type * expression (* list type and size *)
-  | ListAccess of variable_decl * expression (* ages[5] *)
-  | ListAssign of expression * expression (* ages[5] is 10 *)
-  | Access of variable_decl * variable_decl (* Member value access: SleepingBeauty's. Or, my to access traits within a character*)
+  | ListInstantiate of data_type * expression   (* list type and size *)
+  | ListAccess of variable_decl * expression    (* ages[5] *)
+  | ListAssign of expression * expression       (* ages[5] is 10 *)
+  | Access of variable_decl * variable_decl     (* Member value access: SleepingBeauty's. Or, my to access traits within a character*)
   | FCall of function_decl * expression list
   | ACall of variable_decl * action_decl * expression list
   | StrCat of expression * expression
@@ -44,7 +44,7 @@ and variable_decl =
   vtype: data_type;
   mutable vname : string;
   mutable vexpr : expression; (* e.g.: 5+3 in : "number x is (5 + 3)." *)
-  istrait: bool;
+  istrait: bool;   (* boolean denoting whether variable is character trait *)
   listsize: float; (* to prevent list variables to access beyond the lenght of the list*)
 }
 
@@ -69,7 +69,7 @@ and function_decl = {
   fformals : variable_decl list; (* formal params *)
   freturn : data_type; (* return type *)
   funcbody : statement list; (* statements, including local variable declarations *)
-  isLib : bool;
+  isLib : bool; (* boolean denoting whether function is library function *)
 }
 
 (* Actions *)
@@ -77,7 +77,7 @@ and action_decl = {
   aname : string; (* Name of the action *)
   aclass : string;
   aformals: variable_decl list; (* formal params *)
-  areturn : data_type; (* return type *)
+  areturn : data_type;    (* return type *)
   abody : statement list; (* statements, including local variable declarations *)
 }
 
@@ -85,9 +85,9 @@ and action_decl = {
 and class_decl = {
   cname : string; (* name of the class *)
   cparent: string;
-  cformals: variable_decl list; (* formal params *)
+  cformals: variable_decl list;   (* formal params *)
   cinstvars : variable_decl list; (*instance variables *)
-  cactions: action_decl list; (*lists of actions (methods) *)
+  cactions: action_decl list;     (*lists of actions (methods) *)
 }
 
 (* Program --class declarations and function declarations *)
