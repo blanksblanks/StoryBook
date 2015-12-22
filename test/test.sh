@@ -24,23 +24,21 @@ then
             if  diff -q "${program}_Out.txt" "${program}_Exp.txt"
             then
               let "passcount += 1"
-              echo "✅ : $program" >> test_results.txt;
+              echo ": $program" >> test_results.txt;
             else
               let "failcount += 1"
-              echo "❌ : $program -- Compiled and ran, but wrong output." >> test_results.txt
-              echo "❌ : $program -- Compiled and ran, but wrong output."
+              echo ": $program -- Compiled and ran, but wrong output." >> test_results.txt
+              echo ": $program -- Compiled and ran, but wrong output."
             fi
           else
-            echo "🙈"
              let "failcount += 1"
-             echo "❌ : $program -- C Code wouldn't compile" >> test_results.txt;
-             echo "❌ : $program"
+             echo ": $program -- C Code wouldn't compile" >> test_results.txt;
+             echo ": $program"
           fi
         else
-        echo "🙈"
         let "failcount += 1"
-        echo "❌ : $program -- Storybook didn't compile" >> test_results.txt;
-        echo "❌ : $program -- Storybook didn't compile"
+        echo ": $program -- Storybook didn't compile" >> test_results.txt;
+        echo ": $program -- Storybook didn't compile"
         fi
     done
 fi
@@ -54,12 +52,11 @@ then
         if [ ! -s "$program.c" ]
         then
           let "passcount += 1"
-          echo "✅ : $program" >> test_results.txt
+          echo ": $program" >> test_results.txt
         else
           let "failcount += 1"
-          echo "❌ : $program -- Storybook compiled but should not have" >> test_results.txt
-          echo "❌ : $program -- Storybook compiled but should not have"
-        echo "🙈"
+          echo ": $program -- Storybook compiled but should not have" >> test_results.txt
+          echo ": $program -- Storybook compiled but should not have"
         fi
     done
 fi

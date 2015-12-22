@@ -396,6 +396,7 @@ let rec convert_my_expr (e, t) sptr = match e with
   | Sast.StrCat(ex1, ex2) -> convert_my_expr ex1 sptr; convert_my_expr ex2 sptr
   | Sast.FCall(_, el) -> List.iter(fun e -> convert_my_expr e sptr) el
   | Sast.ACall(_, _, exps) -> List.iter(fun e -> convert_my_expr e sptr) exps 
+  | Sast.TraitAssign(v, _ ) -> convert_my_expr v sptr
   | _ -> ()
 
 let rec convert_my_stmt (stmt: Sast.statement) sptr = 

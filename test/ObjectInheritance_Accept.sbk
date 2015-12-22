@@ -2,9 +2,9 @@ Character Monster( words n; number s ) {
   words name is n.
   number size is s.
   
-  Action scare(words scream) returns nothing {
-    say (scream + "I'm a Monster").
-    say (my name).
+Action scare(words scream) returns nothing {
+    say (scream + " I'm a Monster").
+    say (" My name is " + my name).
   }
 }
 
@@ -13,13 +13,33 @@ Character Zombie is Monster(number a) {
 
   Action sayhi() returns nothing {
     say("BOO! I'm a Zombie.").
-    say (my name).
   }
 }
+
+Character Person(words nam; number pos){
+  words name is nam.
+  number position is pos.
+
+  Action run() returns number {
+	endwith(my position + 100).
+  }	
+}
+
 Chapter plot() returns nothing {
   Character Monster Frank is new Monster("Frankenstein"; 99).
   Frank, scare("Aghhhhhhhh").
   Character Zombie Zoe is new Zombie("Zoe"; 6; 16).
   Zoe, sayhi().
-  Zoe, scare("ZOE SCREAMING").
+  Zoe, scare("RAAAAAWWWWRRRR").
+  Character Person Stephen is new Person("Stephen"; 100).
+  number mpos is (100).
+  number ppos is Stephen, run().
+  say(Stephen's name + "'s position is " + ppos + ".").
+  say(Frank's name + "'s position is " + mpos + ".").
+  if(ppos < mpos){
+	say(Stephen's name + " will be eaten by " + Frank's name + ".").
+  }
+  else {
+	say(Stephen's name + " will outrun " + Frank's name + "!").
+  }
 }

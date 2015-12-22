@@ -1,0 +1,11 @@
+Chapter AnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything(number a) returns number {
+  if (a = 42) {
+    endwith (a).
+  }
+  endwith(AnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything(a+1)).
+}
+
+Chapter plot() returns nothing {
+  say(	AnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything(0) + " ").
+}
+

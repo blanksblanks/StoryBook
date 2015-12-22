@@ -1,0 +1,55 @@
+Character Princess( words n; number a; tof f) {
+  words name is n.
+  number age is a.
+  tof famous is f.
+
+  Action introduceSelf() returns nothing {
+    say( my name + ": Hi, my name is " + my name + "!").
+  }
+
+  Action audition(words part; words experience; words movie) returns nothing {
+  	if(my famous = true) {
+        say(my name + ": I am auditioning for the part of " + part + " in " + movie + ".").
+        say("In case you didn't recognize me, I was in Disney's " + experience + ".").
+    }
+    else {
+        say(my name + ": Hello, my name is " + my name + ". I'm auditioning for the part of " + part + " in " + movie + ".").
+        say("I don't have any experience, but I think I have great potential! Plus, all of these old princesses only know how to play roles that depend on men. I can be a strong independent and fearless princess!!").
+    }
+  }
+}
+
+Character DisneyPrincess is Princess( words m ) {
+	words movie is m.
+
+  Action salary(number b) returns number {
+    number double is 2 * b.
+  	say(myname + ": Just so you know, Walt payed me " + b + " dollars so I expect at least " + double).
+    endwith(b).
+  }
+}
+
+Chapter findActress(tof f; number s) returns nothing {
+    if(f = true and s < 10000){
+      say("You're hired!").
+    }
+    else if(f = false and s < 1000) {
+      say("You're hired!").
+    }
+    else {
+      say("No thanks.").
+    }
+}
+
+Chapter plot() returns nothing {
+  
+  Character DisneyPrincess Ariel is new DisneyPrincess( "Ariel"; 16; true; "The Little Mermaid" ).
+  Character Princess Anna is new Princess( "Anna"; 16; false).
+  Ariel, introduceSelf().
+  Ariel, audition("Elsa"; Ariel's movie; "Frozen").
+  number money is Ariel, salary(10000000).
+  findActrss(Ariel's famous; money).
+  Anna, introduceSelf().
+  Anna, audition("Anna"; "No exprience"; "Frozen").
+  findActress(Anna's famous; 1000).
+}
