@@ -131,24 +131,28 @@ with Sast.LitString(s) ->  (s, "")
      let (exp, prec_assign) = get_expr e in
      (id ^ " = " ^ exp, prec_assign)
    | Sast.Instantiate(c_dec, exprs) ->
-        increment_cur_ptr();
-        let rev_vars = List.rev c_dec.cinstvars in
-        let _ = idx := 0 in
-        let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
-        let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
-        " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
-        ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
+     increment_cur_ptr();
+     let rev_vars = List.rev c_dec.cinstvars in
+     let _ = idx := 0 in
+     let init_str = (initalize_inst_vars rev_vars exprs c_dec.cname) in
+     let obj_inst_str = "\tptrs[" ^ string_of_int !current_ptr ^ "]" ^
+     " = malloc((int)sizeof(struct " ^ c_dec.cname ^ " ));\n" ^ init_str in
+     ("ptrs[" ^ string_of_int !current_ptr ^ "];\n", obj_inst_str)
    | Sast.ListInstantiate(typ, s) -> 
-        let dtyp = type_as_string typ in
-        let dataType = String.sub dtyp 0 (String.length dtyp - 1) in(* get rid of ptr *)
-        let (size, _) = get_expr s in
-        let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
-        ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", "")
+     let dtyp = type_as_string typ in
+     let dataType = String.sub dtyp 0 (String.length dtyp - 1) in(* get rid of ptr *)
+     let (size, _) = get_expr s in
+     let intSize = String.sub size 0 (String.length size - 1) in (* turn float into int *)
+     ("malloc(" ^ intSize ^ " * sizeof(" ^ dataType ^ "))", "")
    | Sast.ListAccess(vdecl, i) -> 
      let (indx, _) = get_expr i in 
      let intIndx = String.sub indx 0 (String.length indx - 1) in
      let listId = vdecl.vname in
      (listId ^ "[" ^ intIndx ^ "]", "")
+   | Sast.ListAssign(access, val) -> 
+     let (elem, _) = get_expr access in
+     let (assn, _) = get_expr val in
+     (elem ^ " = " ^ assn, "")
    | Sast.Unop(op, expr) ->
      let op_str = get_op op in let (expr_str, prec_unop) = get_expr expr in
      (op_str ^ "(" ^ expr_str ^ ")", prec_unop)
