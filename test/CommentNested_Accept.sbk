@@ -1,0 +1,7 @@
+~ Hello
+  ~~ This is a nested comment.
+~
+
+Chapter plot() returns nothing {
+  say("Once upon a time...").
+}
