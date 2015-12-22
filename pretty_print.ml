@@ -34,17 +34,6 @@ with Add -> " + "
    | AND -> " && "
    | NOT -> " !"
 
-(* let list_type_as_string (t: Sast.list_type) = match t with
-  Sast.Number -> "float"
-| Sast.Boolean -> "bool"
-| Sast.Char -> "char" *)
-
-(* let dtype_to_ltype t = match t with
-   Sast.Number -> (Sast.Number: Sast.list_type)
- | Sast.Boolean -> (Sast.Boolean: Sast.list_type)
- | Sast.Char -> (Sast.Char: Sast.list_type)
- | _ -> raise(Failure("Cannot have a list of this type")) *)
-
 let type_as_string t = match t
 with 
      Sast.Number -> "float"
@@ -298,7 +287,6 @@ with Sast.LitString(s) ->  (s, "")
         (* If action returns anything else, no need to malloc *)
         |_ -> (acall_str, prev_code) )
  
-  (* catch all *)
     | Sast.Noexpr -> ("", "")
 
 let get_form_param (v: Sast.variable_decl) =
@@ -355,11 +343,6 @@ let rec write_stmt s = match s with
        print_string ("\n}\nelse {");
        write_stmt elsestmt;
        print_string("}\n")
-   (*| _ -> 
-      let (expr_str, prec_code) = get_expr (LitString("cow"), Sast.String) in
-      print_string(prec_code ^ "\t\n");
-      print_string expr_str; print_string ";\n\t" *)
-
 
 let write_func funcdec =
   let ret_and_name_str =
@@ -377,16 +360,7 @@ let write_func funcdec =
   print_string ("(" ^ clean_forms ^ ")");
   print_string " { \n\t";
   List.iter (fun s -> write_stmt s) funcdec.funcbody;
-
-
-  (* Free global pointers at the end of main *)
-  if (funcdec.fname = "plot") && (!new_count > 0) then 
-  print_string "\n\tfor( int i = 0; i < (sizeof(ptrs)/sizeof(ptrs[0])); i++){\n
-                      \tfree(ptrs[i]); }\n}\n "     
-  else begin
-    print_string " \n} \n"
-  end
-
+  print_string " \n} \n"
 
 let rec convert_my_expr (e, t) sptr = match e with 
     Sast.Access(v, _) -> if v.istrait = true then v.vname <- sptr 

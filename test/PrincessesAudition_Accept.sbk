@@ -21,6 +21,7 @@ Character Princess( words n; number a; tof f) {
 
 Character DisneyPrincess is Princess( words m ) {
 	words movie is m.
+  ~~tof famous is true.
 
   Action salary(number b) returns number {
     number incSal is 2 * b.

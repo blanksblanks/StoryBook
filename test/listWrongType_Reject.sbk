@@ -1,0 +1,4 @@
+Chapter plot() returns nothing {
+	numberlist scores is new numberlist[5].
+	scores[5] = 'a'.
+}

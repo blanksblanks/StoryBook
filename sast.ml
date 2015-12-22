@@ -1,14 +1,5 @@
 open Ast
 
-(* Data types -- link to type declarations where applicable,
-   whereast Ast just has strings for the type names *)
-(* type list_type =
-| Number
-| Boolean
-| String
-| Char
-(* | Object of class_decl *) *)
-
 type data_type =
     Void
   | Number
@@ -20,8 +11,6 @@ type data_type =
   | BooleanList
   | CharList
 
-(* Recurses only on semantically checked expressions,
-   whereas Ast didn't check type of expressions *)
 and expr_detail =
     LitNum of float
   | LitBool of bool
@@ -41,7 +30,6 @@ and expr_detail =
   | StrCat of expression * expression
   | MathBinop of expression * op * expression (* a + b *)
   | Unop of op * expression
-  (* | LitList of expression list *)
 
 (* Tuple of expression and the type it evaluates to *)
 and expression = expr_detail * data_type
@@ -69,7 +57,7 @@ and statement =
 | If of expression * statement * statement
   (* For loops: variable decl, boolean stopping condition, increment expr, loop body *)
 | For of statement * expression * expression * statement
-  (* Boolean condition: boolean expr, loop body *)
+  (* While loops: boolean expr, loop body *)
 | While of expression * statement
 
 

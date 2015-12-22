@@ -5,10 +5,8 @@
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
-/*%token LIST  NULL */
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
 %token NUMBERLIST BOOLLIST CHARLIST
-/*%token SUBTYPE */
 %token CHARACTER METHOD TRAIT NEW MY
 %token <float> LIT_NUM
 %token <bool> LIT_BOOL
@@ -185,14 +183,14 @@ expr:
   | LPAREN expr RPAREN {$2}
   | ID ASSIGN expr   {Assign($1, $3)} /* variable assign */
   | ID LPAREN actuals_opt RPAREN {FCall($1, $3)} /* function call */
-   /* Object stuff */
+   /* Handling Objects */
   | NEW ID LPAREN actuals_opt RPAREN {Instantiate($2, $4)} /*object declaration  */
   | ID APOST ID      {Access($1, $3)} /* member access */
   | MY ID            {Access("my", $2)} /* self member access */
   | MY ID ASSIGN expr {TraitAssign(Access("my", $2), $4)}
   | ID APOST ID ASSIGN expr {TraitAssign(Access($1, $3), $5)} /* member assign */
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
-   /* List stuff */
+   /* Handling Lists */
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID LBRACK expr RBRACK ASSIGN expr {ListAssign(ListAccess($1, $3), $6)} /* List assign a[5] = 3 */
   | NEW NUMBERLIST LBRACK expr RBRACK {ListInstantiate(NumberList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
