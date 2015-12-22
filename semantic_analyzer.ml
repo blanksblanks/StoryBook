@@ -47,14 +47,27 @@ let find_plot (l : Sast.function_decl list) =
          List.find(fun f -> f.fname = "plot") l
       with Not_found -> raise (Failure("No plot found"))
 
+let has_super (scope : symbol_table) = 
+  (List.length scope.characters) > 0
+
+let find_trait env name = 
+  let is_inherit = has_super env.scope in match
+  is_inherit with
+  true -> List.find(fun x-> x.vname = name) (List.nth env.scope.characters 0).cinstvars
+  | false -> raise(Failure("var not found: " ^ name))
+
+
+
+
 (* Find Variable *)
-let rec find_variable (scope : symbol_table) name =
+let rec find_variable (scope : symbol_table) orig_env name =
   try
     List.find(fun v -> v.vname = name) scope.variables
   with Not_found ->
     match scope.parent with
-      Some(parent) -> find_variable parent name
-    | _ -> raise (Failure("variable not found " ^ name))
+      Some(parent) -> find_variable parent orig_env name
+    | _ -> find_trait orig_env name
+           (* raise (Failure("variable not found " ^ name)) *)
 
 (* Find Function *)
 let rec find_class_decl (scope: symbol_table) name =
@@ -179,13 +192,13 @@ let rec analyze_expr env = function
     | Ast.LitChar(v) -> Sast.LitChar(v), Sast.Char
     | Ast.Id(vname) ->
       let vdecl = try
-	     find_variable env.scope vname (* locate a variable by name *)
+	     find_variable env.scope env vname (* locate a variable by name *)
       with Not_found ->
         raise (Failure("undeclared identifier " ^ vname))
       in Sast.Id(vdecl), vdecl.vtype (* return type *)
     | Ast.Assign(vname, expr) ->
         let vdecl = try
-          find_variable env.scope vname
+          find_variable env.scope env vname
         with Not_found ->
           raise (Failure("undeclared identifier " ^ vname))
         in let (e, expr_typ) = analyze_expr env expr
@@ -221,7 +234,7 @@ let rec analyze_expr env = function
     | Ast.ListAccess(id, indx) -> (* right now we don't prevent access of unassigned list elements, should be ok. *)
       (
         let var = try
-          find_variable env.scope id
+          find_variable env.scope env id
         with Not_found ->
           raise (Failure("Undeclared identifier " ^ id)) in 
         let (e, etype) = analyze_expr env indx in
@@ -256,7 +269,7 @@ let rec analyze_expr env = function
         end
         (* Regular access *)
         else begin
-          let objDec = try find_variable env.scope objName
+          let objDec = try find_variable env.scope env objName
             with Not_found ->
             raise(Failure("object variable not found" ^ objName))
           in let classDec = try get_class_decl_from_type env.scope objDec.vtype
@@ -302,7 +315,7 @@ let rec analyze_expr env = function
 
     | Ast.ACall(objName, actName, expr_list) ->
        (* Grab object variable *)
-       let objDec = try find_variable env.scope objName
+       let objDec = try find_variable env.scope env objName
        with Not_found -> raise(Failure("variable not found " ^ objName))
        (* Find corresponding class variable *)
        in let classDec =  

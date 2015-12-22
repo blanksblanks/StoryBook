@@ -189,8 +189,8 @@ expr:
   | NEW ID LPAREN actuals_opt RPAREN {Instantiate($2, $4)} /*object declaration  */
   | ID APOST ID      {Access($1, $3)} /* member access */
   | MY ID            {Access("my", $2)} /* self member access */
-  | MY ID ASSIGN expr {Assign($2, $4)}
   | ID APOST ID ASSIGN expr {TraitAssign(Access($1, $3), $5)} /* member assign */
+  | MY ID ASSIGN expr {TraitAssign(Access("my", $2), $4)}
   | ID COMMA ID LPAREN actuals_opt RPAREN {ACall($1, $3, $5)} /* action call */
    /* List stuff */
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
