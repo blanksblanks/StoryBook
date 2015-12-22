@@ -1,11 +1,3 @@
-(* List types -- so that list definition can't recurse infinitely *)
-(* type list_type =
-| Number
-| Boolean
-| String
-| Char
-| Object of string *)
-
 
 (* Possible data types *)
 type data_type =
@@ -18,6 +10,7 @@ type data_type =
   | NumberList 
   | BooleanList
   | CharList
+  | CharacterList (* list of pointers to point to Characters *)
 
 
 

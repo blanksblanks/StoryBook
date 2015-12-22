@@ -42,12 +42,12 @@ rule token = parse
   | "or"     { OR }
 
   (* Control flow *)
-  | "if"     { IF }
-  | "else"   { ELSE }
-  | "repeatfor" { FOR }
-  | "repeatwhile" { WHILE }
-  | "endwith" { ENDWITH }
-  | "returns" { RETURNS }
+  | "if"                  { IF }
+  | "else"                { ELSE }
+  | "repeatfor"           { FOR }
+  | "repeatwhile"         { WHILE }
+  | "endwith"             { ENDWITH }
+  | "returns"             { RETURNS }
 
   (* Primitives--booleans, chars, strings, numbers *)
   | "tof"                 { BOOL }
@@ -59,16 +59,15 @@ rule token = parse
   | "numberlist"          { NUMBERLIST } 
   | "toflist"             { BOOLLIST }
   | "charlist"            { CHARLIST }
-  (*
-  | "null"    { NULL } *)
-  | "nothing" { VOID } 
-  | "Chapter" { FUNCTION }
-  | "Character" { CHARACTER }
-  | "Action" { METHOD }
-  | "trait" { TRAIT }
-  | "new" { NEW }
-  | "my" { MY }
-  | eof { EOF }
+  | "characterlist"       { CHARACTERLIST }
+  | "nothing"             { VOID } 
+  | "Chapter"             { FUNCTION }
+  | "Character"           { CHARACTER }
+  | "Action"              { METHOD }
+  | "trait"               { TRAIT }
+  | "new"                 { NEW }
+  | "my"                  { MY }
+  | eof                   { EOF }
   | ['-']?(digit+'.'digit*)|['-']?(digit*'.'digit+)|['-']?(digit+) as lxm { LIT_NUM(float_of_string lxm) }
   (* String regex modified from:
    realworldocaml.org/v1/en/html/parsing-with-ocamllex-and-menhir.html *)

@@ -23,7 +23,6 @@ type func_wrapper =
   Some of Sast.function_decl
   | None
 
-
 (* Find Function *)
 let rec find_function (scope: symbol_table) name =
 	try
@@ -140,6 +139,9 @@ let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
 | _ -> 		raise (Failure("Invalid unary operator"))
 
+
+let listClass = {cname = "listAcc"; cparent = "None"; cformals = []; cinstvars = []; cactions = []}
+
 let rec type_as_string t = match t
 with
      Sast.Number -> "float"
@@ -151,11 +153,13 @@ with
    | Sast.NumberList -> "float list"
    | Sast.BooleanList -> "bool list"
    | Sast.CharList -> "char list"
+   | Sast.CharacterList -> "character list" 
 
 let find_listAcc_type t = match t with 
     Sast.NumberList -> Sast.Number
   | Sast.BooleanList -> Sast.Boolean
-  | Sast.CharList -> Sast.Char  
+  | Sast.CharList -> Sast.Char 
+  | Sast.CharacterList -> Sast.Object(listClass) (* check type in analyze expr *) 
   | _ -> raise(Failure("Not list type"))
 
 let rec convert_data_type env old_type = match old_type with
@@ -171,6 +175,7 @@ let rec convert_data_type env old_type = match old_type with
   | Ast.NumberList -> Sast.NumberList
   | Ast.BooleanList -> Sast.BooleanList
   | Ast.CharList -> Sast.CharList
+  | Ast.CharacterList -> Sast.CharacterList
 
 (* compare parameter types *)
 let rec compare_p_types formalVars actualExprs = match formalVars, actualExprs with
@@ -250,11 +255,24 @@ let rec analyze_expr env = function
       (
         let (access, etype) = (analyze_expr env access) in
         let (new_val, vtype) = analyze_expr env assn in
-
-        if etype <> vtype then 
-          raise(Failure("Assignment value type does not match type of list element"))
-        else 
-        (Sast.ListAssign((access, etype), (new_val, vtype)), vtype)
+        (
+          match etype with 
+          (* If list is character type, use dummy class object to check that the assignment type is also a Sast.Object(n) *)
+          (* Using void * so actual class decl equivalence doesn't matter, only the fast that it is a Sast.Object *)
+          | Sast.Object(n) -> 
+            (
+              match vtype with
+              | Sast.Object(x) -> (Sast.ListAssign((access, etype), (new_val, vtype)), vtype)
+              | _ -> raise(Failure("Assignment value type does not match type of list element"))
+            )
+          | _ -> 
+            (
+              if etype <> vtype then 
+                raise(Failure("Assignment value type does not match type of list element"))
+              else 
+              (Sast.ListAssign((access, etype), (new_val, vtype)), vtype)
+            )
+        )
       )
     | Ast.Access(objName, varName) -> (* character access *)
       (* "self" reference *)
@@ -353,7 +371,8 @@ let check_var_decl (env: translation_environment) (var: Ast.var_decl) =
                   in env.scope.variables <- List.append env.scope.variables [sast_var_decl];
                   sast_var_decl)
       (* If variable is initialized, check that the two types match *)
-      | _ ->  if typ <> expr_typ then begin
+      | _ ->   
+            if typ <> expr_typ && (type_as_string expr_typ) <> "objectlistAcc" then begin
               raise(Failure(
                 "Variable assignment does not match variable type " ^(type_as_string typ) ^ " " ^ (type_as_string expr_typ)))
               end

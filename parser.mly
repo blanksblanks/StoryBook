@@ -5,10 +5,8 @@
 %token EQ NOT AND OR NEQ LT LEQ GT GEQ
 %token ENDWITH
 %token RETURNS IF ELSE FOR WHILE
-/*%token LIST  NULL */
 %token VOID NUMBER BOOL TRUE FALSE STRING CHAR FUNCTION
-%token NUMBERLIST BOOLLIST CHARLIST
-/*%token SUBTYPE */
+%token NUMBERLIST BOOLLIST CHARLIST CHARACTERLIST
 %token CHARACTER METHOD TRAIT NEW MY
 %token <float> LIT_NUM
 %token <bool> LIT_BOOL
@@ -80,7 +78,7 @@ type_label:
  | BOOLLIST { BooleanList }
  /*| STRING LIST { List(String)}*/
  | CHARLIST { CharList }
-/* | CHARACTER ID LIST { List(Object($2))}*/
+ | CHARACTERLIST { CharacterList}
 
 /* Variable Declarations */
 vdecl_list:
@@ -196,9 +194,10 @@ expr:
   | ID LBRACK expr RBRACK {ListAccess($1, $3)} /* myList [1 + 1] */
   | ID LBRACK expr RBRACK ASSIGN expr {ListAssign(ListAccess($1, $3), $6)} /* List assign a[5] = 3 */
   | NEW NUMBERLIST LBRACK expr RBRACK {ListInstantiate(NumberList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW BOOLLIST LBRACK expr RBRACK {ListInstantiate(BooleanList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  | NEW CHARLIST LBRACK expr RBRACK {ListInstantiate(CharList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
-  /*| NEW CHARACTER ID LIST LBRACK expr RBRACK {ListInstantiate(Object($3), $6)} */ /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW BOOLLIST LBRACK expr RBRACK { ListInstantiate(BooleanList, $4)} /* new int list[5 + 3]  -> ListInstantiate (int, 8) */
+  | NEW CHARLIST LBRACK expr RBRACK { ListInstantiate(CharList, $4) } 
+  /* Handling Object Lists */
+  | NEW CHARACTERLIST LBRACK expr RBRACK { ListInstantiate(CharacterList, $4) } 
 
 /* Actual Parameters */
 actuals_opt:

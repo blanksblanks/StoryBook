@@ -21,8 +21,6 @@ Character Princess( words n; number a; tof f) {
 
 Character DisneyPrincess is Princess( words m ) {
 	words movie is m.
-  ~~tof famous is true.
-
   Action salary(number b) returns number {
     number incSal is 2 * b.
   	say(my name + ": Just so you know, Walt payed me " + b + " dollars so I expect at least " + incSal).
@@ -32,10 +30,13 @@ Character DisneyPrincess is Princess( words m ) {
 
 Chapter findActress(tof f; number s) returns nothing {
     if(f = true and s < 10000){
-      say("You're hired!").
+      say("Producers: You're hired!").
     }
     else if(f = false) {
       say("Producers: You're hired! And we'll pay you " + s * 2 + " dollars!").
+    }
+    else{
+    	say("Producers: No thanks.").
     }
 
 }
@@ -50,5 +51,5 @@ Chapter plot() returns nothing {
   findActress(Aurora's famous; money).
   Anna, introduceSelf().
   Anna, audition("Anna"; "No exprience"; "Frozen").
-  findActress(Anna's famous; 1000).
+  findActress(Anna's famous; 5000).
 }
