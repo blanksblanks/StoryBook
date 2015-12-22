@@ -172,8 +172,6 @@ with Sast.LitString(s) ->  (s, "")
      (v_name, prec_strcat1 ^ prec_strcat2 ^ str_cat_code)
     | Sast.TraitAssign(accessVar, expr) ->
       let (varAccess, prec_var) = get_expr accessVar in
-      let (_, typ) = expr in
-      let expr_typ = type_as_string typ in 
       let (new_value, prec_new) = get_expr expr in
       (varAccess ^ "=" ^ new_value, prec_var ^ prec_new)
     | Sast.Access(obj_dec, var_dec) ->
