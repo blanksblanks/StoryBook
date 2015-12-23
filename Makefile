@@ -20,46 +20,6 @@ parser.ml parser.mli : parser.mly
 %.cmi : %.mli
 	ocamlc -c $<
 
-
-# scanner.ml : scanner.mll
-# 	ocamllex scanner.mll
-
-# parser.ml parser.mli : parser.mly
-# 	$(YACC) -v parser.mly
-
-# semantic_analyzer.cmo : semantic_analyzer.ml
-# 	ocamlc -o semantic_analyzer.ml
-
-# sast.cmo : sast.ml
-# 	ocamlc -c sast.ml
-
-# ast.cmo : ast.ml
-# 	ocamlc -c ast.ml
-
-# parser.cmo : parser.ml
-# 	ocamlc -c parser.ml
-
-# scanner.cmo : scanner.ml
-# 	ocamlc -c scanner.ml
-
-# codegen.cmo : codegen.ml
-# 	ocamlc -c codegen.ml
-
-# ast.cmi : ast.ml
-# 	ocamlc -c ast.ml
-
-# semantic_analyzer.cmi : semantic_analyzer.mli
-# 	ocamlc -c semantic_analyzer.mli
-
-# parser.cmi : parser.mli
-# 	ocamlc -c parser.mli
-
-# scanner.cmi : scanner.mli
-# 	ocamlc -c scanner.mli
-
-# codegen.cmi : codegen.mli
-# 	ocamlc -c codegen.mli
-
 .PHONY : clean
 clean :
 	rm -f test/*.c test/*Out.txt test/test_results.txt test/errors.txt

@@ -129,7 +129,6 @@ let analyze_binop (scope: symbol_table) op t1 t2 = match op with
   | OR -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of or for operands' types")) else Sast.Boolean
   | AND -> 	if (t1 <> Sast.Boolean || t2 <> Sast.Boolean) then raise (Failure("Invalid use of and for operands' types")) else Sast.Boolean
   | NOT -> 	raise (Failure("Invalid use of ! for two operands"))
-  (*| _ ->		raise (Failure("Invalid binary operator")) if this line uncomment, get a case unused warning *)
 
 let analyze_unop (scope: symbol_table) op t1 = match op with
 NOT -> 		if (t1 <> Sast.Boolean) then raise (Failure("Invalid use of ! for operand type")) else Sast.Boolean
