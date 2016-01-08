@@ -1,21 +1,13 @@
 # StoryBook
-A language of our own design with story-like syntax
+
+StoryBook is an object-oriented programming language targeted toward children. The language uses intuitive, story-like syntax and structure, making it easier for children to understand and use. The compiler is written in OCaml and the language compiles to C.
+
+See StoryBook_LRM.pdf for Language Reference Manual.
 
 ## Running StoryBook
 
-To run, just type `make` from the CLI. It will execute the following commands:
-```
-ocamlyacc parser.mly
-ocamlc -c ast.ml
-ocamlc -c parser.mli
-ocamlc -c parser.ml
-ocamllex scanner.mll
-124 states, 6796 transitions, table size 27928 bytes
-ocamlc -c scanner.ml
-ocamlc -c sast.ml
-ocamlc -c semantic_analyzer.ml
-ocamlc -c codegen.ml
-```
+To run, just type `make` from the CLI.
+
 
 To set up the StoryBook compiler (only do once):
 
